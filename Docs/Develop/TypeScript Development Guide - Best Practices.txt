@@ -1,0 +1,347 @@
+## 🏗️ Project Configuration
+
+### TypeScript Configuration
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}
+```
+
+### Package.json Configuration
+```json
+{
+  "type": "module",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "validate": "npm run type-check && npm run lint"
+  }
+}
+```
+
+## 📦 Import/Export Best Practices
+
+### ✅ Correct Import Patterns
+```typescript
+// Always use .js extension for relative imports
+import { DatabaseManager } from '../config/DatabaseManager.js';
+import { logger } from '../../utils/logger.js';
+import { UserService } from './UserService.js';
+
+// Package imports don't need extensions
+import express from 'express';
+import { Pool } from 'mysql2/promise';
+import mysql from 'mysql2/promise';
+
+// Type-only imports
+import type { User, Config } from '../types/index.js';
+```
+
+### ✅ Export Patterns
+```typescript
+export class ServiceManager {
+  // implementation
+}
+
+export interface ServiceConfig {
+  // interface definition
+}
+
+export default ServiceManager;
+export { ServiceManager };
+```
+
+### ❌ Anti-Patterns
+```typescript
+// Don't mix CommonJS with ES modules
+const fs = require('fs'); // Wrong in ES modules
+
+// Missing .js extension
+import { UserService } from './UserService'; // Wrong
+
+// Circular dependencies
+// UserService.ts imports AuthService.ts
+// AuthService.ts imports UserService.ts // Avoid this
+```
+
+## 🗄️ MySQL2 Configuration
+
+### ✅ Valid Pool Options
+```typescript
+{
+  host: 'localhost',
+  port: 3306,
+  user: 'username',
+  password: 'password',
+  database: 'database_name',
+  charset: 'utf8mb4',
+  timezone: '+00:00',
+  connectionLimit: 10,
+  queueLimit: 0,
+  idleTimeout: 60000,
+  acquireTimeout: 60000
+}
+```
+
+### ❌ Invalid Options (Generate Warnings)
+```typescript
+// Remove these - they don't exist in mysql2
+{
+  reconnect: true,
+  maxReconnects: 3,
+  reconnectDelay: 2000,
+  timeout: 60000,
+  connectTimeout: 60000,
+  keepAliveInitialDelay: 0,
+  enableKeepAlive: true
+}
+```
+
+### ✅ Connection Pool Management
+```typescript
+export class DatabasePoolManager {
+  private static instances: Map<string, mysql.Pool> = new Map()
+  
+  static getPool(dbName: string): mysql.Pool {
+    if (!this.instances.has(dbName)) {
+      const pool = mysql.createPool(config)
+      this.instances.set(dbName, pool)
+    }
+    return this.instances.get(dbName)!
+  }
+  
+  static async closeAllPools(): Promise<void> {
+    for (const pool of this.instances.values()) {
+      await pool.end()
+    }
+    this.instances.clear()
+  }
+}
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  await DatabasePoolManager.closeAllPools()
+  process.exit(0)
+})
+```
+
+## 🔧 Type Safety
+
+### ✅ Explicit Type Casting
+```typescript
+// Safe with explicit casting
+parameters: mcpTool.inputSchema as JSONSchema7
+const result = await query(sql, params) as RowDataPacket[]
+
+// With fallbacks
+parameters: mcpTool.inputSchema || {
+  type: 'object',
+  properties: {},
+  required: []
+}
+```
+
+### ❌ Implicit Types
+```typescript
+// Dangerous - no type checking
+parameters: mcpTool.inputSchema
+const result = await query(sql, params)
+```
+
+## 🛠️ Tool Schemas (OpenAI Function Calling)
+
+### ✅ Correct Schema Structure
+```typescript
+inputSchema: {
+  type: 'object',
+  properties: {
+    whatsapp_phone: {
+      type: 'string',
+      description: 'WhatsApp phone number'
+    },
+    name: {
+      type: 'string',
+      description: 'Customer name'
+    }
+  },
+  required: ['whatsapp_phone']
+}
+```
+
+### ❌ Malformed Schema (Causes 400 Errors)
+```typescript
+// Nested properties object
+inputSchema: {
+  type: 'object',
+  properties: {
+    type: 'object',  // ❌ Double nesting
+    properties: { ... }
+  }
+}
+```
+
+## 📁 File Structure Best Practices
+
+```
+src/
+├── services/
+│   ├── UserService.ts     // import './UserService.js'
+│   └── AuthService.ts     // import './AuthService.js'
+├── utils/
+│   └── logger.ts          // import '../utils/logger.js'
+├── types/
+│   └── index.ts           // import '../types/index.js'
+├── config/
+│   └── database.ts
+└── interfaces/
+    └── api.ts
+```
+
+### ✅ Barrel Exports (Use with Caution)
+```typescript
+// types/index.ts
+export type { User } from './User.js';
+export type { Config } from './Config.js';
+
+// Import barrel
+import type { User, Config } from '../types/index.js';
+```
+
+## 🔍 Error Handling
+
+### ✅ Database Error Handling
+```typescript
+try {
+  const connection = await pool.getConnection()
+  const result = await connection.execute(sql, params)
+  connection.release()
+  return result
+} catch (error) {
+  logger.error('Database error:', error)
+  throw error
+}
+```
+
+### ❌ Avoid Event Listeners (Not Supported in mysql2)
+```typescript
+// Don't use these
+pool.on('connection', callback)
+pool.on('error', callback)
+```
+
+## 🧪 Validation & Testing
+
+### Pre-commit Validation Script
+```bash
+#!/bin/bash
+# pre-commit.sh
+npm run build
+if [ $? -ne 0 ]; then
+  echo "❌ Build failed - fix TypeScript errors"
+  exit 1
+fi
+echo "✅ Build successful"
+```
+
+### Import Validation Script
+```typescript
+// scripts/check-imports.js
+import fs from 'fs';
+import path from 'path';
+
+function checkImports(dir: string): void {
+  const files = fs.readdirSync(dir, { withFileTypes: true });
+  
+  for (const file of files) {
+    if (file.isDirectory()) {
+      checkImports(path.join(dir, file.name));
+    } else if (file.name.endsWith('.ts')) {
+      const content = fs.readFileSync(path.join(dir, file.name), 'utf8');
+      const importRegex = /from\s+['"](\..*?)['"]/g;
+      
+      let match;
+      while ((match = importRegex.exec(content)) !== null) {
+        const importPath = match[1];
+        if (importPath.startsWith('.') && !importPath.endsWith('.js')) {
+          console.error(`Missing .js extension: ${file.name} -> ${importPath}`);
+        }
+      }
+    }
+  }
+}
+
+checkImports('./src');
+```
+
+## ⚙️ ESLint Configuration
+```javascript
+// .eslintrc.js
+module.exports = {
+  extends: [
+    '@typescript-eslint/recommended'
+  ],
+  rules: {
+    '@typescript-eslint/consistent-type-imports': 'error',
+    'import/extensions': ['error', 'ignorePackages', {
+      'js': 'always',
+      'ts': 'never'
+    }]
+  }
+};
+```
+
+## 🚨 Error Prevention Checklist
+
+- [ ] **MySQL2 Config** - Only use valid pool options
+- [ ] **Type Casting** - Explicit `as Type` for external data  
+- [ ] **ES Modules** - All relative imports end with `.js`
+- [ ] **Tool Schemas** - Flat structure, no nested properties
+- [ ] **Pool Management** - Singleton pattern with graceful shutdown
+- [ ] **Pre-commit** - Build validation before commits
+- [ ] **Strict Mode** - Enable all TypeScript strict checks
+- [ ] **No Circular Dependencies** - Use dependency injection
+- [ ] **Type-only Imports** - Use `import type` when possible
+
+## 🔄 Dynamic Imports
+```typescript
+// Use for conditional loading
+const { UserService } = await import('./UserService.js');
+
+// Module lazy loading
+const loadUserModule = async () => {
+  const module = await import('./UserService.js');
+  return new module.UserService();
+};
+```
+
+## 🎯 Quick Fixes for Common Issues
+
+1. **Warning: Invalid MySQL Config** → Remove unsupported options
+2. **Type Error: parameters** → Add explicit type casting
+3. **Import Error** → Add `.js` extension to relative imports
+4. **400 Error from AI** → Fix tool schema structure
+5. **Connection Issues** → Implement proper connection pooling
+6. **Circular Dependencies** → Restructure with dependency injection
+7. **Build Failures** → Enable strict TypeScript checks
+
+---
+
+*Follow these practices to maintain clean, type-safe, and error-free TypeScript code.*
