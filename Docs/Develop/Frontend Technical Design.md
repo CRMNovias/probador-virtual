@@ -10,7 +10,9 @@
 ## 1. Vision and Scope
 
 ### 1.1 Overview
-This document defines the technical architecture for the **frontend application only**. The backend API is being developed independently by another team member. This frontend is a Single Page Application (SPA) that consumes RESTful API endpoints and provides an interactive virtual try-on experience for wedding dress customers.
+This document defines the technical architecture for the **FRONTEND APPLICATION ONLY**. The backend API is being developed independently by another team. This frontend is a Single Page Application (SPA) that consumes RESTful API endpoints and provides an interactive virtual try-on experience for wedding dress customers.
+
+**IMPORTANT**: This project scope includes ONLY the React frontend. We do NOT develop, maintain, or configure any backend services, databases, or server infrastructure.
 
 ### 1.2 Scope
 **In Scope:**
@@ -199,7 +201,7 @@ export const apiConfig: ApiConfig = {
 ```typescript
 // Request
 interface SendCodeRequest {
-  whatsappPhone: string; // Format: +34600000000
+  phone: string; // Format: +34600000000
 }
 
 // Response
@@ -214,7 +216,7 @@ interface SendCodeResponse {
 ```typescript
 // Request
 interface VerifyCodeRequest {
-  whatsappPhone: string;
+  phone: string;
   code: string; // 6-digit code
 }
 
@@ -236,7 +238,8 @@ interface VerifyCodeResponse {
 interface UserProfile {
   id: string;
   name: string | null;
-  whatsappPhone: string;
+  email: string | null;
+  phone: string;
   createdAt: string; // ISO 8601
   hasAvatar: boolean;
 }
@@ -278,8 +281,6 @@ interface Dress {
   name: string;
   imageUrl: string;
   description: string;
-  category: string;
-  available: boolean;
 }
 ```
 
@@ -794,11 +795,11 @@ const fadeIn = {
 
 ### Phase 1: Foundation (MVP)
 1. ✅ Project setup (Vite + React + TypeScript + Tailwind)
-2. ✅ Folder structure and config
-3. ✅ API client with interceptors
-4. ✅ Auth flow (phone + code verification)
-5. ✅ Basic routing
-6. ✅ Layout components (Header, Navigation)
+2. ⬜ Folder structure and config
+3. ⬜ API client with interceptors
+4. ⬜ Auth flow (phone + code verification)
+5. ⬜ Basic routing
+6. ⬜ Layout components (Header, Navigation)
 
 ### Phase 2: Core Features
 7. Avatar creation flow

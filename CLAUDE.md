@@ -6,7 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Probador Virtual de Vestidos de Novia - Atelier de Bodas**
 
-A virtual try-on application for wedding dresses that uses AI to generate full-body avatar models from passport-style photos and allow customers to virtually try on dresses in different poses.
+A **FRONTEND-ONLY** virtual try-on application for wedding dresses. This React application consumes REST APIs (developed separately by another team) to provide an interactive experience where customers can:
+- Upload passport-style photos
+- Generate AI-powered full-body avatars
+- Virtually try on wedding dresses in different poses
+- Browse their try-on gallery
+- Manage appointments
+
+**IMPORTANT**: This project contains ONLY the frontend React application. Backend APIs are developed and maintained separately.
 
 ## Git Workflow
 
@@ -22,7 +29,7 @@ A virtual try-on application for wedding dresses that uses AI to generate full-b
 ### Code Standards
 - **Language**: All code must be in English (variables, methods, comments, etc.)
 - **Naming Conventions**:
-  - Classes: `PascalCase`
+  - Classes/Components: `PascalCase`
   - Everything else: `camelCase`
   - Avoid `kebab-case` in JS/TS files
 - **Typing**: Everything must be typed (variables, parameters, etc.) - that's why we're using TypeScript
@@ -34,7 +41,7 @@ A virtual try-on application for wedding dresses that uses AI to generate full-b
 ### Pre-Development Checklist
 
 Before each development task, verify:
-1. **Architecture**: Does it respect the MCP structure?
+1. **Architecture**: Does it follow best practices for React component structure?
 2. **SOLID**: Is it extensible and maintainable?
 3. **Scalability**: Does it support growth?
 4. **Elegance**: Is the solution clean and simple?
@@ -63,7 +70,8 @@ Create or modify `.txt` documents in `Docs/Develop/` or subdirectories whenever 
     "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "jsx": "react-jsx"
   }
 }
 ```
@@ -87,72 +95,14 @@ Create or modify `.txt` documents in `Docs/Develop/` or subdirectories whenever 
 
 ```typescript
 // ✅ Correct
-import { DatabaseManager } from '../config/DatabaseManager.js';
-import { logger } from '../../utils/logger.js';
-import type { User, Config } from '../types/index.js';
-import express from 'express';
+import { apiClient } from '../services/apiClient.js';
+import { formatDate } from '../../utils/formatters.js';
+import type { User, ApiResponse } from '../types/index.js';
+import axios from 'axios';
 
 // ❌ Wrong
 import { UserService } from './UserService';  // Missing .js
 const fs = require('fs');  // CommonJS in ES module
-```
-
-## Database Configuration (MySQL2)
-
-### Valid Pool Options
-```typescript
-{
-  host: 'localhost',
-  port: 3306,
-  user: 'username',
-  password: 'password',
-  database: 'database_name',
-  charset: 'utf8mb4',
-  timezone: '+00:00',
-  connectionLimit: 10,
-  queueLimit: 0,
-  idleTimeout: 60000,
-  acquireTimeout: 60000
-}
-```
-
-### Invalid Options (Remove These)
-Do NOT use these options - they don't exist in mysql2:
-- `reconnect`
-- `maxReconnects`
-- `reconnectDelay`
-- `timeout`
-- `connectTimeout`
-- `keepAliveInitialDelay`
-- `enableKeepAlive`
-
-### Connection Pool Management
-Implement singleton pattern with graceful shutdown:
-
-```typescript
-export class DatabasePoolManager {
-  private static instances: Map<string, mysql.Pool> = new Map()
-
-  static getPool(dbName: string): mysql.Pool {
-    if (!this.instances.has(dbName)) {
-      const pool = mysql.createPool(config)
-      this.instances.set(dbName, pool)
-    }
-    return this.instances.get(dbName)!
-  }
-
-  static async closeAllPools(): Promise<void> {
-    for (const pool of this.instances.values()) {
-      await pool.end()
-    }
-    this.instances.clear()
-  }
-}
-
-process.on('SIGTERM', async () => {
-  await DatabasePoolManager.closeAllPools()
-  process.exit(0)
-})
 ```
 
 ## Type Safety
@@ -161,43 +111,12 @@ Always use explicit type casting for external data:
 
 ```typescript
 // ✅ Safe
-parameters: mcpTool.inputSchema as JSONSchema7
-const result = await query(sql, params) as RowDataPacket[]
+const response = await apiClient.get('/user') as ApiResponse<User>;
+const data = JSON.parse(jsonString) as UserProfile;
 
 // ❌ Dangerous
-parameters: mcpTool.inputSchema
-const result = await query(sql, params)
-```
-
-## Tool Schemas (OpenAI Function Calling)
-
-Use flat structure only - no nested properties:
-
-```typescript
-// ✅ Correct
-inputSchema: {
-  type: 'object',
-  properties: {
-    whatsapp_phone: {
-      type: 'string',
-      description: 'WhatsApp phone number'
-    },
-    name: {
-      type: 'string',
-      description: 'Customer name'
-    }
-  },
-  required: ['whatsapp_phone']
-}
-
-// ❌ Wrong - double nesting causes 400 errors
-inputSchema: {
-  type: 'object',
-  properties: {
-    type: 'object',
-    properties: { ... }
-  }
-}
+const response = await apiClient.get('/user');
+const data = JSON.parse(jsonString);
 ```
 
 ## UX Flow (React Implementation)
@@ -220,19 +139,63 @@ The application follows this user journey:
 - Floating action button: "Reservar Cita" (Book Appointment)
 - Modals: Image viewer, share options, delete confirmation
 
-## Common Development Commands
+## API Integration
 
-**Note**: No build scripts are currently configured. When implementing:
+This frontend consumes REST APIs. All API calls should:
+- Go through the service layer (`src/services/`)
+- Include proper error handling
+- Show loading states
+- Handle authentication (JWT tokens)
+- Use TypeScript interfaces for request/response
+
+Example:
+```typescript
+// src/services/authService.ts
+import { apiClient } from './apiClient.js';
+import type { SendCodeResponse, VerifyCodeResponse } from '../types/api.js';
+
+export const sendCode = async (phone: string): Promise<SendCodeResponse> => {
+  const response = await apiClient.post('/auth/send-code', { phone });
+  return response as SendCodeResponse;
+};
+```
+
+## Environment Variables
+
+All configuration values must come from environment variables:
 
 ```bash
+# .env.development
+VITE_API_BASE_URL=http://localhost:3000/api
+VITE_API_TIMEOUT=30000
+VITE_MAX_UPLOAD_SIZE_MB=10
+VITE_ENABLE_LOGS=true
+```
+
+Access them via:
+```typescript
+// src/config/envConfig.ts
+export const envConfig = {
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+  apiTimeout: parseInt(import.meta.env.VITE_API_TIMEOUT, 10),
+  // ...
+} as const;
+```
+
+## Common Development Commands
+
+```bash
+# Development server
+npm run dev
+
 # Type checking
 npm run type-check
 
-# Build
+# Build for production
 npm run build
 
-# Start application
-npm start
+# Preview production build
+npm run preview
 
 # Linting
 npm run lint
@@ -243,24 +206,37 @@ npm run validate
 
 ## Error Prevention Checklist
 
-- [ ] MySQL2 Config - Only use valid pool options
 - [ ] Type Casting - Explicit `as Type` for external data
 - [ ] ES Modules - All relative imports end with `.js`
-- [ ] Tool Schemas - Flat structure, no nested properties
-- [ ] Pool Management - Singleton pattern with graceful shutdown
 - [ ] Strict Mode - Enable all TypeScript strict checks
 - [ ] No Circular Dependencies - Use dependency injection
 - [ ] Type-only Imports - Use `import type` when possible
+- [ ] Environment Variables - No hardcoded values
+- [ ] Error Handling - All API calls wrapped in try/catch
+- [ ] Loading States - Show feedback during async operations
 
 ## Project Structure
 
 ```
 Probador_Virtual/
+├── src/                         # Frontend source code (to be created)
+│   ├── config/                  # Configuration files
+│   ├── services/                # API service layer
+│   ├── types/                   # TypeScript type definitions
+│   ├── hooks/                   # Custom React hooks
+│   ├── context/                 # React Context providers
+│   ├── components/              # React components
+│   ├── pages/                   # Page components
+│   ├── utils/                   # Utility functions
+│   ├── constants/               # Constants and enums
+│   └── assets/                  # Images, icons, etc.
 ├── Docs/
-│   ├── Design Documentation/    # Design specs and mockups (PDF)
+│   ├── Design Documentation/    # Design specs and mockups
 │   ├── Develop/                 # Development guidelines
 │   │   ├── Project instructions Guide.txt
-│   │   └── TypeScript Development Guide - Best Practices.txt
+│   │   ├── TypeScript Development Guide - Best Practices.txt
+│   │   ├── Frontend Technical Design.md
+│   │   └── Phase 1 - Foundation Development Plan.txt
 │   └── UX/                      # UX flows and mockups
 │       └── React UX flows mockup.txt
 ├── .gitignore
@@ -268,14 +244,47 @@ Probador_Virtual/
 └── CLAUDE.md
 ```
 
-**Current Status**: Documentation-only phase. No source code implemented yet.
+**Current Status**: Documentation-only phase. Frontend implementation starting with Phase 1.
 
 ## Quick Fixes for Common Issues
 
-1. **Warning: Invalid MySQL Config** → Remove unsupported options
-2. **Type Error: parameters** → Add explicit type casting
-3. **Import Error** → Add `.js` extension to relative imports
-4. **400 Error from AI** → Fix tool schema structure
-5. **Connection Issues** → Implement proper connection pooling
-6. **Circular Dependencies** → Restructure with dependency injection
-7. **Build Failures** → Enable strict TypeScript checks
+1. **Type Error: parameters** → Add explicit type casting
+2. **Import Error** → Add `.js` extension to relative imports
+3. **API Error** → Check error handling in service layer
+4. **Circular Dependencies** → Restructure with dependency injection
+5. **Build Failures** → Enable strict TypeScript checks
+6. **Environment Variables Not Found** → Check `.env` file and restart dev server
+7. **CORS Issues** → Contact backend team (not our responsibility)
+
+## Technology Stack
+
+- **React** 19.x - UI library
+- **TypeScript** ~5.8.x - Type safety
+- **Vite** 6.x - Build tool & dev server
+- **React Router** 6.x - Client-side routing
+- **Tailwind CSS** 3.x - Styling framework
+- **Axios** - HTTP client for API calls
+- **Framer Motion** - Animations
+- **React Hook Form** - Form validation
+- **date-fns** - Date formatting
+
+## Key Naming Conventions
+
+Use consistent naming for all entities:
+
+```typescript
+// File naming
+Button.tsx          // Components
+useAuth.ts          // Hooks
+authService.ts      // Services
+api.ts              // Types
+formatters.ts       // Utils
+routes.ts           // Constants
+
+// Code naming
+class UserProfile { }              // PascalCase for classes
+const apiClient = axios.create()   // camelCase for variables
+function formatPhone() { }         // camelCase for functions
+interface User { }                 // PascalCase for interfaces
+type Status = 'active' | 'idle'    // PascalCase for types
+```
