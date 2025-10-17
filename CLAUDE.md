@@ -17,12 +17,44 @@ A **FRONTEND-ONLY** virtual try-on application for wedding dresses. This React a
 
 ## Git Workflow
 
+**CRITICAL**: This project uses Git and follows GitFlow methodology strictly.
+
 - **Repository**: Private (game-lovers/fit-checker.git)
+- **Version Control**: Git (always work with branches)
 - **Branch Strategy**: GitFlow
-  - `main`: Production code only - DO NOT touch directly
-  - `develop`: Main integration branch
-  - `feature/*`: All development work happens here, branching from `develop`
-- **Working Method**: Create one branch per conversation/session. Never merge directly to main.
+  - `main`: Production code only - **NEVER commit or merge directly to main**
+  - `develop`: Main integration branch - all features merge here first
+  - `feature/*`: Feature development branches (e.g., `feature/phase1-foundation`)
+  - `fix/*`: Bug fix branches (e.g., `fix/auth-validation`)
+  - `hotfix/*`: Emergency production fixes (branch from `main`)
+
+### Branching Rules
+- **ALWAYS create a new branch** for each phase, feature, or fix
+- Branch naming convention:
+  - `feature/phase-X-description` for phase implementations
+  - `feature/component-name` for individual features
+  - `fix/issue-description` for bug fixes
+  - `hotfix/critical-issue` for production emergencies
+- **One branch per conversation/session**: Create a dedicated branch at the start of each work session
+- **Never merge directly to main**: All changes go through `develop` first
+- **Merge flow**: `feature/*` → `develop` → `main` (via pull request)
+
+### Git Commands Pattern
+```bash
+# Start new feature/phase
+git checkout develop
+git pull origin develop
+git checkout -b feature/phase-1-foundation
+
+# Commit work
+git add .
+git commit -m "Implement folder structure and configuration"
+
+# Push to remote
+git push -u origin feature/phase-1-foundation
+
+# When complete, merge to develop via PR
+```
 
 ## Development Methodology
 
