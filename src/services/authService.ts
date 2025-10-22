@@ -19,7 +19,7 @@ import type { SendCodeResponse, VerifyCodeResponse } from '../types/index.js';
  */
 export const sendCode = async (phone: string): Promise<SendCodeResponse> => {
   const response = await apiClient.post(envConfig.endpoints.auth.sendCode, { phone });
-  return response as SendCodeResponse;
+  return response as unknown as SendCodeResponse;
 };
 
 /**
@@ -36,7 +36,7 @@ export const verifyCode = async (
     phone,
     code,
   });
-  const data = response as VerifyCodeResponse;
+  const data = response as unknown as VerifyCodeResponse;
 
   // Store auth data on successful verification
   if (data.success && data.token) {

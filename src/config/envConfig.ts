@@ -18,7 +18,7 @@ export const envConfig = {
   maxUploadSizeMB: parseInt(import.meta.env.VITE_MAX_UPLOAD_SIZE_MB as string, 10),
   enableLogs: import.meta.env.VITE_ENABLE_LOGS === 'true',
 
-  // Endpoints - Auth
+  // Endpoints - Phase 1 only (validated with Backend API Specification Phase 1)
   endpoints: {
     auth: {
       sendCode: import.meta.env.VITE_ENDPOINT_AUTH_SEND_CODE as string,
@@ -26,33 +26,20 @@ export const envConfig = {
     },
     user: {
       profile: import.meta.env.VITE_ENDPOINT_USER_PROFILE as string,
-      update: import.meta.env.VITE_ENDPOINT_USER_UPDATE as string,
-      uploadPhoto: import.meta.env.VITE_ENDPOINT_USER_UPLOAD_PHOTO as string,
+      create: import.meta.env['VITE_ENDPOINT_USER_CREATE'] as string,
+      upload: import.meta.env['VITE_ENDPOINT_USER_UPLOAD'] as string,
     },
     avatar: {
-      upload: import.meta.env.VITE_ENDPOINT_AVATAR_UPLOAD as string,
-      regenerate: import.meta.env.VITE_ENDPOINT_AVATAR_REGENERATE as string,
       get: import.meta.env.VITE_ENDPOINT_AVATAR_GET as string,
-    },
-    dress: {
-      getAll: import.meta.env.VITE_ENDPOINT_DRESSES_GET_ALL as string,
-      getById: import.meta.env.VITE_ENDPOINT_DRESS_GET_BY_ID as string,
-    },
-    pose: {
-      getAll: import.meta.env.VITE_ENDPOINT_POSES_GET_ALL as string,
+      generate: import.meta.env['VITE_ENDPOINT_AVATAR_GENERATE'] as string,
     },
     tryOn: {
       generate: import.meta.env.VITE_ENDPOINT_TRYON_GENERATE as string,
       getUserTryOns: import.meta.env.VITE_ENDPOINT_TRYON_GET_USER as string,
       delete: import.meta.env.VITE_ENDPOINT_TRYON_DELETE as string,
-      getById: import.meta.env.VITE_ENDPOINT_TRYON_GET_BY_ID as string,
-    },
-    share: {
-      get: import.meta.env.VITE_ENDPOINT_SHARE_GET as string,
     },
     appointment: {
       getUserAppointments: import.meta.env.VITE_ENDPOINT_APPOINTMENTS_GET_USER as string,
-      book: import.meta.env.VITE_ENDPOINT_APPOINTMENT_BOOK as string,
     },
   },
 } as const;

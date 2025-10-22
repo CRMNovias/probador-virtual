@@ -17,31 +17,31 @@ import type { UserProfile, CreateProfileRequest, UpdateProfileRequest, UploadPho
  */
 export const getProfile = async (): Promise<UserProfile> => {
   const response = await apiClient.get(envConfig.endpoints.user.profile);
-  return response as UserProfile;
+  return response as unknown as UserProfile;
 };
 
 /**
- * Create user profile
+ * Create user profile (Phase 1)
  * @param data - Profile creation data
  * @returns Promise with created user profile
  */
 export const createProfile = async (data: CreateProfileRequest): Promise<UserProfile> => {
-  const response = await apiClient.post(envConfig.endpoints.user.profile, data);
-  return response as UserProfile;
+  const response = await apiClient.post(envConfig.endpoints.user.create, data);
+  return response as unknown as UserProfile;
 };
 
 /**
  * Update user profile
+ * NOTE: Not available in Phase 1 - will be added in Phase 2
  * @param data - Profile update data
  * @returns Promise with updated user profile
  */
-export const updateProfile = async (data: UpdateProfileRequest): Promise<UserProfile> => {
-  const response = await apiClient.put(envConfig.endpoints.user.update, data);
-  return response as UserProfile;
+export const updateProfile = async (_data: UpdateProfileRequest): Promise<UserProfile> => {
+  throw new Error('updateProfile is not available in Phase 1');
 };
 
 /**
- * Upload user photo
+ * Upload user photo (Phase 1)
  * @param file - Image file to upload
  * @returns Promise with upload response
  */
@@ -49,11 +49,11 @@ export const uploadPhoto = async (file: File): Promise<UploadPhotoResponse> => {
   const formData = new FormData();
   formData.append('photo', file);
 
-  const response = await apiClient.post(envConfig.endpoints.user.uploadPhoto, formData, {
+  const response = await apiClient.post(envConfig.endpoints.user.upload, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
   });
 
-  return response as UploadPhotoResponse;
+  return response as unknown as UploadPhotoResponse;
 };
