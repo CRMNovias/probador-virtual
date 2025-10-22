@@ -8,8 +8,9 @@
  * Application route paths
  */
 export const routes = {
-  AUTH: '/',
-  AVATAR_CREATION: '/avatar/create',
+  HOME: '/',
+  AUTH: '/auth',
+  AVATAR_CREATION: '/avatar-creation',
   TRY_ON: '/try-on',
   GALLERY: '/gallery',
   APPOINTMENTS: '/appointments',

@@ -5,7 +5,7 @@
  */
 
 /**
- * User profile information
+ * User profile information (complete profile)
  */
 export interface UserProfile {
   id: string;
@@ -17,11 +17,21 @@ export interface UserProfile {
 }
 
 /**
+ * Basic user info from auth response (Phase 1 - Backend API Spec)
+ */
+export interface AuthUser {
+  id: string;
+  phone: string;
+  createdAt: string;
+}
+
+/**
  * Request to create a new user profile
  */
 export interface CreateProfileRequest {
+  phone: string;
   name: string;
-  email?: string;
+  email: string;
 }
 
 /**
@@ -42,19 +52,27 @@ export interface UploadPhotoResponse {
 }
 
 /**
- * Response from sending verification code
+ * Response from sending verification code (Phase 1 - Backend API Spec)
  */
 export interface SendCodeResponse {
   success: boolean;
+  data: {
+    phoneNumber: string;
+    expiresIn: number;
+    cooldownSeconds: number;
+  };
   message: string;
-  expiresIn: number; // seconds
 }
 
 /**
- * Response from verifying code
+ * Response from verifying code (Phase 1 - Backend API Spec)
  */
 export interface VerifyCodeResponse {
   success: boolean;
-  token: string;
-  user: UserProfile;
+  data: {
+    token: string;
+    expiresIn: number;
+    user: AuthUser;
+  };
+  message: string;
 }

@@ -1,15 +1,25 @@
 /**
- * App Component
- * 
- * Root application component
+ * App Component (Phase 1)
+ *
+ * Root application component that wraps the entire app with:
+ * - AuthProvider for authentication state
+ * - AppRouter for routing
+ *
+ * This component initializes the application and provides global context.
  */
 
+import React from 'react';
+import { AuthProvider } from './context/AuthContext.js';
+import { AppRouter } from './router.js';
+
+/**
+ * App Component
+ */
 export const App: React.FC = () => {
   return (
-    <div className="App">
-      <h1>Probador Virtual - Atelier de Bodas</h1>
-      <p>TODO: Implement router and layout</p>
-    </div>
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
   );
 };
 

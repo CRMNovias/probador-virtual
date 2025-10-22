@@ -9,7 +9,6 @@
 
 import { apiClient } from './apiClient.js';
 import { envConfig } from '../config/envConfig.js';
-import { STORAGE_KEYS } from '../constants/storageKeys.js';
 import type { SendCodeResponse, VerifyCodeResponse } from '../types/index.js';
 
 /**
@@ -27,6 +26,9 @@ export const sendCode = async (phone: string): Promise<SendCodeResponse> => {
  * @param phone - Phone number
  * @param code - 6-digit verification code
  * @returns Promise with verification response including token and user
+ *
+ * NOTE: This service does NOT store the token/user in localStorage.
+ * That is handled by AuthContext.login() to maintain separation of concerns.
  */
 export const verifyCode = async (
   phone: string,
@@ -36,22 +38,5 @@ export const verifyCode = async (
     phone,
     code,
   });
-  const data = response as unknown as VerifyCodeResponse;
-
-  // Store auth data on successful verification
-  if (data.success && data.token) {
-    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
-    localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(data.user));
-  }
-
-  return data;
-};
-
-/**
- * Logout user by clearing auth data
- */
-export const logout = (): void => {
-  localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-  localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
-  localStorage.removeItem(STORAGE_KEYS.AVATAR_URL);
+  return response as unknown as VerifyCodeResponse;
 };
