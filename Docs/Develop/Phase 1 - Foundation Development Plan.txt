@@ -2,9 +2,9 @@ PHASE 1: FOUNDATION (MVP) - FRONTEND DEVELOPMENT PLAN
 Probador Virtual de Vestidos de Novia - Atelier de Bodas
 
 ================================================================================
-VERSION: 2.0
+VERSION: 2.1
 LAST UPDATED: 2025-10-17
-STATUS: In Progress (1/6 completed)
+STATUS: In Progress (2/6 completed)
 PROJECT SCOPE: FRONTEND ONLY
 ================================================================================
 
@@ -25,7 +25,7 @@ application. This phase creates the core infrastructure required for:
 
 OBJECTIVES:
 - ✅ Set up React + TypeScript + Vite project
-- ⬜ Create organized folder structure following best practices
+- ✅ Create organized folder structure following best practices
 - ⬜ Configure API client with interceptors for backend communication
 - ⬜ Implement authentication UI flow (phone + SMS code)
 - ⬜ Set up React Router with protected routes
@@ -83,7 +83,7 @@ TASK 1: PROJECT SETUP ✅ COMPLETED
 
 
 ================================================================================
-TASK 2: FOLDER STRUCTURE AND CONFIG ⬜ PENDING
+TASK 2: FOLDER STRUCTURE AND CONFIG ✅ COMPLETED
 ================================================================================
 
 2.1 Frontend Folder Structure
@@ -193,107 +193,87 @@ src/
 
 Actions Required:
 -----------------
-□ Create all folder structure above
-□ Create placeholder files with basic TypeScript interfaces
-□ Add JSDoc comments explaining purpose of each file
-□ Ensure all files use .tsx extension for React components
-□ Ensure all files use .ts extension for utilities/services
-□ All files must export named exports (not default exports)
+✅ Create all folder structure above
+✅ Create placeholder files with basic TypeScript interfaces
+✅ Add JSDoc comments explaining purpose of each file
+✅ Ensure all files use .tsx extension for React components
+✅ Ensure all files use .ts extension for utilities/services
+✅ All files must export named exports (not default exports)
+
+COMPLETION NOTES (2025-10-17):
+- Complete folder structure created with all directories
+- All placeholder files created with JSDoc documentation
+- Proper file extensions applied (.tsx for components, .ts for utilities)
+- Named exports used throughout (except App.tsx which has default export for compatibility)
 
 
 2.2 Configuration Files
 ------------------------
 
 A. Environment Variables
-□ Create .env.development:
+✅ Create .env.development:
    # Base API Configuration
    VITE_API_BASE_URL=http://localhost:3000/api
    VITE_API_TIMEOUT=30000
    VITE_MAX_UPLOAD_SIZE_MB=10
    VITE_ENABLE_LOGS=true
 
-   # Auth Endpoints
+   # Auth Endpoints (Phase 1)
    VITE_ENDPOINT_AUTH_SEND_CODE=/auth/send-code
    VITE_ENDPOINT_AUTH_VERIFY_CODE=/auth/verify-code
 
-   # User Endpoints
+   # User Endpoints (Phase 1)
    VITE_ENDPOINT_USER_PROFILE=/user/profile
-   VITE_ENDPOINT_USER_UPDATE=/user/profile
-   VITE_ENDPOINT_USER_UPLOAD_PHOTO=/user/upload-photo
+   VITE_ENDPOINT_USER_CREATE=/user/profile
+   VITE_ENDPOINT_USER_UPLOAD=/user/upload
 
-   # Avatar Endpoints
-   VITE_ENDPOINT_AVATAR_UPLOAD=/avatar/upload
-   VITE_ENDPOINT_AVATAR_REGENERATE=/avatar/regenerate
+   # Avatar Endpoints (Phase 1)
    VITE_ENDPOINT_AVATAR_GET=/avatar
+   VITE_ENDPOINT_AVATAR_GENERATE=/avatar/generate
 
-   # Dress Endpoints
-   VITE_ENDPOINT_DRESSES_GET_ALL=/dresses
-   VITE_ENDPOINT_DRESS_GET_BY_ID=/dress
-
-   # Pose Endpoints
-   VITE_ENDPOINT_POSES_GET_ALL=/poses
-
-   # Try-On Endpoints
+   # Try-On Endpoints (Phase 1)
    VITE_ENDPOINT_TRYON_GENERATE=/tryons/generate
    VITE_ENDPOINT_TRYON_GET_USER=/tryons/user
    VITE_ENDPOINT_TRYON_DELETE=/tryons
-   VITE_ENDPOINT_TRYON_GET_BY_ID=/tryons
 
-   # Share Endpoints
-   VITE_ENDPOINT_SHARE_GET=/share
-
-   # Appointment Endpoints
+   # Appointment Endpoints (Phase 1)
    VITE_ENDPOINT_APPOINTMENTS_GET_USER=/appointments/user
-   VITE_ENDPOINT_APPOINTMENT_BOOK=/appointments/book
 
-□ Create .env.production:
+✅ Create .env.production:
    # Base API Configuration
    VITE_API_BASE_URL=https://api.atelierdebodas.com/api
    VITE_API_TIMEOUT=60000
    VITE_MAX_UPLOAD_SIZE_MB=5
    VITE_ENABLE_LOGS=false
 
-   # Auth Endpoints
+   # Auth Endpoints (Phase 1)
    VITE_ENDPOINT_AUTH_SEND_CODE=/auth/send-code
    VITE_ENDPOINT_AUTH_VERIFY_CODE=/auth/verify-code
 
-   # User Endpoints
+   # User Endpoints (Phase 1)
    VITE_ENDPOINT_USER_PROFILE=/user/profile
-   VITE_ENDPOINT_USER_UPDATE=/user/profile
-   VITE_ENDPOINT_USER_UPLOAD_PHOTO=/user/upload-photo
+   VITE_ENDPOINT_USER_CREATE=/user/profile
+   VITE_ENDPOINT_USER_UPLOAD=/user/upload
 
-   # Avatar Endpoints
-   VITE_ENDPOINT_AVATAR_UPLOAD=/avatar/upload
-   VITE_ENDPOINT_AVATAR_REGENERATE=/avatar/regenerate
+   # Avatar Endpoints (Phase 1)
    VITE_ENDPOINT_AVATAR_GET=/avatar
+   VITE_ENDPOINT_AVATAR_GENERATE=/avatar/generate
 
-   # Dress Endpoints
-   VITE_ENDPOINT_DRESSES_GET_ALL=/dresses
-   VITE_ENDPOINT_DRESS_GET_BY_ID=/dress
-
-   # Pose Endpoints
-   VITE_ENDPOINT_POSES_GET_ALL=/poses
-
-   # Try-On Endpoints
+   # Try-On Endpoints (Phase 1)
    VITE_ENDPOINT_TRYON_GENERATE=/tryons/generate
    VITE_ENDPOINT_TRYON_GET_USER=/tryons/user
    VITE_ENDPOINT_TRYON_DELETE=/tryons
-   VITE_ENDPOINT_TRYON_GET_BY_ID=/tryons
 
-   # Share Endpoints
-   VITE_ENDPOINT_SHARE_GET=/share
-
-   # Appointment Endpoints
+   # Appointment Endpoints (Phase 1)
    VITE_ENDPOINT_APPOINTMENTS_GET_USER=/appointments/user
-   VITE_ENDPOINT_APPOINTMENT_BOOK=/appointments/book
 
-□ Create .env.example (template for developers with all endpoints)
+✅ Create .env.example (template for developers with all endpoints)
 
 B. Environment Config Wrapper (src/config/envConfig.ts)
-□ Implement envConfig object with validation
-□ Throw errors if required variables are missing
-□ Parse integer values correctly
-□ Export as const object
+✅ Implement envConfig object with validation
+✅ Throw errors if required variables are missing
+✅ Parse integer values correctly
+✅ Export as const object
 
 Example:
 ```typescript
@@ -304,7 +284,7 @@ export const envConfig = {
   maxUploadSizeMB: parseInt(import.meta.env.VITE_MAX_UPLOAD_SIZE_MB, 10),
   enableLogs: import.meta.env.VITE_ENABLE_LOGS === 'true',
 
-  // Endpoints - Auth
+  // Endpoints - Phase 1 only (validated with Backend API Spec)
   endpoints: {
     auth: {
       sendCode: import.meta.env.VITE_ENDPOINT_AUTH_SEND_CODE,
@@ -312,33 +292,20 @@ export const envConfig = {
     },
     user: {
       profile: import.meta.env.VITE_ENDPOINT_USER_PROFILE,
-      update: import.meta.env.VITE_ENDPOINT_USER_UPDATE,
-      uploadPhoto: import.meta.env.VITE_ENDPOINT_USER_UPLOAD_PHOTO,
+      create: import.meta.env.VITE_ENDPOINT_USER_CREATE,
+      upload: import.meta.env.VITE_ENDPOINT_USER_UPLOAD,
     },
     avatar: {
-      upload: import.meta.env.VITE_ENDPOINT_AVATAR_UPLOAD,
-      regenerate: import.meta.env.VITE_ENDPOINT_AVATAR_REGENERATE,
       get: import.meta.env.VITE_ENDPOINT_AVATAR_GET,
-    },
-    dress: {
-      getAll: import.meta.env.VITE_ENDPOINT_DRESSES_GET_ALL,
-      getById: import.meta.env.VITE_ENDPOINT_DRESS_GET_BY_ID,
-    },
-    pose: {
-      getAll: import.meta.env.VITE_ENDPOINT_POSES_GET_ALL,
+      generate: import.meta.env.VITE_ENDPOINT_AVATAR_GENERATE,
     },
     tryOn: {
       generate: import.meta.env.VITE_ENDPOINT_TRYON_GENERATE,
       getUserTryOns: import.meta.env.VITE_ENDPOINT_TRYON_GET_USER,
       delete: import.meta.env.VITE_ENDPOINT_TRYON_DELETE,
-      getById: import.meta.env.VITE_ENDPOINT_TRYON_GET_BY_ID,
-    },
-    share: {
-      get: import.meta.env.VITE_ENDPOINT_SHARE_GET,
     },
     appointment: {
       getUserAppointments: import.meta.env.VITE_ENDPOINT_APPOINTMENTS_GET_USER,
-      book: import.meta.env.VITE_ENDPOINT_APPOINTMENT_BOOK,
     },
   },
 } as const;
@@ -364,22 +331,22 @@ validateEndpoints(envConfig.endpoints);
 ```
 
 C. API Configuration (src/config/apiConfig.ts)
-□ Define ApiConfig interface
-□ Export apiConfig object with:
+✅ Define ApiConfig interface
+✅ Export apiConfig object with:
    - baseUrl (from envConfig)
    - timeout (from envConfig)
    - retryAttempts: 3
    - headers: default headers
 
 D. App Configuration (src/config/appConfig.ts)
-□ Define app-wide constants:
+✅ Define app-wide constants:
    - maxUploadSizeMB
    - allowedImageTypes: ['image/jpeg', 'image/png']
    - codeLength: 6
    - codeExpirationMinutes: 5
 
 E. Constants Files
-□ Create src/constants/routes.ts:
+✅ Create src/constants/routes.ts:
    export const routes = {
      AUTH: '/',
      AVATAR_CREATION: '/avatar/create',
@@ -389,7 +356,7 @@ E. Constants Files
      SHARE: '/share/:id',
    } as const;
 
-□ Create src/constants/apiEndpoints.ts:
+✅ Create src/constants/apiEndpoints.ts:
    NOTE: This file is DEPRECATED. Use envConfig.endpoints instead.
 
    All endpoints are now defined in environment variables and accessed via:
@@ -401,14 +368,18 @@ E. Constants Files
    This ensures all endpoints can be configured per environment without
    changing code.
 
-□ Create src/constants/storageKeys.ts:
+   IMPORTANT: Phase 1 only includes endpoints validated in "Backend API
+   Specification - Phase 1.md". Other endpoints (dresses, poses, share,
+   book appointments) will be added in Phase 2.
+
+✅ Create src/constants/storageKeys.ts:
    export const STORAGE_KEYS = {
      AUTH_TOKEN: 'auth_token',
      USER_PROFILE: 'user_profile',
      AVATAR_URL: 'avatar_url',
    } as const;
 
-□ Create src/constants/errorMessages.ts (Spanish messages):
+✅ Create src/constants/errorMessages.ts (Spanish messages):
    export const errorMessages = {
      // Auth errors
      AUTH_INVALID_PHONE: 'Número de teléfono no válido.',
@@ -476,7 +447,7 @@ E. Constants Files
 2.3 Type Definitions
 --------------------
 
-□ Create src/types/api.ts:
+✅ Create src/types/api.ts:
 ```typescript
 export interface ApiResponse<T> {
   success: boolean;
@@ -491,7 +462,7 @@ export interface ApiError {
 }
 ```
 
-□ Create src/types/user.ts:
+✅ Create src/types/user.ts:
 ```typescript
 export interface UserProfile {
   id: string;
@@ -519,7 +490,7 @@ export interface UploadPhotoResponse {
 }
 ```
 
-□ Create src/types/dress.ts:
+✅ Create src/types/dress.ts:
 ```typescript
 export interface Dress {
   id: string;
@@ -529,7 +500,7 @@ export interface Dress {
 }
 ```
 
-□ Create src/types/pose.ts:
+✅ Create src/types/pose.ts:
 ```typescript
 export interface Pose {
   id: string;
@@ -539,7 +510,7 @@ export interface Pose {
 }
 ```
 
-□ Create src/types/avatar.ts:
+✅ Create src/types/avatar.ts:
 ```typescript
 export interface Avatar {
   id: string;
@@ -555,7 +526,7 @@ export interface UploadAvatarResponse {
 }
 ```
 
-□ Create src/types/tryOn.ts:
+✅ Create src/types/tryOn.ts:
 ```typescript
 export interface TryOn {
   id: string;
@@ -589,7 +560,7 @@ export interface UploadTryOnResponse {
 }
 ```
 
-□ Create src/types/appointment.ts:
+✅ Create src/types/appointment.ts:
 ```typescript
 export type AppointmentStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled';
 
@@ -607,7 +578,7 @@ export interface AppointmentsResponse {
 }
 ```
 
-□ Create src/types/index.ts (barrel export):
+✅ Create src/types/index.ts (barrel export):
 ```typescript
 export type * from './api.js';
 export type * from './user.js';
@@ -720,8 +691,8 @@ export { apiClient };
 ```
 
 
-3.2 Service Layer Implementation
----------------------------------
+3.2 Service Layer Implementation (Phase 1 Only)
+-----------------------------------------------
 
 All API calls should go through service files. Each service should:
 - Import the apiClient
@@ -729,17 +700,17 @@ All API calls should go through service files. Each service should:
 - Handle service-specific errors
 - Return typed responses
 
-Create the following services:
+Create the following services for Phase 1:
 
-A. authService.ts
------------------
+A. authService.ts (Phase 1)
+---------------------------
 □ sendCode(phone: string): Promise<SendCodeResponse>
-   - POST to /auth/send-code
+   - POST to envConfig.endpoints.auth.sendCode
    - Handle response
    - Return formatted response
 
 □ verifyCode(phone: string, code: string): Promise<VerifyCodeResponse>
-   - POST to /auth/verify-code
+   - POST to envConfig.endpoints.auth.verifyCode
    - Store token in localStorage on success
    - Store user in localStorage on success
    - Return user + token
@@ -776,37 +747,38 @@ export const verifyCode = async (
 };
 ```
 
-B. userService.ts
------------------
+B. userService.ts (Phase 1)
+---------------------------
 □ getProfile(): Promise<UserProfile>
-□ createProfile(data: CreateProfileRequest): Promise<UserProfile>
+   - GET to envConfig.endpoints.user.profile
+□ createProfile(data: CreateProfileRequest): Promise<CreateProfileResponse>
+   - POST to envConfig.endpoints.user.create
 □ uploadPhoto(file: File): Promise<UploadPhotoResponse>
+   - POST to envConfig.endpoints.user.upload (multipart/form-data)
 
-C. dressService.ts
-------------------
-□ getDressById(id: string): Promise<Dress>
-□ getAllDresses(): Promise<Dress[]>
-
-D. poseService.ts
------------------
-□ getAllPoses(): Promise<Pose[]>
-
-E. avatarService.ts
--------------------
-□ uploadAvatar(file: File): Promise<UploadAvatarResponse>
-□ regenerateAvatar(): Promise<UploadAvatarResponse>
+C. avatarService.ts (Phase 1)
+------------------------------
 □ getAvatar(): Promise<Avatar>
+   - GET to envConfig.endpoints.avatar.get
+□ generateAvatar(prompt: string): Promise<GenerateAvatarResponse>
+   - POST to envConfig.endpoints.avatar.generate
 
-F. tryOnService.ts
-------------------
-□ generateTryOn(data: FormData): Promise<UploadTryOnResponse>
-□ getUserTryOns(): Promise<TryOnCategory[]>
-□ getTryOnById(id: string): Promise<TryOn>
+D. tryOnService.ts (Phase 1)
+-----------------------------
+□ generateTryOn(dressId: string, prompt: string): Promise<GenerateTryOnResponse>
+   - POST to envConfig.endpoints.tryOn.generate
+□ getUserTryOns(): Promise<TryOnsByDress[]>
+   - GET to envConfig.endpoints.tryOn.getUserTryOns
 □ deleteTryOn(id: string): Promise<void>
+   - DELETE to envConfig.endpoints.tryOn.delete
 
-G. appointmentService.ts
--------------------------
+E. appointmentService.ts (Phase 1)
+-----------------------------------
 □ getUserAppointments(): Promise<AppointmentsResponse>
+   - GET to envConfig.endpoints.appointment.getUserAppointments
+
+NOTE: dressService.ts and poseService.ts will be added in Phase 2 when
+those endpoints are available from the backend.
 
 
 ================================================================================
