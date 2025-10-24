@@ -93,11 +93,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * Clears all auth data from state and localStorage
    */
   const logout = useCallback(() => {
+    // Clear state
     setToken(null);
     setUser(null);
+
+    // Clear ALL localStorage keys (complete cleanup)
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
     localStorage.removeItem(STORAGE_KEYS.AVATAR_URL);
+    localStorage.removeItem(STORAGE_KEYS.LAST_SELECTED_DRESS);
+    localStorage.removeItem(STORAGE_KEYS.LAST_SELECTED_POSE);
+
+    // Also clear avatar_info from AppContext
+    localStorage.removeItem('avatar_info');
+
+    // Clear sessionStorage (temp phone, code sent timestamp)
+    sessionStorage.clear();
+
+    console.log('[AuthContext] Logout completed - all data cleared');
   }, []);
 
   /**

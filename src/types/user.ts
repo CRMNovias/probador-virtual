@@ -35,6 +35,19 @@ export interface CreateProfileRequest {
 }
 
 /**
+ * Response from creating user profile (Phase 1 - Backend returns complete profile)
+ */
+export interface CreateProfileResponse {
+  success: boolean;
+  data: {
+    token: string;
+    expiresIn: number;
+    user: UserProfile;
+  };
+  message: string;
+}
+
+/**
  * Request to update user profile
  */
 export interface UpdateProfileRequest {
@@ -72,6 +85,7 @@ export interface VerifyCodeResponse {
   data: {
     token: string;
     expiresIn: number;
+    hasProfile: boolean;  // Indicates if user has completed profile (name + email)
     user: AuthUser;
   };
   message: string;

@@ -1,140 +1,206 @@
 /**
- * AvatarCreationPage (Phase 1 - Placeholder)
+ * AvatarCreationPage (Phase 2 - Complete Implementation)
  *
  * Avatar creation flow page where users upload passport-style photos
- * and generate their full-body avatar.
- *
- * PHASE 1: Basic layout and structure
- * PHASE 2: Full implementation with photo upload and AI generation
+ * and generate their full-body avatar with AI.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../components/layout/Header.js';
-import { Button } from '../components/shared/Button.js';
+import { Loader } from '../components/shared/Loader.js';
+import { AvatarComparison } from '../components/avatar/AvatarComparison.js';
+import { uploadPhoto } from '../services/userService.js';
+import { generateAvatar } from '../services/avatarService.js';
+import { envConfig } from '../config/envConfig.js';
+import { routes } from '../constants/routes.js';
+
+const CheckIcon = ({ className = '' }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <polyline points="20 6 9 17 4 12"></polyline>
+  </svg>
+);
+
+const UploadIcon = ({ className = '' }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+    <polyline points="17 8 12 3 7 8"></polyline>
+    <line x1="12" y1="3" x2="12" y2="15"></line>
+  </svg>
+);
 
 /**
  * AvatarCreationPage Component
  */
 export const AvatarCreationPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const dressId = searchParams.get('dressId');
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  // Preview state
+  const [showComparison, setShowComparison] = useState(false);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>('');
+  const [generatedAvatarUrl, setGeneratedAvatarUrl] = useState<string>('');
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validation
+    if (!file.type.startsWith('image/')) {
+      setError('Por favor selecciona un archivo de imagen');
+      return;
+    }
+
+    const maxSizeMB = envConfig.maxUploadSizeMB;
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      setError(`La imagen es demasiado grande. Máximo ${maxSizeMB}MB`);
+      return;
+    }
+
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      // Create local URL for uploaded photo preview
+      const localPhotoUrl = URL.createObjectURL(file);
+      setUploadedPhotoUrl(localPhotoUrl);
+
+      // Step 1: Upload photo
+      setLoadingMessage('Subiendo foto...');
+      const uploadResponse = await uploadPhoto(file);
+      console.log('[AvatarCreation] Upload response:', uploadResponse);
+
+      // Step 2: Generate avatar
+      setLoadingMessage('Nuestra IA está creando tu avatar...');
+      const prompt = 'Generate a full-body avatar from this passport-style photo';
+      const avatarResponse = await generateAvatar(prompt);
+      console.log('[AvatarCreation] Avatar response:', avatarResponse);
+
+      // Extract avatar URL from response
+      const avatarUrl = (avatarResponse as any).avatarUrl || (avatarResponse as any).url || '';
+      setGeneratedAvatarUrl(avatarUrl);
+
+      // Step 3: Show comparison view
+      setIsLoading(false);
+      setShowComparison(true);
+    } catch (err) {
+      console.error('[AvatarCreation] Error:', err);
+      setError(err instanceof Error ? err.message : 'Error al generar avatar');
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handle continue to try-on
+   */
+  const handleContinue = (): void => {
+    const destination = dressId ? `${routes.TRY_ON}?dressId=${dressId}` : routes.TRY_ON;
+    navigate(destination, { replace: true });
+  };
+
+  /**
+   * Handle regenerate avatar
+   */
+  const handleRegenerate = (): void => {
+    setShowComparison(false);
+    setUploadedPhotoUrl('');
+    setGeneratedAvatarUrl('');
+    setError(null);
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader text={loadingMessage} />
+        </main>
+      </div>
+    );
+  }
+
+  // Comparison view
+  if (showComparison && uploadedPhotoUrl && generatedAvatarUrl) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+        <Header />
+        <main className="flex-1 flex items-center justify-center p-4">
+          <AvatarComparison
+            uploadedPhotoUrl={uploadedPhotoUrl}
+            generatedAvatarUrl={generatedAvatarUrl}
+            onContinue={handleContinue}
+            onRegenerate={handleRegenerate}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  // Upload view
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf9f7]">
-      {/* Header */}
+    <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
       <Header />
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-2xl">
-        {/* Page Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-serif text-[#4a3f35] mb-2">
-            Crear Avatar
-          </h1>
-          <p className="text-gray-600">
-            Sube una foto tipo pasaporte para generar tu avatar de cuerpo completo
+      <main className="flex-1 flex items-center justify-center p-4 md:p-8">
+        <div className="w-full flex flex-col items-center text-center">
+          <h1 className="text-4xl font-serif text-[#4a3f35] mb-4">Crea tu avatar</h1>
+          <p className="text-[#6e5f53] mb-8 font-light max-w-md">
+            Sube una foto tipo carnet para generar un modelo virtual de cuerpo entero. La IA hará el resto.
           </p>
-        </div>
 
-        {/* Placeholder Content */}
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <div className="text-center">
-            {/* Upload Icon Placeholder */}
-            <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
-              <svg
-                className="w-16 h-16 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+            {/* Upload Zone */}
+            <div className="flex flex-col items-center justify-center bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <input
+                type="file"
+                id="photo-upload"
+                className="hidden"
+                onChange={handleFileChange}
+                accept="image/jpeg,image/png,image/webp"
+              />
+              <label
+                htmlFor="photo-upload"
+                className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+                <UploadIcon />
+                <p className="text-gray-500 font-semibold mt-4">Pulsa para subir una foto</p>
+                <p className="text-gray-400 text-sm">o arrástrala aquí</p>
+              </label>
+
+              {error && (
+                <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
             </div>
 
-            <h2 className="text-xl font-medium text-gray-900 mb-4">
-              Funcionalidad Pendiente
-            </h2>
-
-            <p className="text-gray-600 mb-6">
-              Esta funcionalidad se implementará en la Fase 2 del proyecto.
-              <br />
-              Incluirá:
-            </p>
-
-            <ul className="text-left text-gray-600 space-y-2 mb-8 max-w-md mx-auto">
-              <li className="flex items-start">
-                <svg
-                  className="w-5 h-5 text-[#8C6F5A] mr-2 mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Subida de foto tipo pasaporte
-              </li>
-              <li className="flex items-start">
-                <svg
-                  className="w-5 h-5 text-[#8C6F5A] mr-2 mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Generación de avatar de cuerpo completo con IA
-              </li>
-              <li className="flex items-start">
-                <svg
-                  className="w-5 h-5 text-[#8C6F5A] mr-2 mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Vista previa del avatar generado
-              </li>
-              <li className="flex items-start">
-                <svg
-                  className="w-5 h-5 text-[#8C6F5A] mr-2 mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Opción de regenerar avatar
-              </li>
-            </ul>
-
-            <Button variant="primary" size="lg" disabled>
-              Próximamente
-            </Button>
+            {/* Recommendations */}
+            <div className="bg-[#F8F7F5] p-6 rounded-xl text-left">
+              <h3 className="text-lg font-semibold text-[#4a3f35] mb-4">Recomendaciones:</h3>
+              <ul className="space-y-3 text-[#6e5f53] font-light">
+                <li className="flex items-start gap-3">
+                  <CheckIcon className="w-5 h-5 text-[#8C6F5A] mt-1 flex-shrink-0" />
+                  <span>Foto tipo carnet, con el rostro centrado y mirando al frente.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckIcon className="w-5 h-5 text-[#8C6F5A] mt-1 flex-shrink-0" />
+                  <span>Buena iluminación, sin sombras pronunciadas en la cara.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckIcon className="w-5 h-5 text-[#8C6F5A] mt-1 flex-shrink-0" />
+                  <span>
+                    Si el vestido tiene hombros descubiertos, una foto similar ayudará a un mejor resultado.
+                  </span>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
-
-        {/* Info Box */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>Nota de Desarrollo:</strong> Esta es la página de creación
-            de avatar. En Phase 2, los usuarios podrán subir una foto y generar
-            su avatar personalizado para probar vestidos virtualmente.
-          </p>
         </div>
       </main>
     </div>

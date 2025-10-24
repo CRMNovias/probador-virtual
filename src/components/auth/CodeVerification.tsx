@@ -26,8 +26,9 @@ export interface CodeVerificationProps {
 
   /**
    * Callback when code is successfully verified
+   * @param needsRegistration - true if user needs to complete registration
    */
-  onVerified: () => void;
+  onVerified: (needsRegistration: boolean) => void;
 
   /**
    * Callback to go back to phone input
@@ -150,10 +151,10 @@ export const CodeVerification: React.FC<CodeVerificationProps> = ({
    */
   const submitCode = async (fullCode: string): Promise<void> => {
     const cleanedPhone = phone.replace(/\s/g, '');
-    const success = await verifyCodeHandler(cleanedPhone, fullCode);
+    const result = await verifyCodeHandler(cleanedPhone, fullCode);
 
-    if (success) {
-      onVerified();
+    if (result.success) {
+      onVerified(result.needsRegistration);
     } else {
       // Clear code on error
       setCode(Array(CODE_LENGTH).fill(''));

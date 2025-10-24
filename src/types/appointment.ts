@@ -17,6 +17,7 @@ export interface Appointment {
   userId: string;
   date: string; // ISO 8601 date string
   time: string; // HH:MM format
+  dateTime: string; // ISO 8601 combined date-time string (for compatibility)
   status: AppointmentStatus;
   notes: string | null;
   createdAt: string;

@@ -15,6 +15,14 @@ import { errorMessages } from '../constants/errorMessages.js';
 import type { AxiosError } from 'axios';
 
 /**
+ * Verify code result
+ */
+export interface VerifyCodeResult {
+  success: boolean;
+  needsRegistration: boolean;
+}
+
+/**
  * Auth flow state and handlers
  */
 export interface UseAuthFlowReturn {
@@ -35,8 +43,9 @@ export interface UseAuthFlowReturn {
 
   /**
    * Verify code and login
+   * Returns object with success flag and needsRegistration flag
    */
-  verifyCodeHandler: (phone: string, code: string) => Promise<boolean>;
+  verifyCodeHandler: (phone: string, code: string) => Promise<VerifyCodeResult>;
 
   /**
    * Clear error message
@@ -135,10 +144,10 @@ export const useAuthFlow = (): UseAuthFlowReturn => {
 
   /**
    * Verify code and login handler
-   * @returns true if successful, false if failed
+   * @returns VerifyCodeResult with success flag and needsRegistration flag
    */
   const verifyCodeHandler = useCallback(
-    async (phone: string, code: string): Promise<boolean> => {
+    async (phone: string, code: string): Promise<VerifyCodeResult> => {
       setIsLoading(true);
       setError(null);
 
@@ -148,7 +157,7 @@ export const useAuthFlow = (): UseAuthFlowReturn => {
         // Verify response has required data
         if (!response.success || !response.data?.token || !response.data?.user) {
           setError(errorMessages.AUTH_INVALID_CODE);
-          return false;
+          return { success: false, needsRegistration: false };
         }
 
         // Convert AuthUser to UserProfile with defaults
@@ -163,11 +172,23 @@ export const useAuthFlow = (): UseAuthFlowReturn => {
 
         // Login with token and user data
         login(response.data.token, userProfile);
-        return true;
+
+        // Check if user needs registration using backend's hasProfile flag
+        // hasProfile: true = user has completed name/email registration
+        // hasProfile: false = user needs to complete registration
+        const needsRegistration = !response.data.hasProfile;
+
+        console.log('[useAuthFlow] Registration check:', {
+          hasProfile: response.data.hasProfile,
+          needsRegistration,
+          userId: response.data.user.id
+        });
+
+        return { success: true, needsRegistration };
       } catch (err) {
         const errorMsg = getErrorMessage(err);
         setError(errorMsg);
-        return false;
+        return { success: false, needsRegistration: false };
       } finally {
         setIsLoading(false);
       }

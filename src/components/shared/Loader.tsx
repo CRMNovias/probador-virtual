@@ -46,7 +46,8 @@ const getSizeClasses = (size: LoaderProps['size']): string => {
 };
 
 /**
- * Loader Component
+ * Loader Component - UX Mockup Design
+ * Features: Sparkles icon + progress bar animation
  */
 export const Loader: React.FC<LoaderProps> = ({
   text,
@@ -55,27 +56,21 @@ export const Loader: React.FC<LoaderProps> = ({
 }) => {
   const sizeClasses = getSizeClasses(size);
 
-  // Spinner SVG
-  const spinner = (
+  // Sparkles Icon (from mockup)
+  const sparklesIcon = (
     <svg
-      className={`animate-spin ${sizeClasses} text-[#8C6F5A]`}
       xmlns="http://www.w3.org/2000/svg"
-      fill="none"
+      className={`${sizeClasses} text-[#8C6F5A] animate-pulse`}
       viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
     >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      ></circle>
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      ></path>
+      <path d="M12 2L9.8 8.6L2 9.4L7.4 14.4L6.2 21.8L12 18.2L17.8 21.8L16.6 14.4L22 9.4L14.2 8.6L12 2z" />
+      <path d="M5 3v4" />
+      <path d="M19 17v4" />
+      <path d="M3 5h4" />
+      <path d="M17 19h4" />
     </svg>
   );
 
@@ -83,19 +78,22 @@ export const Loader: React.FC<LoaderProps> = ({
   if (inline) {
     return (
       <span className="inline-flex items-center gap-2">
-        {spinner}
+        {sparklesIcon}
         {text && <span className="text-sm">{text}</span>}
       </span>
     );
   }
 
-  // Centered variant (for full screen loading)
+  // Centered variant (for full screen loading) - Mockup design
   return (
-    <div className="flex flex-col items-center justify-center min-h-[200px] gap-4">
-      {spinner}
-      {text && (
-        <p className="text-gray-600 text-center max-w-md">{text}</p>
-      )}
+    <div className="flex flex-col items-center justify-center gap-4 text-center text-[#8C6F5A]">
+      {sparklesIcon}
+      {text && <p className="text-lg font-light">{text}</p>}
+
+      {/* Progress Bar (animated) */}
+      <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-[#EAE0D5] to-[#D4C8BE] animate-loader-progress"></div>
+      </div>
     </div>
   );
 };

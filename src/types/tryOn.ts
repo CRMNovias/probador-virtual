@@ -37,7 +37,7 @@ export interface TryOnCategory {
   dressId: string;
   dressName: string;
   dressImageUrl: string;
-  images: TryOnImage[];
+  tryOns: TryOnImage[];
 }
 
 /**
@@ -56,5 +56,6 @@ export interface UploadTryOnResponse {
  */
 export interface GenerateTryOnRequest {
   dressId: string;
-  poseId: string;
+  poseId?: string; // Optional - can use prompt instead
+  prompt?: string; // Optional - AI generation prompt for custom poses
 }

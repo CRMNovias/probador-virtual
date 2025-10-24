@@ -17,12 +17,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PhoneInput } from '../components/auth/PhoneInput.js';
 import { CodeVerification } from '../components/auth/CodeVerification.js';
+import { UserRegistration } from '../components/auth/UserRegistration.js';
 import { useAuth } from '../context/AuthContext.js';
 
 /**
  * Auth steps
  */
-type AuthStep = 'phone' | 'code';
+type AuthStep = 'phone' | 'code' | 'registration';
 
 /**
  * AuthPage Component
@@ -35,9 +36,10 @@ export const AuthPage: React.FC = () => {
 
   /**
    * Redirect if already authenticated
+   * IMPORTANT: Don't redirect if user is in registration step
    */
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
+    if (!isLoading && isAuthenticated && user && currentStep !== 'registration') {
       // If user has avatar, go to try-on page
       // Otherwise, go to avatar creation
       if (user.hasAvatar) {
@@ -46,7 +48,7 @@ export const AuthPage: React.FC = () => {
         navigate('/avatar-creation', { replace: true });
       }
     }
-  }, [isAuthenticated, isLoading, user, navigate]);
+  }, [isAuthenticated, isLoading, user, navigate, currentStep]);
 
   /**
    * Handle code sent successfully
@@ -59,11 +61,24 @@ export const AuthPage: React.FC = () => {
 
   /**
    * Handle code verified successfully
-   * Navigate to avatar creation page
+   * Check if user needs to complete registration
    */
-  const handleCodeVerified = (): void => {
-    // Navigation will be handled by the useEffect above
-    // (after AuthContext updates isAuthenticated)
+  const handleCodeVerified = (needsRegistration: boolean): void => {
+    if (needsRegistration) {
+      // New user - show registration form
+      setCurrentStep('registration');
+    } else {
+      // Existing user - navigate based on avatar status
+      // Navigation will be handled by the useEffect above
+      navigate('/avatar-creation', { replace: true });
+    }
+  };
+
+  /**
+   * Handle registration completed
+   * Navigate to avatar creation
+   */
+  const handleRegistrationCompleted = (): void => {
     navigate('/avatar-creation', { replace: true });
   };
 
@@ -108,6 +123,16 @@ export const AuthPage: React.FC = () => {
               phone={phoneNumber}
               onVerified={handleCodeVerified}
               onBack={handleBackToPhone}
+            />
+          </div>
+        )}
+
+        {/* Step 3: User Registration (only for new users) */}
+        {currentStep === 'registration' && (
+          <div className="animate-fadeIn">
+            <UserRegistration
+              phone={phoneNumber}
+              onCompleted={handleRegistrationCompleted}
             />
           </div>
         )}

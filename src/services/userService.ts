@@ -9,7 +9,7 @@
 
 import { apiClient } from './apiClient.js';
 import { envConfig } from '../config/envConfig.js';
-import type { UserProfile, CreateProfileRequest, UpdateProfileRequest, UploadPhotoResponse } from '../types/index.js';
+import type { UserProfile, CreateProfileRequest, CreateProfileResponse, UpdateProfileRequest, UploadPhotoResponse } from '../types/index.js';
 
 /**
  * Get current user profile
@@ -21,13 +21,13 @@ export const getProfile = async (): Promise<UserProfile> => {
 };
 
 /**
- * Create user profile (Phase 1)
+ * Create user profile (Phase 1 - Backend returns complete profile)
  * @param data - Profile creation data
- * @returns Promise with created user profile
+ * @returns Promise with create profile response including user data
  */
-export const createProfile = async (data: CreateProfileRequest): Promise<UserProfile> => {
+export const createProfile = async (data: CreateProfileRequest): Promise<CreateProfileResponse> => {
   const response = await apiClient.post(envConfig.endpoints.user.create, data);
-  return response as unknown as UserProfile;
+  return response as unknown as CreateProfileResponse;
 };
 
 /**
