@@ -26,6 +26,12 @@ export default defineConfig({
     strictPort: false,
     host: true,
     open: true,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'probador.crmnovias.com',
+      '.crmnovias.com', // Allow all subdomains
+    ],
   },
 
   build: {
