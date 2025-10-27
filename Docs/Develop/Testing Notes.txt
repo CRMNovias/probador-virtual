@@ -1,0 +1,72 @@
+# Testing Notes - Probador Virtual
+
+## Testing with Chrome DevTools
+
+### Important: Query Parameters Required
+
+When testing the application with Chrome DevTools MCP, certain pages require query parameters to function correctly:
+
+#### Try-On Page
+- **URL**: `http://localhost:5173/try-on?dressId=1`
+- **Required parameter**: `dressId` (must be a valid dress ID, e.g., 1, 2, 3)
+- **Error if missing**: The page will throw an error without the `dressId` parameter
+
+#### Avatar Creation Page (Optional)
+- **URL**: `http://localhost:5173/avatar-creation?dressId=1`
+- **Optional parameter**: `dressId` (if provided, redirects to try-on with that dress after avatar creation)
+- **Behavior**: If omitted, just redirects to try-on home page
+
+### Complete Test Flow URLs
+
+1. **Authentication**: `http://localhost:5173/auth`
+2. **Avatar Creation**: `http://localhost:5173/avatar-creation`
+3. **Try-On**: `http://localhost:5173/try-on?dressId=1` ⚠️ **REQUIRED PARAMETER**
+4. **Gallery**: `http://localhost:5173/gallery`
+5. **Appointments**: `http://localhost:5173/appointments`
+
+### Test User Credentials
+
+- **Phone**: Any Spanish phone number (e.g., +34 612345678, +34 699887766)
+- **SMS Code**: Always `123456` (backend mock)
+- **Registration**: Any name and valid email
+
+### Known Backend Issues
+
+1. **User Persistence Issue**:
+   - `POST /user/profile` endpoint does not save users to database
+   - Only returns token but doesn't persist user data
+   - Causes `USER_NOT_FOUND` error on subsequent requests
+   - **Workaround**: Use previously created users (e.g., phone +34 123456789)
+
+2. **Missing Response Data**:
+   - `POST /user/profile` doesn't return `user` object in response
+   - Frontend implements workaround to construct user from context
+
+### Testing Checklist
+
+- [ ] Clear localStorage before testing new user flow: `localStorage.clear()`
+- [ ] Use valid phone number format: `+34 6XX XXX XXX`
+- [ ] Always use code `123456` for verification
+- [ ] When testing try-on, always append `?dressId=1` to URL
+- [ ] Check console for detailed logs with `[ComponentName]` prefix
+
+### DevTools Commands
+
+```javascript
+// Clear all storage
+localStorage.clear();
+sessionStorage.clear();
+
+// Reload page
+location.reload();
+
+// Check current user
+JSON.parse(localStorage.getItem('userProfile'))
+
+// Check auth token
+localStorage.getItem('authToken')
+```
+
+---
+
+Last updated: 2025-10-27

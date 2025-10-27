@@ -65,10 +65,25 @@ export const GalleryPage: React.FC = () => {
 
   const loadTryOns = async () => {
     try {
-      const data = await getUserTryOns();
-      setTryOnsByDress(data);
+      const response = await getUserTryOns();
+      console.log('[GalleryPage] Try-ons response:', response);
+
+      // Backend returns: { success, data: { total, tryOnsByDress: [...] } }
+      // Extract the array from the nested structure
+      const data = (response as any).data?.tryOnsByDress || response;
+
+      console.log('[GalleryPage] Extracted try-ons data:', data);
+
+      // Ensure it's an array
+      if (Array.isArray(data)) {
+        setTryOnsByDress(data);
+      } else {
+        console.error('[GalleryPage] Expected array but got:', typeof data, data);
+        setTryOnsByDress([]);
+      }
     } catch (err) {
-      console.error('Error loading try-ons:', err);
+      console.error('[GalleryPage] Error loading try-ons:', err);
+      setTryOnsByDress([]);
     } finally {
       setIsLoading(false);
     }

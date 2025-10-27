@@ -14,6 +14,7 @@ import { uploadPhoto } from '../services/userService.js';
 import { generateAvatar } from '../services/avatarService.js';
 import { envConfig } from '../config/envConfig.js';
 import { routes } from '../constants/routes.js';
+import { useAuth } from '../context/AuthContext.js';
 
 const CheckIcon = ({ className = '' }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
@@ -36,6 +37,7 @@ export const AvatarCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dressId = searchParams.get('dressId');
+  const { user, updateUser } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -82,8 +84,24 @@ export const AvatarCreationPage: React.FC = () => {
       console.log('[AvatarCreation] Avatar response:', avatarResponse);
 
       // Extract avatar URL from response
-      const avatarUrl = (avatarResponse as any).avatarUrl || (avatarResponse as any).url || '';
+      // Backend returns: { success, data: { avatarUrl, avatarId }, message }
+      const responseData = (avatarResponse as any).data || avatarResponse;
+      const avatarUrl = responseData.avatarUrl || responseData.url || '';
+
+      console.log('[AvatarCreation] Extracted avatar URL:', avatarUrl);
+      console.log('[AvatarCreation] Response data:', responseData);
+
+      if (!avatarUrl) {
+        throw new Error('No se recibió URL del avatar generado');
+      }
+
       setGeneratedAvatarUrl(avatarUrl);
+
+      // Update user context to mark avatar as created
+      if (user) {
+        updateUser({ ...user, hasAvatar: true });
+        console.log('[AvatarCreation] User updated with hasAvatar: true');
+      }
 
       // Step 3: Show comparison view
       setIsLoading(false);

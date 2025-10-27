@@ -45,7 +45,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
-  const { updateUser } = useAuth();
+  const { updateUser, user: currentUser } = useAuth();
 
   /**
    * Validate form fields
@@ -85,17 +85,31 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
     setIsLoading(true);
 
     try {
-      // Create user profile - backend now returns complete profile
+      // Create user profile - backend should return complete profile
       const response = await createProfile({
         phone,
         name: name.trim(),
         email: email.trim().toLowerCase(),
       });
 
-      console.log('[UserRegistration] Profile created:', response.data.user);
+      console.log('[UserRegistration] Profile created:', response);
 
-      // Update auth context with new user data from response
-      updateUser(response.data.user);
+      // WORKAROUND: Backend is not returning user object in response
+      // Construct UserProfile from available data and current user context
+      const userProfile: import('../../types/user.js').UserProfile = response.data.user || {
+        id: currentUser?.id || '', // Get ID from current user context (set during code verification)
+        phone,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        createdAt: currentUser?.createdAt || new Date().toISOString(),
+        hasAvatar: false,
+      };
+
+      console.log('[UserRegistration] User profile constructed:', userProfile);
+      console.log('[UserRegistration] Current user from context:', currentUser);
+
+      // Update auth context with new user data
+      updateUser(userProfile);
 
       // Call completion callback
       onCompleted();

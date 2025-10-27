@@ -36,10 +36,13 @@ export const AuthPage: React.FC = () => {
 
   /**
    * Redirect if already authenticated
-   * IMPORTANT: Don't redirect if user is in registration step
+   * IMPORTANT: Only redirect when user arrives already authenticated,
+   * not during the auth flow itself (phone/code/registration steps)
    */
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user && currentStep !== 'registration') {
+    // Only redirect if user is authenticated AND we're still in the phone step
+    // This means they arrived already logged in
+    if (!isLoading && isAuthenticated && user && currentStep === 'phone') {
       // If user has avatar, go to try-on page
       // Otherwise, go to avatar creation
       if (user.hasAvatar) {

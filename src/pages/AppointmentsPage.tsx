@@ -94,7 +94,30 @@ export const AppointmentsPage: React.FC = () => {
 
       <main className="flex-1 pb-24 p-4 md:p-8">
         <div className="w-full max-w-2xl mx-auto">
-          <h1 className="text-4xl font-serif text-[#4a3f35] mb-8 text-center">Mis Citas</h1>
+          <h1 className="text-4xl font-serif text-[#4a3f35] mb-6 text-center">Mis Citas</h1>
+
+          {/* Book Appointment Button */}
+          <div className="mb-8 flex justify-center">
+            <a
+              href="https://atelierdebodas.com/pide-cita/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#8C6F5A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#6e5f53] transition-colors shadow-md"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+                <path d="M8 14h.01"></path>
+                <path d="M12 14h.01"></path>
+                <path d="M16 14h.01"></path>
+                <path d="M8 18h.01"></path>
+                <path d="M12 18h.01"></path>
+              </svg>
+              Agendar Nueva Cita
+            </a>
+          </div>
 
           <div className="space-y-6">
             {/* Próximas Citas */}
