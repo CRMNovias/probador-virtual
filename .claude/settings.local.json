@@ -13,7 +13,9 @@
       "mcp__chrome-devtools__list_network_requests",
       "mcp__chrome-devtools__get_network_request",
       "mcp__chrome-devtools__get_console_message",
-      "mcp__chrome-devtools__take_screenshot"
+      "mcp__chrome-devtools__take_screenshot",
+      "Bash(timeout 3 sleep:*)",
+      "Bash(timeout 5 sleep:*)"
     ],
     "deny": [],
     "ask": []

@@ -129,7 +129,7 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
       {/* Comparison Container */}
       <div
         ref={containerRef}
-        className="relative w-full aspect-[3/4] max-h-[600px] mx-auto mb-6 rounded-xl overflow-hidden shadow-lg cursor-ew-resize bg-gray-100"
+        className="relative w-full h-[75vh] max-h-[800px] mx-auto mb-6 rounded-xl overflow-hidden shadow-lg cursor-ew-resize bg-gray-100"
         onMouseDown={handleMouseDown}
         onTouchStart={handleMouseDown}
       >
@@ -138,7 +138,7 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
           <img
             src={generatedAvatarUrl}
             alt="Avatar generado"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
           <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium">
             Avatar Generado
@@ -153,7 +153,7 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
           <img
             src={uploadedPhotoUrl}
             alt="Foto subida"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
           <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium">
             Foto Original

@@ -5,7 +5,7 @@
  * and generate their full-body avatar with AI.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../components/layout/Header.js';
 import { Loader } from '../components/shared/Loader.js';
@@ -16,19 +16,9 @@ import { envConfig } from '../config/envConfig.js';
 import { routes } from '../constants/routes.js';
 import { useAuth } from '../context/AuthContext.js';
 
-const CheckIcon = ({ className = '' }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-    <polyline points="20 6 9 17 4 12"></polyline>
-  </svg>
-);
-
-const UploadIcon = ({ className = '' }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-    <polyline points="17 8 12 3 7 8"></polyline>
-    <line x1="12" y1="3" x2="12" y2="15"></line>
-  </svg>
-);
+// Import example image (if exists)
+// Uncomment when you add the image to: src/assets/images/examples/photo-example.jpg
+// import photoExample from '../assets/images/examples/photo-example.jpg';
 
 /**
  * AvatarCreationPage Component
@@ -37,6 +27,7 @@ export const AvatarCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dressId = searchParams.get('dressId');
+  const regenerate = searchParams.get('regenerate'); // New param to indicate regeneration mode
   const { user, updateUser } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -47,6 +38,55 @@ export const AvatarCreationPage: React.FC = () => {
   const [showComparison, setShowComparison] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>('');
   const [generatedAvatarUrl, setGeneratedAvatarUrl] = useState<string>('');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  /**
+   * Auto-trigger regeneration if in regenerate mode
+   */
+  useEffect(() => {
+    if (regenerate === 'true' && !isLoading && !showComparison) {
+      handleRegenerateFromBackend();
+    }
+  }, [regenerate]);
+
+  /**
+   * Regenerate avatar using existing photo stored on backend
+   */
+  const handleRegenerateFromBackend = async (): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    setLoadingMessage('Regenerando tu avatar...');
+
+    try {
+      // Call generate avatar - backend uses the existing uploaded photo
+      const prompt = 'Generate a full-body avatar from this passport-style photo';
+      const avatarResponse = await generateAvatar(prompt);
+      console.log('[AvatarCreation] Regeneration response:', avatarResponse);
+
+      // Extract avatar URL from response
+      const responseData = (avatarResponse as any).data || avatarResponse;
+      const avatarUrl = responseData.avatarUrl || responseData.url || '';
+
+      if (!avatarUrl) {
+        throw new Error('No se recibió URL del avatar generado');
+      }
+
+      // Update user context
+      if (user) {
+        updateUser({ ...user, hasAvatar: true });
+      }
+
+      setIsLoading(false);
+
+      // Navigate directly to try-on page after regeneration
+      const destination = dressId ? `${routes.TRY_ON}?dressId=${dressId}` : routes.TRY_ON;
+      navigate(destination, { replace: true });
+    } catch (err) {
+      console.error('[AvatarCreation] Regeneration error:', err);
+      setError(err instanceof Error ? err.message : 'Error al regenerar avatar');
+      setIsLoading(false);
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,7 +105,16 @@ export const AvatarCreationPage: React.FC = () => {
     }
 
     setError(null);
+    setUploadedFile(file);
+    await processAvatarGeneration(file);
+  };
+
+  /**
+   * Process avatar generation (reusable for both upload and regeneration)
+   */
+  const processAvatarGeneration = async (file: File): Promise<void> => {
     setIsLoading(true);
+    setError(null);
 
     try {
       // Create local URL for uploaded photo preview
@@ -122,19 +171,27 @@ export const AvatarCreationPage: React.FC = () => {
   };
 
   /**
-   * Handle regenerate avatar
+   * Handle regenerate avatar - uses the same uploaded photo
    */
-  const handleRegenerate = (): void => {
+  const handleRegenerate = async (): Promise<void> => {
+    if (!uploadedFile) {
+      // If no file stored, navigate back to upload screen
+      setShowComparison(false);
+      setUploadedPhotoUrl('');
+      setGeneratedAvatarUrl('');
+      setError(null);
+      return;
+    }
+
+    // Regenerate with existing file
     setShowComparison(false);
-    setUploadedPhotoUrl('');
-    setGeneratedAvatarUrl('');
-    setError(null);
+    await processAvatarGeneration(uploadedFile);
   };
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <Loader text={loadingMessage} />
@@ -146,7 +203,7 @@ export const AvatarCreationPage: React.FC = () => {
   // Comparison view
   if (showComparison && uploadedPhotoUrl && generatedAvatarUrl) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
         <Header />
         <main className="flex-1 flex items-center justify-center p-4">
           <AvatarComparison
@@ -162,62 +219,130 @@ export const AvatarCreationPage: React.FC = () => {
 
   // Upload view
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
       <Header />
 
       <main className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <div className="w-full flex flex-col items-center text-center">
-          <h1 className="text-4xl font-serif text-[#4a3f35] mb-4">Crea tu avatar</h1>
-          <p className="text-[#6e5f53] mb-8 font-light max-w-md">
-            Sube una foto tipo carnet para generar un modelo virtual de cuerpo entero. La IA hará el resto.
-          </p>
+        <div className="w-full max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+          {/* Left side - Content */}
+          <div className="space-y-6 text-left">
+            <h1 className="text-5xl md:text-6xl font-serif text-[#2C2419] leading-tight">
+              Crea tu Modelo para Cualquier Look.
+            </h1>
+            <p className="text-lg text-gray-700 leading-relaxed max-w-xl">
+              ¿Alguna vez te preguntaste cómo te quedaría un vestido? Deja de imaginar.
+              Sube una foto y descúbrelo. Nuestra IA crea tu modelo personal,
+              listo para probarse cualquier cosa.
+            </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-            {/* Upload Zone */}
-            <div className="flex flex-col items-center justify-center bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-              <input
-                type="file"
-                id="photo-upload"
-                className="hidden"
-                onChange={handleFileChange}
-                accept="image/jpeg,image/png,image/webp"
-              />
+            <div className="space-y-4 max-w-xl">
               <label
                 htmlFor="photo-upload"
-                className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                className="block w-full cursor-pointer"
               >
-                <UploadIcon />
-                <p className="text-gray-500 font-semibold mt-4">Pulsa para subir una foto</p>
-                <p className="text-gray-400 text-sm">o arrástrala aquí</p>
+                <div className="bg-[#1A1F2E] text-white rounded-lg p-6 text-center hover:bg-[#252B3D] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                  <div className="flex items-center justify-center gap-3">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
+                    </svg>
+                    <span className="text-lg font-semibold">Subir Foto</span>
+                  </div>
+                </div>
+                <input
+                  id="photo-upload"
+                  type="file"
+                  className="hidden"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleFileChange}
+                />
               </label>
 
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Las fotos que mejor funcionan son de primer plano del rostro o de cara y hombros.
+                Si el vestido tiene hombros descubiertos, sube una foto con los hombros descubiertos
+                para obtener un resultado más realista.
+              </p>
+
               {error && (
-                <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
-                  {error}
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
+
+              <div className="pt-6 border-t border-gray-300">
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Al subir, aceptas no crear contenido dañino, explícito o ilegal.
+                  Este servicio es solo para uso creativo y responsable.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right side - Example Image / Placeholder */}
+          <div className="hidden md:flex flex-col items-center justify-center space-y-4">
+            {/* Main example/placeholder area */}
+            <div className="relative w-full max-w-md aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl overflow-hidden">
+              {/* If you add an example image, uncomment this block and comment out the placeholder below */}
+              {/* <img
+                src={photoExample}
+                alt="Ejemplo de foto ideal"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-6">
+                <p className="text-white text-sm text-center font-medium">
+                  ✓ Ejemplo de foto ideal: Primer plano del rostro
+                </p>
+              </div> */}
+
+              {/* Placeholder (remove when you add example image) */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center text-white opacity-30">
+                  <svg
+                    className="w-32 h-32 mx-auto mb-4 animate-pulse"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <p className="text-xl font-serif">Tu Avatar Aparecerá Aquí</p>
+                </div>
+              </div>
+
+              {/* Particle effect overlay - subtle dots */}
+              <div className="absolute inset-0 opacity-20">
+                {[...Array(20)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      animationDelay: `${Math.random() * 2}s`,
+                      animationDuration: `${2 + Math.random() * 2}s`
+                    }}
+                  />
+                ))}
+              </div>
             </div>
 
-            {/* Recommendations */}
-            <div className="bg-[#F8F7F5] p-6 rounded-xl text-left">
-              <h3 className="text-lg font-semibold text-[#4a3f35] mb-4">Recomendaciones:</h3>
-              <ul className="space-y-3 text-[#6e5f53] font-light">
-                <li className="flex items-start gap-3">
-                  <CheckIcon className="w-5 h-5 text-[#8C6F5A] mt-1 flex-shrink-0" />
-                  <span>Foto tipo carnet, con el rostro centrado y mirando al frente.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckIcon className="w-5 h-5 text-[#8C6F5A] mt-1 flex-shrink-0" />
-                  <span>Buena iluminación, sin sombras pronunciadas en la cara.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckIcon className="w-5 h-5 text-[#8C6F5A] mt-1 flex-shrink-0" />
-                  <span>
-                    Si el vestido tiene hombros descubiertos, una foto similar ayudará a un mejor resultado.
-                  </span>
-                </li>
-              </ul>
-            </div>
+            {/* Helper text below example */}
+            <p className="text-sm text-gray-600 text-center max-w-md">
+              <strong>Foto ideal:</strong> Primer plano del rostro o cara y hombros con buena iluminación
+            </p>
           </div>
         </div>
       </main>

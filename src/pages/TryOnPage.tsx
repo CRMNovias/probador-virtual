@@ -16,6 +16,11 @@ import { generateTryOn, deleteTryOn } from '../services/tryOnService.js';
 import { routes } from '../constants/routes.js';
 import type { Avatar, GenerateTryOnRequest } from '../types/index.js';
 
+// Import pose images (uncomment when you add the images)
+// import pose1Img from '../assets/images/poses/pose1.jpg';
+// import pose2Img from '../assets/images/poses/pose2.jpg';
+// import pose3Img from '../assets/images/poses/pose3.jpg';
+
 // Icons
 const SparklesIcon = ({ className = '' }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
@@ -60,9 +65,24 @@ const TrashIcon = () => (
 
 // 3 Poses predefinidas (frontend)
 const POSES = [
-  { id: 'pose1', name: 'Pose de Estudio', prompt: 'Vista frontal completa, manos en cadera, pose elegante de estudio' },
-  { id: 'pose2', name: 'Pose Natural', prompt: 'Vista 3/4 ligeramente girada, pose natural y relajada' },
-  { id: 'pose3', name: 'Pose de Perfil', prompt: 'Perfil lateral completo, pose elegante de perfil' },
+  {
+    id: 'pose1',
+    name: 'Pose de Estudio',
+    prompt: 'Vista frontal completa, manos en cadera, pose elegante de estudio',
+    // image: pose1Img, // Uncomment when you add the image
+  },
+  {
+    id: 'pose2',
+    name: 'Pose Natural',
+    prompt: 'Vista 3/4 ligeramente girada, pose natural y relajada',
+    // image: pose2Img, // Uncomment when you add the image
+  },
+  {
+    id: 'pose3',
+    name: 'Pose de Perfil',
+    prompt: 'Perfil lateral completo, pose elegante de perfil',
+    // image: pose3Img, // Uncomment when you add the image
+  },
 ];
 
 interface GeneratedTryOn {
@@ -82,18 +102,27 @@ export const TryOnPage: React.FC = () => {
   const [selectedPoseId, setSelectedPoseId] = useState(POSES[0]?.id || 'pose1');
   const [generatedTryOn, setGeneratedTryOn] = useState<GeneratedTryOn | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingAvatar, setIsLoadingAvatar] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
 
   // Load avatar on mount
   useEffect(() => {
     const loadAvatar = async () => {
+      setIsLoadingAvatar(true);
+      setAvatarError(null);
       try {
         const avatarData = await getAvatar();
+        console.log('[TryOnPage] Avatar loaded successfully:', avatarData);
         setAvatar(avatarData);
       } catch (err) {
-        console.error('Error loading avatar:', err);
+        console.error('[TryOnPage] Error loading avatar:', err);
+        // Set error message for user feedback
+        setAvatarError('No se pudo cargar tu avatar. Es posible que aún no hayas creado uno o que haya un problema con el servidor.');
+      } finally {
+        setIsLoadingAvatar(false);
       }
     };
     loadAvatar();
@@ -162,6 +191,13 @@ export const TryOnPage: React.FC = () => {
   };
 
   const handleRegenerateAvatar = () => {
+    const params = new URLSearchParams();
+    if (dressId) params.append('dressId', dressId);
+    params.append('regenerate', 'true');
+    navigate(`${routes.AVATAR_CREATION}?${params.toString()}`);
+  };
+
+  const handleChangePhoto = () => {
     navigate(routes.AVATAR_CREATION + (dressId ? `?dressId=${dressId}` : ''));
   };
 
@@ -177,7 +213,25 @@ export const TryOnPage: React.FC = () => {
           <div className="relative w-full h-[60vh] lg:h-full bg-white rounded-xl shadow-sm flex items-center justify-center overflow-hidden border border-gray-200">
             {isLoading && <Loader text={loadingMessage} />}
 
-            {!isLoading && displayImageUrl && (
+            {!isLoading && avatarError && (
+              <div className="text-center p-8 max-w-md">
+                <div className="mb-4">
+                  <svg className="w-16 h-16 mx-auto text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Error al cargar avatar</h3>
+                <p className="text-sm text-gray-600 mb-6">{avatarError}</p>
+                <button
+                  onClick={handleChangePhoto}
+                  className="bg-[#8C6F5A] text-white px-6 py-3 rounded-lg hover:bg-[#7a5f4d] transition-colors"
+                >
+                  Crear Avatar
+                </button>
+              </div>
+            )}
+
+            {!isLoading && !avatarError && displayImageUrl && (
               <>
                 <img
                   src={displayImageUrl}
@@ -219,9 +273,15 @@ export const TryOnPage: React.FC = () => {
               </>
             )}
 
-            {!isLoading && !displayImageUrl && (
+            {!isLoading && !avatarError && isLoadingAvatar && (
               <div className="text-center text-gray-400">
-                <p>Cargando avatar...</p>
+                <Loader text="Cargando avatar..." />
+              </div>
+            )}
+
+            {!isLoading && !avatarError && !isLoadingAvatar && !displayImageUrl && (
+              <div className="text-center text-gray-400">
+                <p>No hay avatar disponible</p>
               </div>
             )}
           </div>
@@ -239,7 +299,7 @@ export const TryOnPage: React.FC = () => {
                   <SparklesIcon className="w-4 h-4" /> Regenerar
                 </button>
                 <button
-                  onClick={handleRegenerateAvatar}
+                  onClick={handleChangePhoto}
                   className="flex-1 text-sm flex items-center justify-center gap-2 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   <UploadIcon className="w-4 h-4" /> Cambiar Foto
@@ -267,8 +327,20 @@ export const TryOnPage: React.FC = () => {
                         : 'border-transparent hover:border-gray-300'
                     }`}
                   >
-                    <div className="w-20 h-28 bg-gray-200 rounded mb-2 flex items-center justify-center text-xs text-gray-500">
-                      {pose.name}
+                    {/* Pose Image Container */}
+                    <div className="w-20 h-28 bg-gray-200 rounded mb-2 overflow-hidden relative">
+                      {/* If you have the image, uncomment this and comment the placeholder below */}
+                      {/* {pose.image ? (
+                        <img
+                          src={pose.image}
+                          alt={pose.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : ( */}
+                        <div className="flex items-center justify-center h-full text-xs text-gray-500 p-2 text-center">
+                          {pose.name}
+                        </div>
+                      {/* )} */}
                     </div>
                     <span className="text-xs text-gray-700">{pose.name}</span>
                   </button>
