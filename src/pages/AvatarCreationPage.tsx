@@ -10,6 +10,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../components/layout/Header.js';
 import { Loader } from '../components/shared/Loader.js';
 import { AvatarComparison } from '../components/avatar/AvatarComparison.js';
+import { ExampleComparison } from '../components/avatar/ExampleComparison.js';
 import { uploadPhoto } from '../services/userService.js';
 import { generateAvatar } from '../services/avatarService.js';
 import { envConfig } from '../config/envConfig.js';
@@ -223,39 +224,47 @@ export const AvatarCreationPage: React.FC = () => {
       <Header />
 
       <main className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+        <div className="w-full max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
           {/* Left side - Content */}
-          <div className="space-y-6 text-left">
-            <h1 className="text-5xl md:text-6xl font-serif text-[#2C2419] leading-tight">
-              Crea tu Modelo para Cualquier Look.
-            </h1>
-            <p className="text-lg text-gray-700 leading-relaxed max-w-xl">
-              ¿Alguna vez te preguntaste cómo te quedaría un vestido? Deja de imaginar.
-              Sube una foto y descúbrelo. Nuestra IA crea tu modelo personal,
-              listo para probarse cualquier cosa.
-            </p>
+          <div className="space-y-8 text-left">
+            <div>
+              <h1 className="text-5xl md:text-6xl font-serif text-[#2C2419] leading-tight mb-4">
+                Crea tu Modelo para Cualquier Look.
+              </h1>
+              <p className="text-lg text-[#6B5647] leading-relaxed">
+                ¿Alguna vez te preguntaste cómo te quedaría un vestido? Deja de imaginar.
+                Sube una foto y descúbrelo. Nuestra IA crea tu modelo personal,
+                listo para probarse cualquier cosa.
+              </p>
+            </div>
 
-            <div className="space-y-4 max-w-xl">
+            {/* Upload Button */}
+            <div className="space-y-6">
               <label
                 htmlFor="photo-upload"
-                className="block w-full cursor-pointer"
+                className="block w-full cursor-pointer group"
               >
-                <div className="bg-[#1A1F2E] text-white rounded-lg p-6 text-center hover:bg-[#252B3D] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                  <div className="flex items-center justify-center gap-3">
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                <div className="bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white rounded-2xl p-8 text-center hover:shadow-2xl transition-all duration-300 shadow-xl transform hover:scale-[1.02]">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                      <svg
+                        className="w-8 h-8"
+                        fill="none"
+                        stroke="currentColor"
                         strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                    <span className="text-lg font-semibold">Subir Foto</span>
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="text-2xl font-serif block mb-1">Subir Foto</span>
+                      <span className="text-sm text-white/80">Click para seleccionar una imagen</span>
+                    </div>
                   </div>
                 </div>
                 <input
@@ -267,20 +276,39 @@ export const AvatarCreationPage: React.FC = () => {
                 />
               </label>
 
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Las fotos que mejor funcionan son de primer plano del rostro o de cara y hombros.
-                Si el vestido tiene hombros descubiertos, sube una foto con los hombros descubiertos
-                para obtener un resultado más realista.
-              </p>
+              {/* Tips Section */}
+              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 shadow-md border border-white/40">
+                <h3 className="text-sm font-semibold text-[#2C2419] mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-[#8C6F5A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Consejos para mejores resultados
+                </h3>
+                <ul className="space-y-2 text-sm text-[#6B5647]">
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#8C6F5A] mt-0.5">•</span>
+                    <span>Primer plano del rostro o cara y hombros</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#8C6F5A] mt-0.5">•</span>
+                    <span>Buena iluminación frontal</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#8C6F5A] mt-0.5">•</span>
+                    <span>Hombros descubiertos si el vestido lo requiere</span>
+                  </li>
+                </ul>
+              </div>
 
               {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
                   <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
 
-              <div className="pt-6 border-t border-gray-300">
-                <p className="text-xs text-gray-500 leading-relaxed">
+              {/* Terms */}
+              <div className="pt-4 border-t border-[#8C6F5A]/20">
+                <p className="text-xs text-[#6B5647]/70 leading-relaxed">
                   Al subir, aceptas no crear contenido dañino, explícito o ilegal.
                   Este servicio es solo para uso creativo y responsable.
                 </p>
@@ -288,61 +316,9 @@ export const AvatarCreationPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right side - Example Image / Placeholder */}
-          <div className="hidden md:flex flex-col items-center justify-center space-y-4">
-            {/* Main example/placeholder area */}
-            <div className="relative w-full max-w-md aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl overflow-hidden">
-              {/* If you add an example image, uncomment this block and comment out the placeholder below */}
-              {/* <img
-                src={photoExample}
-                alt="Ejemplo de foto ideal"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-6">
-                <p className="text-white text-sm text-center font-medium">
-                  ✓ Ejemplo de foto ideal: Primer plano del rostro
-                </p>
-              </div> */}
-
-              {/* Placeholder (remove when you add example image) */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-white opacity-30">
-                  <svg
-                    className="w-32 h-32 mx-auto mb-4 animate-pulse"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <p className="text-xl font-serif">Tu Avatar Aparecerá Aquí</p>
-                </div>
-              </div>
-
-              {/* Particle effect overlay - subtle dots */}
-              <div className="absolute inset-0 opacity-20">
-                {[...Array(20)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-                    style={{
-                      left: `${Math.random() * 100}%`,
-                      top: `${Math.random() * 100}%`,
-                      animationDelay: `${Math.random() * 2}s`,
-                      animationDuration: `${2 + Math.random() * 2}s`
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Helper text below example */}
-            <p className="text-sm text-gray-600 text-center max-w-md">
-              <strong>Foto ideal:</strong> Primer plano del rostro o cara y hombros con buena iluminación
-            </p>
+          {/* Right side - Animated Example Comparison */}
+          <div className="hidden md:flex flex-col items-center justify-center">
+            <ExampleComparison />
           </div>
         </div>
       </main>

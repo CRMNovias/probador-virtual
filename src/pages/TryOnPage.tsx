@@ -16,10 +16,10 @@ import { generateTryOn, deleteTryOn } from '../services/tryOnService.js';
 import { routes } from '../constants/routes.js';
 import type { Avatar, GenerateTryOnRequest } from '../types/index.js';
 
-// Import pose images (uncomment when you add the images)
-// import pose1Img from '../assets/images/poses/pose1.jpg';
-// import pose2Img from '../assets/images/poses/pose2.jpg';
-// import pose3Img from '../assets/images/poses/pose3.jpg';
+// Import pose images
+import pose1Img from '../assets/images/poses/pose1.jpg';
+import pose2Img from '../assets/images/poses/pose2.jpg';
+import pose3Img from '../assets/images/poses/pose3.jpg';
 
 // Icons
 const SparklesIcon = ({ className = '' }: { className?: string }) => (
@@ -69,19 +69,19 @@ const POSES = [
     id: 'pose1',
     name: 'Pose de Estudio',
     prompt: 'Vista frontal completa, manos en cadera, pose elegante de estudio',
-    // image: pose1Img, // Uncomment when you add the image
+    image: pose1Img,
   },
   {
     id: 'pose2',
     name: 'Pose Natural',
     prompt: 'Vista 3/4 ligeramente girada, pose natural y relajada',
-    // image: pose2Img, // Uncomment when you add the image
+    image: pose2Img,
   },
   {
     id: 'pose3',
     name: 'Pose de Perfil',
     prompt: 'Perfil lateral completo, pose elegante de perfil',
-    // image: pose3Img, // Uncomment when you add the image
+    image: pose3Img,
   },
 ];
 
@@ -204,27 +204,27 @@ export const TryOnPage: React.FC = () => {
   const displayImageUrl = generatedTryOn ? generatedTryOn.url : avatar?.imageUrl;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
       <Header />
 
       <main className="flex-1 pb-24">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 p-4 md:p-8 h-full">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 p-4 md:p-8 h-full">
           {/* Columna Izquierda: Canvas */}
-          <div className="relative w-full h-[60vh] lg:h-full bg-white rounded-xl shadow-sm flex items-center justify-center overflow-hidden border border-gray-200">
+          <div className="relative w-full h-[60vh] lg:h-full bg-white rounded-2xl shadow-xl flex items-center justify-center overflow-hidden border border-white/40 backdrop-blur-sm">
             {isLoading && <Loader text={loadingMessage} />}
 
             {!isLoading && avatarError && (
               <div className="text-center p-8 max-w-md">
                 <div className="mb-4">
-                  <svg className="w-16 h-16 mx-auto text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-16 h-16 mx-auto text-[#8C6F5A] opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Error al cargar avatar</h3>
-                <p className="text-sm text-gray-600 mb-6">{avatarError}</p>
+                <h3 className="text-xl font-serif text-[#2C2419] mb-2">Error al cargar avatar</h3>
+                <p className="text-sm text-[#6B5647] mb-6 leading-relaxed">{avatarError}</p>
                 <button
                   onClick={handleChangePhoto}
-                  className="bg-[#8C6F5A] text-white px-6 py-3 rounded-lg hover:bg-[#7a5f4d] transition-colors"
+                  className="bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white px-8 py-3 rounded-xl hover:shadow-xl transition-all duration-300 shadow-lg transform hover:scale-[1.02]"
                 >
                   Crear Avatar
                 </button>
@@ -240,7 +240,7 @@ export const TryOnPage: React.FC = () => {
                 />
 
                 {/* Watermark */}
-                <div className="absolute bottom-4 left-4 text-sm font-serif text-gray-500 bg-white/50 px-2 py-1 rounded">
+                <div className="absolute bottom-4 left-4 text-xs font-serif text-[#2C2419] bg-white/60 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
                   Atelier de Bodas
                 </div>
 
@@ -289,18 +289,18 @@ export const TryOnPage: React.FC = () => {
           {/* Columna Derecha: Controles */}
           <div className="flex flex-col gap-6">
             {/* Card: Tu Avatar */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-              <h3 className="text-xl font-serif text-[#4a3f35] mb-3">Tu Avatar</h3>
-              <div className="flex gap-2">
+            <div className="bg-white/60 backdrop-blur-sm p-5 rounded-2xl shadow-lg border border-white/40">
+              <h3 className="text-lg font-serif text-[#2C2419] mb-3">Tu Avatar</h3>
+              <div className="flex gap-3">
                 <button
                   onClick={handleRegenerateAvatar}
-                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white py-2.5 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
                 >
                   <SparklesIcon className="w-4 h-4" /> Regenerar
                 </button>
                 <button
                   onClick={handleChangePhoto}
-                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-white/80 text-[#2C2419] py-2.5 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 border border-[#8C6F5A]/20"
                 >
                   <UploadIcon className="w-4 h-4" /> Cambiar Foto
                 </button>
@@ -308,41 +308,44 @@ export const TryOnPage: React.FC = () => {
             </div>
 
             {/* Card: Vestido Seleccionado */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-              <h2 className="text-2xl font-serif text-[#4a3f35] mb-1">Vestido Seleccionado</h2>
-              <p className="text-lg text-[#6e5f53] font-light">ID: {dressId}</p>
+            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/40">
+              <h2 className="text-2xl font-serif text-[#2C2419] mb-1">Vestido Seleccionado</h2>
+              <p className="text-lg text-[#6B5647] font-light">ID: {dressId}</p>
             </div>
 
             {/* Card: Elige una pose */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-              <h3 className="text-xl font-serif text-[#4a3f35] mb-4">Elige una pose</h3>
+            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/40">
+              <h3 className="text-xl font-serif text-[#2C2419] mb-4">Elige una pose</h3>
               <div className="flex justify-center md:justify-start gap-4">
                 {POSES.map(pose => (
                   <button
                     key={pose.id}
                     onClick={() => setSelectedPoseId(pose.id)}
-                    className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
+                    className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-200 ${
                       selectedPoseId === pose.id
-                        ? 'border-[#8C6F5A] ring-2 ring-[#D4C8BE] bg-[#F8F7F5]'
-                        : 'border-transparent hover:border-gray-300'
+                        ? 'border-[#8C6F5A] ring-2 ring-[#8C6F5A]/20 bg-white shadow-md scale-105'
+                        : 'border-white/40 hover:border-[#8C6F5A]/40 bg-white/40 hover:bg-white/60'
                     }`}
                   >
                     {/* Pose Image Container */}
-                    <div className="w-20 h-28 bg-gray-200 rounded mb-2 overflow-hidden relative">
-                      {/* If you have the image, uncomment this and comment the placeholder below */}
-                      {/* {pose.image ? (
+                    <div className={`w-20 h-28 rounded-lg mb-2 overflow-hidden relative transition-colors ${
+                      selectedPoseId === pose.id
+                        ? 'ring-2 ring-[#8C6F5A]'
+                        : ''
+                    }`}>
+                      {pose.image ? (
                         <img
                           src={pose.image}
                           alt={pose.name}
                           className="w-full h-full object-cover"
                         />
-                      ) : ( */}
-                        <div className="flex items-center justify-center h-full text-xs text-gray-500 p-2 text-center">
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-xs text-[#6B5647] p-2 text-center font-medium bg-gradient-to-br from-[#D4C8BE] to-[#B8ACA0]">
                           {pose.name}
                         </div>
-                      {/* )} */}
+                      )}
                     </div>
-                    <span className="text-xs text-gray-700">{pose.name}</span>
+                    <span className="text-xs text-[#2C2419] font-medium">{pose.name}</span>
                   </button>
                 ))}
               </div>
@@ -350,7 +353,7 @@ export const TryOnPage: React.FC = () => {
 
             {/* Error Display */}
             {error && (
-              <div className="bg-red-100 border border-red-300 rounded-lg p-4 text-red-700 text-sm">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm backdrop-blur-sm">
                 {error}
               </div>
             )}
@@ -359,10 +362,10 @@ export const TryOnPage: React.FC = () => {
             <button
               onClick={handleGenerate}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 bg-[#8C6F5A] text-white py-4 rounded-lg hover:bg-[#7a5f4d] transition-colors shadow-lg text-lg disabled:bg-gray-400"
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white py-5 rounded-2xl hover:shadow-2xl transition-all duration-300 shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
             >
               <SparklesIcon className="w-6 h-6" />
-              Generar Prueba Virtual
+              <span className="font-serif">Generar Prueba Virtual</span>
             </button>
           </div>
         </div>
