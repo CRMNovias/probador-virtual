@@ -104,8 +104,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem(STORAGE_KEYS.LAST_SELECTED_DRESS);
     localStorage.removeItem(STORAGE_KEYS.LAST_SELECTED_POSE);
 
-    // Also clear avatar_info from AppContext
+    // Also clear avatar_info and dress_id from AppContext
     localStorage.removeItem('avatar_info');
+    localStorage.removeItem('dress_id');
 
     // Clear sessionStorage (temp phone, code sent timestamp)
     sessionStorage.clear();

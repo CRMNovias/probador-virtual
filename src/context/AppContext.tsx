@@ -65,6 +65,7 @@ const AppContext = createContext<AppContextState | undefined>(undefined);
  */
 const STORAGE_KEYS = {
   AVATAR_INFO: 'avatar_info',
+  DRESS_ID: 'dress_id',
 } as const;
 
 /**
@@ -86,13 +87,21 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [avatar, setAvatarState] = useState<AvatarInfo | null>(null);
 
   /**
-   * Extract dressId from URL on mount
+   * Extract dressId from URL on mount and persist to localStorage
    */
   useEffect(() => {
     const dressIdParam = searchParams.get('dressId');
+    const storedDressId = localStorage.getItem(STORAGE_KEYS.DRESS_ID);
 
+    // Priority: URL param > localStorage
     if (dressIdParam) {
       setDressId(dressIdParam);
+      setIsDressIdMissing(false);
+      // Persist to localStorage for future navigation
+      localStorage.setItem(STORAGE_KEYS.DRESS_ID, dressIdParam);
+    } else if (storedDressId) {
+      // Fallback to stored dressId if not in URL
+      setDressId(storedDressId);
       setIsDressIdMissing(false);
     } else {
       setDressId(null);
@@ -135,6 +144,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const clearAppState = useCallback((): void => {
     setAvatarState(null);
     localStorage.removeItem(STORAGE_KEYS.AVATAR_INFO);
+    localStorage.removeItem(STORAGE_KEYS.DRESS_ID);
+    setDressId(null);
   }, []);
 
   const value: AppContextState = {

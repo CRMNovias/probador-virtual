@@ -13,8 +13,9 @@
  */
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { routes } from '../../constants/routes.js';
+import { useApp } from '../../context/AppContext.js';
 
 /**
  * Navigation tab definition
@@ -93,6 +94,15 @@ const navTabs: NavTab[] = [
  */
 export const Navigation: React.FC = () => {
   const location = useLocation();
+  const { dressId } = useApp();
+
+  /**
+   * Build navigation path with dressId if available
+   */
+  const buildNavPath = (path: string): string => {
+    if (!dressId) return path;
+    return `${path}?dressId=${dressId}`;
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg">
@@ -102,9 +112,9 @@ export const Navigation: React.FC = () => {
             const isActive = location.pathname === tab.path;
 
             return (
-              <NavLink
+              <a
                 key={tab.path}
-                to={tab.path}
+                href={buildNavPath(tab.path)}
                 className={`
                   flex flex-col items-center justify-center
                   flex-1 h-full
@@ -126,7 +136,7 @@ export const Navigation: React.FC = () => {
                 {isActive && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#8C6F5A]" />
                 )}
-              </NavLink>
+              </a>
             );
           })}
         </div>
