@@ -8,7 +8,8 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header.js';
 import { Navigation } from '../components/layout/Navigation.js';
-import { getUserTryOns, deleteTryOn } from '../services/tryOnService.js';
+import { ShareModal } from '../components/shared/ShareModal.js';
+import { getUserTryOns, deleteTryOn, shareTryOn } from '../services/tryOnService.js';
 import type { TryOnCategory } from '../types/index.js';
 
 // Icons
@@ -58,6 +59,9 @@ export const GalleryPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; url: string } | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareId, setShareId] = useState<string>('');
+  const [sharingTryOnId, setSharingTryOnId] = useState<string | null>(null);
 
   useEffect(() => {
     loadTryOns();
@@ -96,6 +100,21 @@ export const GalleryPage: React.FC = () => {
   const handleDelete = (e: React.MouseEvent, id: string, url: string) => {
     e.stopPropagation();
     setDeleteConfirm({ id, url });
+  };
+
+  const handleShare = async (e: React.MouseEvent, tryOnId: string) => {
+    e.stopPropagation();
+    try {
+      setSharingTryOnId(tryOnId);
+      const response = await shareTryOn(tryOnId);
+      setShareId(response.shareId);
+      setShareModalOpen(true);
+    } catch (err) {
+      console.error('[GalleryPage] Error sharing try-on:', err);
+      alert(err instanceof Error ? err.message : 'Error al generar enlace de compartir');
+    } finally {
+      setSharingTryOnId(null);
+    }
   };
 
   const confirmDelete = async () => {
@@ -192,14 +211,18 @@ export const GalleryPage: React.FC = () => {
                                   <MaximizeIcon />
                                 </button>
                                 <button
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    alert('Función de compartir disponible próximamente');
-                                  }}
-                                  className="p-2 bg-white/80 rounded-full text-gray-800 hover:scale-110 transition-transform opacity-50"
-                                  title="Compartir (próximamente)"
+                                  onClick={e => handleShare(e, tryOn.id)}
+                                  disabled={sharingTryOnId === tryOn.id}
+                                  className={`p-2 bg-white/80 rounded-full hover:scale-110 transition-transform ${
+                                    sharingTryOnId === tryOn.id ? 'opacity-50 cursor-wait' : 'text-gray-800'
+                                  }`}
+                                  title="Compartir"
                                 >
-                                  <ShareIcon />
+                                  {sharingTryOnId === tryOn.id ? (
+                                    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <ShareIcon />
+                                  )}
                                 </button>
                                 <button
                                   onClick={e => handleDelete(e, tryOn.id, tryOn.imageUrl)}
@@ -273,6 +296,14 @@ export const GalleryPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={shareModalOpen}
+        shareId={shareId}
+        onClose={() => setShareModalOpen(false)}
+        isLoading={sharingTryOnId !== null}
+      />
     </div>
   );
 };
