@@ -12,7 +12,6 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '../shared/Button.js';
 
 export interface AvatarComparisonProps {
   /**

@@ -48,6 +48,7 @@ export const AvatarCreationPage: React.FC = () => {
     if (regenerate === 'true' && !isLoading && !showComparison) {
       handleRegenerateFromBackend();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regenerate]);
 
   /**
