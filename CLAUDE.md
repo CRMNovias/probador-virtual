@@ -78,6 +78,57 @@ Before each development task, verify:
 3. **Scalability**: Does it support growth?
 4. **Elegance**: Is the solution clean and simple?
 
+### Pre-Commit Testing Requirements
+
+**CRITICAL**: Before committing any code changes, ALWAYS test the implementation using Chrome DevTools if possible:
+
+1. **Build & Type Check** (REQUIRED):
+   ```bash
+   npm run type-check  # Must pass before commit
+   npm run build       # Must build successfully
+   ```
+
+2. **Manual Testing with DevTools** (REQUIRED when applicable):
+   - Start dev server: `npm run dev`
+   - Open Chrome DevTools (or use MCP Chrome DevTools if available)
+   - Test ALL new/modified functionality:
+     - Click all new buttons
+     - Fill all new forms
+     - Navigate all new routes
+     - Verify state changes in React DevTools
+     - Check console for errors
+     - Verify network requests in Network tab
+     - Test responsive design in Device Mode
+
+3. **Component-Specific Testing**:
+   - **New Components**: Render in browser, test all props/states
+   - **Modified Components**: Verify no regression, test edge cases
+   - **New Pages**: Navigate to page, test all interactions
+   - **API Integrations**: Mock API responses, test error handling
+   - **State Management**: Verify state updates in Redux/Context DevTools
+
+4. **Documentation of Testing**:
+   - Document testing results in commit message or separate doc
+   - Include screenshots if visual changes
+   - List all test cases executed
+   - Note any issues found and fixed
+
+**Example Testing Checklist**:
+- [ ] Type check passed
+- [ ] Build successful
+- [ ] Visual rendering correct
+- [ ] Click handlers work
+- [ ] Form validation works
+- [ ] Error states display
+- [ ] Loading states display
+- [ ] Navigation works
+- [ ] No console errors
+- [ ] Network requests succeed
+- [ ] State updates correctly
+- [ ] Responsive design works
+
+**Note**: Some features may require backend implementation and can only be partially tested. In these cases, document what was tested and what requires backend.
+
 ### File Organization
 - Separate all structures, enums, and interfaces into their own files
 - Separate all data structures and identified objects

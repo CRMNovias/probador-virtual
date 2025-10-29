@@ -14,19 +14,19 @@ export interface ShareModalProps {
   isOpen: boolean;
 
   /**
-   * Share ID for building the share URL
+   * Try-on ID for building the share URL
    */
-  shareId: string;
+  tryOnId: string;
+
+  /**
+   * Dress ID to include in the share URL
+   */
+  dressId: string;
 
   /**
    * Callback when modal should close
    */
   onClose: () => void;
-
-  /**
-   * Loading state while generating share link
-   */
-  isLoading?: boolean;
 }
 
 /**
@@ -34,14 +34,14 @@ export interface ShareModalProps {
  */
 export const ShareModal: React.FC<ShareModalProps> = ({
   isOpen,
-  shareId,
+  tryOnId,
+  dressId,
   onClose,
-  isLoading = false,
 }) => {
   const [copied, setCopied] = useState(false);
 
-  // Build full share URL
-  const shareUrl = `${window.location.origin}/share/${shareId}`;
+  // Build full share URL with dressId
+  const shareUrl = `${window.location.origin}/share/${tryOnId}?dressId=${dressId}`;
 
   /**
    * Copy share URL to clipboard
@@ -112,14 +112,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         </div>
 
         {/* Content */}
-        {isLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8C6F5A] mx-auto mb-4" />
-            <p className="text-gray-600">Generando enlace de compartir...</p>
-          </div>
-        ) : (
-          <>
-            {/* Share Icon */}
+        <>
+          {/* Share Icon */}
             <div className="flex justify-center mb-6">
               <div className="w-20 h-20 bg-gradient-to-br from-[#8C6F5A]/10 to-[#6B5647]/10 rounded-full flex items-center justify-center">
                 <svg
@@ -234,8 +228,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             >
               Cerrar
             </button>
-          </>
-        )}
+        </>
       </div>
     </div>
   );

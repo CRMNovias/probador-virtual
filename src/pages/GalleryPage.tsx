@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header.js';
 import { Navigation } from '../components/layout/Navigation.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
-import { getUserTryOns, deleteTryOn, shareTryOn } from '../services/tryOnService.js';
+import { getUserTryOns, deleteTryOn } from '../services/tryOnService.js';
 import type { TryOnCategory } from '../types/index.js';
 
 // Icons
@@ -60,8 +60,8 @@ export const GalleryPage: React.FC = () => {
   const [viewerImage, setViewerImage] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; url: string } | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [shareId, setShareId] = useState<string>('');
-  const [sharingTryOnId, setSharingTryOnId] = useState<string | null>(null);
+  const [selectedTryOnId, setSelectedTryOnId] = useState<string>('');
+  const [selectedDressId, setSelectedDressId] = useState<string>('');
 
   useEffect(() => {
     loadTryOns();
@@ -102,19 +102,11 @@ export const GalleryPage: React.FC = () => {
     setDeleteConfirm({ id, url });
   };
 
-  const handleShare = async (e: React.MouseEvent, tryOnId: string) => {
+  const handleShare = (e: React.MouseEvent, tryOnId: string, dressId: string) => {
     e.stopPropagation();
-    try {
-      setSharingTryOnId(tryOnId);
-      const response = await shareTryOn(tryOnId);
-      setShareId(response.shareId);
-      setShareModalOpen(true);
-    } catch (err) {
-      console.error('[GalleryPage] Error sharing try-on:', err);
-      alert(err instanceof Error ? err.message : 'Error al generar enlace de compartir');
-    } finally {
-      setSharingTryOnId(null);
-    }
+    setSelectedTryOnId(tryOnId);
+    setSelectedDressId(dressId);
+    setShareModalOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -211,18 +203,11 @@ export const GalleryPage: React.FC = () => {
                                   <MaximizeIcon />
                                 </button>
                                 <button
-                                  onClick={e => handleShare(e, tryOn.id)}
-                                  disabled={sharingTryOnId === tryOn.id}
-                                  className={`p-2 bg-white/80 rounded-full hover:scale-110 transition-transform ${
-                                    sharingTryOnId === tryOn.id ? 'opacity-50 cursor-wait' : 'text-gray-800'
-                                  }`}
+                                  onClick={e => handleShare(e, tryOn.id, category.dressId)}
+                                  className="p-2 bg-white/80 rounded-full hover:scale-110 transition-transform text-gray-800"
                                   title="Compartir"
                                 >
-                                  {sharingTryOnId === tryOn.id ? (
-                                    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                                  ) : (
-                                    <ShareIcon />
-                                  )}
+                                  <ShareIcon />
                                 </button>
                                 <button
                                   onClick={e => handleDelete(e, tryOn.id, tryOn.imageUrl)}
@@ -298,12 +283,14 @@ export const GalleryPage: React.FC = () => {
       )}
 
       {/* Share Modal */}
-      <ShareModal
-        isOpen={shareModalOpen}
-        shareId={shareId}
-        onClose={() => setShareModalOpen(false)}
-        isLoading={sharingTryOnId !== null}
-      />
+      {selectedTryOnId && selectedDressId && (
+        <ShareModal
+          isOpen={shareModalOpen}
+          tryOnId={selectedTryOnId}
+          dressId={selectedDressId}
+          onClose={() => setShareModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

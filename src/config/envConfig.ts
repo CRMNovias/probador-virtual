@@ -37,8 +37,6 @@ export const envConfig = {
       generate: import.meta.env.VITE_ENDPOINT_TRYON_GENERATE as string,
       getUserTryOns: import.meta.env.VITE_ENDPOINT_TRYON_GET_USER as string,
       delete: import.meta.env.VITE_ENDPOINT_TRYON_DELETE as string,
-      share: import.meta.env['VITE_ENDPOINT_TRYON_SHARE'] as string,
-      getShared: import.meta.env['VITE_ENDPOINT_TRYON_GET_SHARED'] as string,
     },
     appointment: {
       getUserAppointments: import.meta.env.VITE_ENDPOINT_APPOINTMENTS_GET_USER as string,
