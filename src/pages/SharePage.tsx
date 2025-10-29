@@ -1,61 +1,105 @@
 /**
- * SharePage (Phase 1 - Placeholder)
+ * SharePage (Phase 2 - Complete Implementation)
  *
  * Public share page for viewing shared try-on images.
  * This is a PUBLIC page (no authentication required).
  *
- * PHASE 1: Basic layout
- * PHASE 2: Full implementation with image display and sharing functionality
+ * Features:
+ * - Displays shared try-on image
+ * - Shows dress information (if available)
+ * - Provides link to try the dress yourself
+ * - Handles loading and error states
  */
 
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getSharedTryOn } from '../services/tryOnService.js';
+import { Loader } from '../components/shared/Loader.js';
+import { routes } from '../constants/routes.js';
+import type { SharedTryOn } from '../types/index.js';
 
 /**
  * SharePage Component
  */
 export const SharePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
-  return (
-    <div className="min-h-screen flex flex-col bg-[#faf9f7]">
-      {/* Simple Header (no user menu since it's public) */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-center">
-          <h1 className="text-2xl font-serif text-[#4a3f35]">
-            Atelier de Bodas
-          </h1>
-        </div>
-      </header>
+  const [sharedTryOn, setSharedTryOn] = useState<SharedTryOn | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
-        {/* Page Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-serif text-[#4a3f35] mb-2">
-            Prueba Compartida
-          </h1>
-          <p className="text-gray-600">
-            Visualiza la prueba virtual compartida
-          </p>
-        </div>
+  /**
+   * Fetch shared try-on data on mount
+   */
+  useEffect(() => {
+    const fetchSharedTryOn = async () => {
+      if (!id) {
+        setError('ID de compartición no válido');
+        setIsLoading(false);
+        return;
+      }
 
-        {/* Share ID Info */}
-        {id && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>ID de Compartición:</strong> {id}
-            </p>
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await getSharedTryOn(id);
+        setSharedTryOn(data);
+      } catch (err) {
+        console.error('[SharePage] Error fetching shared try-on:', err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'No se pudo cargar la prueba virtual compartida'
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSharedTryOn();
+  }, [id]);
+
+  /**
+   * Navigate to try-on page with dress ID
+   */
+  const handleTryItYourself = (): void => {
+    if (sharedTryOn?.dressId) {
+      navigate(`${routes.HOME}?dressId=${sharedTryOn.dressId}`);
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+          <div className="container mx-auto px-4 h-16 flex items-center justify-center">
+            <h1 className="text-2xl font-serif text-[#2C2419]">Atelier de Bodas</h1>
           </div>
-        )}
+        </header>
+        <main className="flex-1 flex items-center justify-center">
+          <Loader text="Cargando prueba virtual..." />
+        </main>
+      </div>
+    );
+  }
 
-        {/* Placeholder Content */}
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <div className="text-center">
-            {/* Share Icon Placeholder */}
-            <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+  // Error state
+  if (error || !sharedTryOn) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+          <div className="container mx-auto px-4 h-16 flex items-center justify-center">
+            <h1 className="text-2xl font-serif text-[#2C2419]">Atelier de Bodas</h1>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg
-                className="w-16 h-16 text-gray-400"
+                className="w-10 h-10 text-red-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -64,96 +108,188 @@ export const SharePage: React.FC = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
             </div>
-
-            <h2 className="text-xl font-medium text-gray-900 mb-4">
-              Funcionalidad Pendiente
+            <h2 className="text-2xl font-serif text-[#2C2419] mb-3">
+              Error al Cargar
             </h2>
+            <p className="text-gray-600 mb-6">{error || 'Prueba virtual no encontrada'}</p>
+            <button
+              onClick={() => navigate(routes.HOME)}
+              className="px-6 py-3 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white rounded-xl hover:shadow-lg transition-all"
+            >
+              Ir al Inicio
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
-            <p className="text-gray-600 mb-6">
-              Esta funcionalidad se implementará en la Fase 2 del proyecto.
-              <br />
-              Incluirá:
+  // Success state - display shared try-on
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-center">
+          <h1 className="text-2xl font-serif text-[#2C2419]">Atelier de Bodas</h1>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+        {/* Page Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-serif text-[#2C2419] mb-3">
+            Prueba Virtual Compartida
+          </h1>
+          <p className="text-lg text-[#6B5647]">
+            Visualiza cómo se vería este vestido de novia
+          </p>
+        </div>
+
+        {/* Image Card */}
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden mb-8 border border-white/40">
+          <div className="relative">
+            {/* Try-On Image */}
+            <div
+              className="relative cursor-pointer group"
+              onClick={() => setImageViewerOpen(true)}
+            >
+              <img
+                src={sharedTryOn.imageUrl}
+                alt="Prueba virtual compartida"
+                className="w-full h-auto max-h-[70vh] object-contain bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]"
+              />
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-4">
+                  <svg
+                    className="w-8 h-8 text-[#8C6F5A]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Watermark */}
+            <div className="absolute bottom-4 left-4 text-xs font-serif text-[#2C2419] bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+              Atelier de Bodas
+            </div>
+          </div>
+
+          {/* Info Section */}
+          <div className="p-6">
+            {sharedTryOn.dressName && (
+              <h2 className="text-2xl font-serif text-[#2C2419] mb-2">
+                {sharedTryOn.dressName}
+              </h2>
+            )}
+            <p className="text-gray-600 mb-4">
+              Compartido el {new Date(sharedTryOn.sharedAt).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
             </p>
 
-            <ul className="text-left text-gray-600 space-y-2 mb-8 max-w-md mx-auto">
-              <li className="flex items-start">
-                <svg
-                  className="w-5 h-5 text-[#8C6F5A] mr-2 mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Visualización de imagen compartida
-              </li>
-              <li className="flex items-start">
-                <svg
-                  className="w-5 h-5 text-[#8C6F5A] mr-2 mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Información del vestido
-              </li>
-              <li className="flex items-start">
-                <svg
-                  className="w-5 h-5 text-[#8C6F5A] mr-2 mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Botón para probar el vestido
-              </li>
-              <li className="flex items-start">
-                <svg
-                  className="w-5 h-5 text-[#8C6F5A] mr-2 mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Acceso público sin autenticación
-              </li>
-            </ul>
+            {/* CTA Button */}
+            <button
+              onClick={handleTryItYourself}
+              className="w-full py-4 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white rounded-xl hover:shadow-2xl transition-all duration-300 font-serif text-lg transform hover:scale-[1.02] flex items-center justify-center gap-3"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
+              <span>Pruébalo Tú Misma</span>
+            </button>
           </div>
         </div>
 
         {/* Info Box */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>Nota de Desarrollo:</strong> Esta es la página pública para
-            visualizar pruebas virtuales compartidas. No requiere autenticación
-            y se implementará en Phase 2.
+        <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-200 rounded-xl p-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <svg
+              className="w-6 h-6 text-blue-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <h3 className="text-lg font-semibold text-blue-900">
+              ¿Te gustaría probártelo?
+            </h3>
+          </div>
+          <p className="text-blue-800">
+            Sube tu foto y visualiza cómo te quedaría este vestido de novia con
+            nuestra tecnología de prueba virtual.
           </p>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-sm text-gray-500">
-        <p>© 2024 Atelier de Bodas. Todos los derechos reservados.</p>
+      <footer className="py-6 text-center text-sm text-gray-500 bg-white/40 backdrop-blur-sm">
+        <p>© 2025 Atelier de Bodas. Todos los derechos reservados.</p>
       </footer>
+
+      {/* Image Viewer Modal */}
+      {imageViewerOpen && (
+        <div
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+          onClick={() => setImageViewerOpen(false)}
+        >
+          <div className="relative max-w-[95vw] max-h-[95vh]">
+            <img
+              src={sharedTryOn.imageUrl}
+              alt="Prueba virtual ampliada"
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+            <button
+              onClick={() => setImageViewerOpen(false)}
+              className="absolute -top-12 right-0 text-white p-2 hover:bg-white/20 rounded-full transition-colors"
+            >
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

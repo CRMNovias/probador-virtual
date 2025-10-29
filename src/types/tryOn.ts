@@ -59,3 +59,18 @@ export interface GenerateTryOnRequest {
   poseId?: string; // Optional - can use prompt instead
   prompt?: string; // Optional - AI generation prompt for custom poses
 }
+
+/**
+ * Shared try-on data (Phase 2)
+ * Public data structure for shared try-ons
+ */
+export interface SharedTryOn {
+  shareId: string;
+  tryOnId: string;
+  imageUrl: string;
+  dressId: string;
+  dressName?: string;
+  createdAt: string;
+  sharedAt: string;
+  expiresAt?: string;
+}

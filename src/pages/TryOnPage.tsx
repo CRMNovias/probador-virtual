@@ -10,9 +10,10 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header.js';
 import { Navigation } from '../components/layout/Navigation.js';
 import { Loader } from '../components/shared/Loader.js';
+import { ShareModal } from '../components/shared/ShareModal.js';
 import { useApp } from '../context/AppContext.js';
 import { getAvatar } from '../services/avatarService.js';
-import { generateTryOn, deleteTryOn } from '../services/tryOnService.js';
+import { generateTryOn, deleteTryOn, shareTryOn } from '../services/tryOnService.js';
 import { routes } from '../constants/routes.js';
 import type { Avatar, GenerateTryOnRequest } from '../types/index.js';
 
@@ -107,6 +108,9 @@ export const TryOnPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareId, setShareId] = useState<string>('');
+  const [isSharing, setIsSharing] = useState(false);
 
   // Load avatar on mount
   useEffect(() => {
@@ -190,6 +194,22 @@ export const TryOnPage: React.FC = () => {
     }
   };
 
+  const handleShare = async () => {
+    if (!generatedTryOn) return;
+
+    try {
+      setIsSharing(true);
+      setError(null);
+      const response = await shareTryOn(generatedTryOn.id);
+      setShareId(response.shareId);
+      setShareModalOpen(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al generar enlace de compartir');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const handleRegenerateAvatar = () => {
     const params = new URLSearchParams();
     if (dressId) params.append('dressId', dressId);
@@ -255,11 +275,18 @@ export const TryOnPage: React.FC = () => {
                       <MaximizeIcon />
                     </button>
                     <button
-                      onClick={() => alert('Función de compartir disponible próximamente')}
-                      className="p-3 bg-white/80 rounded-full text-gray-800 shadow-lg hover:scale-110 transition-transform opacity-50 cursor-not-allowed"
-                      title="Compartir (próximamente)"
+                      onClick={handleShare}
+                      disabled={isSharing}
+                      className={`p-3 bg-white/80 rounded-full shadow-lg hover:scale-110 transition-transform ${
+                        isSharing ? 'opacity-50 cursor-wait' : 'text-gray-800 hover:bg-white'
+                      }`}
+                      title="Compartir"
                     >
-                      <ShareIcon />
+                      {isSharing ? (
+                        <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <ShareIcon />
+                      )}
                     </button>
                     <button
                       onClick={handleDelete}
@@ -393,6 +420,14 @@ export const TryOnPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={shareModalOpen}
+        shareId={shareId}
+        onClose={() => setShareModalOpen(false)}
+        isLoading={isSharing}
+      />
     </div>
   );
 };
