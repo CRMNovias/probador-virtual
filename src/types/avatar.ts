@@ -17,12 +17,14 @@ export interface Avatar {
 }
 
 /**
- * Response from avatar upload
+ * Response from avatar upload/generation
  */
 export interface UploadAvatarResponse {
   success: boolean;
-  avatarId: string;
-  avatarUrl: string;
+  data: {
+    avatarUrl: string;
+    avatarId?: string;
+  };
   message?: string;
 }
 

@@ -27,7 +27,8 @@
       "Bash(npm run dev:*)",
       "mcp__chrome-devtools__list_pages",
       "mcp__chrome-devtools__select_page",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(timeout 10 sleep:*)"
     ],
     "deny": [],
     "ask": []
