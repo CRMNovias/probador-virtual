@@ -1,68 +1,44 @@
 /**
  * AI Prompt Templates for Virtual Try-On Generation
  *
- * Professional prompts for generating high-quality wedding dress try-on images.
- * These prompts are optimized for AI image generation models (Stable Diffusion, DALL-E, etc.)
+ * Prompts optimized for virtual try-on AI systems.
+ * System instructions + pose specification format.
  */
 
 /**
- * Base prompt template for virtual try-on generation
- * Contains common quality parameters and style requirements
+ * Base virtual try-on system prompt
+ * This is the core instruction set for the virtual try-on AI
  */
-export const BASE_TRYON_PROMPT = `A professional photorealistic image of a bride wearing an elegant wedding dress in a bridal boutique setting.
-High-quality commercial photography, professional lighting, soft natural light from windows, elegant background with neutral tones.
-The bride should look natural and elegant, with professional makeup and styled hair.
-Ultra-realistic, 8K resolution, detailed fabric textures, professional fashion photography style.
-Focus on the wedding dress details: lace, embroidery, beading, fabric flow.`;
+export const BASE_TRYON_PROMPT = `You are an expert virtual try-on AI. You will be given a 'model image' and a 'garment image'. Your task is to create a new photorealistic image where the person from the 'model image' is wearing the clothing from the 'garment image'.
 
-/**
- * Negative prompt - things to avoid in generation
- */
-export const NEGATIVE_PROMPT = `low quality, blurry, distorted, deformed, disfigured, amateur, poor lighting,
-oversaturated colors, cartoon, anime, drawing, sketch, watermark, text, logo,
-extra limbs, missing limbs, asymmetrical face, unnatural pose, bad proportions,
-low resolution, pixelated, grainy, artificial looking`;
+**Crucial Rules:**
+1. **Complete Garment Replacement:** You MUST completely REMOVE and REPLACE the clothing item worn by the person in the 'model image' with the new garment. No part of the original clothing (e.g., collars, sleeves, patterns) should be visible in the final image.
+2. **Preserve the Model:** The person's face, hair, body shape, and pose from the 'model image' MUST remain unchanged.
+3. **Preserve the Background:** The entire background from the 'model image' MUST be preserved perfectly.
+4. **Apply the Garment:** Realistically fit the new garment onto the person. It should adapt to their pose with natural folds, shadows, and lighting consistent with the original scene.
+5. **Output:** Return ONLY the final, edited image. Do not include any text.`;
 
 /**
  * Pose-specific prompt segments
+ * These match the pose titles shown in the UI
  */
 export const POSE_PROMPTS = {
   pose1: {
     name: 'Pose de Estudio',
-    description: 'Full frontal studio pose with hands on hips',
-    prompt: `Full body frontal view, standing straight facing the camera, hands elegantly placed on hips,
-confident bridal pose, symmetrical composition, direct eye contact with camera,
-studio photography setup, professional bridal portrait style.`,
+    description: 'Studio pose - frontal view',
+    prompt: `Pose de Estudio: Full body frontal view, standing straight facing the camera, hands on hips, confident pose, symmetrical composition.`,
   },
   pose2: {
     name: 'Pose Natural',
-    description: 'Natural 3/4 turn pose',
-    prompt: `Three-quarter body turn, slightly angled to the side (45 degrees),
-one hand gently touching the dress fabric, natural relaxed pose, soft smile,
-looking slightly off-camera, elegant and romantic atmosphere,
-natural bridal photography style with soft bokeh background.`,
+    description: 'Natural pose - 3/4 turn',
+    prompt: `Pose Natural: Three-quarter body turn, slightly angled to the side, natural relaxed pose, one hand gently placed, elegant and romantic.`,
   },
   pose3: {
     name: 'Pose de Perfil',
-    description: 'Full profile side pose',
-    prompt: `Full body side profile view (90 degrees), standing elegantly,
-showing the complete silhouette of the wedding dress from side angle,
-one arm naturally down, the other slightly raised showing dress details,
-graceful profile pose, highlighting dress shape and train,
-editorial bridal photography style.`,
+    description: 'Profile pose - side view',
+    prompt: `Pose de Perfil: Full body side profile view, standing elegantly, showing the complete silhouette from the side.`,
   },
 } as const;
-
-/**
- * Quality and technical parameters
- */
-export const QUALITY_PARAMETERS = {
-  resolution: '8K, ultra high resolution, sharp focus',
-  lighting: 'professional studio lighting, soft diffused light, natural window light',
-  details: 'intricate fabric details, realistic texture, fine lace patterns, delicate embroidery',
-  style: 'commercial bridal photography, fashion editorial style, professional retouching',
-  camera: 'shot with professional DSLR, 85mm portrait lens, shallow depth of field',
-};
 
 /**
  * Generate complete prompt for virtual try-on
@@ -79,34 +55,15 @@ export const generateTryOnPrompt = (poseId: keyof typeof POSE_PROMPTS, dressId: 
     return generateTryOnPrompt('pose1', dressId);
   }
 
-  // Construct the complete prompt
-  const completePrompt = `
-${BASE_TRYON_PROMPT}
+  // Construct the complete prompt: Base instructions + Pose specification
+  const completePrompt = `${BASE_TRYON_PROMPT}
 
-POSE SPECIFICATION:
-${poseConfig.prompt}
-
-QUALITY REQUIREMENTS:
-- ${QUALITY_PARAMETERS.resolution}
-- ${QUALITY_PARAMETERS.lighting}
-- ${QUALITY_PARAMETERS.details}
-- ${QUALITY_PARAMETERS.style}
-- ${QUALITY_PARAMETERS.camera}
-
-Additional context: Wedding dress ID ${dressId}, ${poseConfig.name} (${poseConfig.description})
-  `.trim();
+**Pose Specification:**
+${poseConfig.prompt}`;
 
   console.log(`[promptTemplates] Generated prompt for ${poseId}:`, completePrompt);
 
   return completePrompt;
-};
-
-/**
- * Get negative prompt for generation
- * Use this to specify what should NOT appear in the generated image
- */
-export const getNegativePrompt = (): string => {
-  return NEGATIVE_PROMPT;
 };
 
 /**
