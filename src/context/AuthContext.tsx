@@ -82,10 +82,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * Stores token and user in state and localStorage
    */
   const login = useCallback((newToken: string, newUser: UserProfile) => {
+    console.log('[AuthContext] Login called with user:', {
+      hasAvatar: newUser.hasAvatar,
+      name: newUser.name,
+      id: newUser.id
+    });
     setToken(newToken);
     setUser(newUser);
     localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, newToken);
     localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(newUser));
+    console.log('[AuthContext] User saved to localStorage:', JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_PROFILE) || '{}'));
   }, []);
 
   /**
