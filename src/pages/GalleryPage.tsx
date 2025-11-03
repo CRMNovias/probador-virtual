@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header.js';
 import { Navigation } from '../components/layout/Navigation.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
+import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
 import { getUserTryOns, deleteTryOn } from '../services/tryOnService.js';
 import { downloadImage, generateTryOnFilename } from '../utils/downloadImage.js';
 import type { TryOnCategory } from '../types/index.js';
@@ -193,7 +194,7 @@ export const GalleryPage: React.FC = () => {
                     >
                       <div>
                         <h2 className="text-xl font-serif text-[#4a3f35]">
-                          Vestido ID: {category.dressId}
+                          Prenda ID: {category.dressId || 'No disponible'}
                         </h2>
                         <p className="text-sm text-gray-500 font-light">
                           {category.tryOns.length} prueba(s) generada(s)
@@ -216,10 +217,10 @@ export const GalleryPage: React.FC = () => {
                               className="group relative rounded-lg overflow-hidden aspect-[2/3] cursor-pointer"
                               onClick={() => setViewerImage(tryOn.imageUrl)}
                             >
-                              <img
+                              <WatermarkedImage
                                 src={tryOn.imageUrl}
                                 alt={`Try-on ${tryOn.id}`}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full"
                               />
 
                               {/* Hover Overlay */}
@@ -278,10 +279,10 @@ export const GalleryPage: React.FC = () => {
           onClick={() => setViewerImage(null)}
         >
           <div className="relative max-w-[90vw] max-h-[90vh]">
-            <img
+            <WatermarkedImage
               src={viewerImage}
               alt="Vista ampliada"
-              className="max-w-full max-h-full object-contain rounded-lg"
+              className="max-w-full max-h-full rounded-lg"
             />
             <button
               onClick={() => setViewerImage(null)}

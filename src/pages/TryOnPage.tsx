@@ -11,6 +11,7 @@ import { Header } from '../components/layout/Header.js';
 import { Navigation } from '../components/layout/Navigation.js';
 import { Loader } from '../components/shared/Loader.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
+import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
 import { useApp } from '../context/AppContext.js';
 import { getAvatar } from '../services/avatarService.js';
 import { generateTryOn, deleteTryOn } from '../services/tryOnService.js';
@@ -306,16 +307,11 @@ export const TryOnPage: React.FC = () => {
 
             {!isLoading && !avatarError && displayImageUrl && (
               <>
-                <img
+                <WatermarkedImage
                   src={displayImageUrl}
                   alt="Virtual Try-On"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full"
                 />
-
-                {/* Watermark */}
-                <div className="absolute bottom-4 left-4 text-xs font-serif text-[#2C2419] bg-white/60 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
-                  Atelier de Bodas
-                </div>
 
                 {/* Action Buttons (solo si hay try-on generada) */}
                 {generatedTryOn && (

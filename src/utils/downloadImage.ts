@@ -1,32 +1,67 @@
 /**
  * Download Image Utility
  *
- * Helper function to download images from URLs
+ * Helper functions to download images with watermark
  */
 
+import logoImg from '../assets/images/logo/logo.jpg';
+
 /**
- * Download an image from a URL
+ * Download an image with watermark applied
  *
  * @param imageUrl - URL of the image to download
  * @param filename - Name for the downloaded file (default: 'image.png')
  */
 export const downloadImage = async (imageUrl: string, filename: string = 'image.png'): Promise<void> => {
   try {
-    console.log('[downloadImage] Starting download:', { imageUrl, filename });
+    console.log('[downloadImage] Starting download with watermark:', { imageUrl, filename });
 
-    // Fetch the image
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    // Create a canvas to composite the image with watermark
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Failed to get canvas context');
     }
 
-    // Get the blob
-    const blob = await response.blob();
+    // Load the main image
+    const mainImage = await loadImage(imageUrl);
 
-    // Create a temporary URL for the blob
+    // Set canvas size to match image
+    canvas.width = mainImage.width;
+    canvas.height = mainImage.height;
+
+    // Draw main image
+    ctx.drawImage(mainImage, 0, 0);
+
+    // Load and draw watermark
+    const watermark = await loadImage(logoImg);
+
+    // Watermark dimensions: 254x90 (original size)
+    const watermarkWidth = 254;
+    const watermarkHeight = 90;
+
+    // Position: 50px from right and bottom
+    const xPosition = canvas.width - watermarkWidth - 50;
+    const yPosition = canvas.height - watermarkHeight - 50;
+
+    // Draw watermark with slight transparency
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(watermark, xPosition, yPosition, watermarkWidth, watermarkHeight);
+    ctx.globalAlpha = 1.0;
+
+    // Convert canvas to blob
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Failed to create blob from canvas'));
+        }
+      }, 'image/png');
+    });
+
+    // Create download link
     const blobUrl = window.URL.createObjectURL(blob);
-
-    // Create a temporary anchor element and trigger download
     const link = document.createElement('a');
     link.href = blobUrl;
     link.download = filename;
@@ -42,6 +77,19 @@ export const downloadImage = async (imageUrl: string, filename: string = 'image.
     console.error('[downloadImage] Download failed:', error);
     throw error;
   }
+};
+
+/**
+ * Helper function to load an image
+ */
+const loadImage = (url: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous'; // Enable CORS
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url;
+  });
 };
 
 /**
