@@ -35,19 +35,22 @@ export const AuthPage: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   /**
-   * Redirect if already authenticated
-   * IMPORTANT: Only redirect when user arrives already authenticated,
-   * not during the auth flow itself (phone/code/registration steps)
+   * Redirect authenticated users
+   * Handles both:
+   * 1. Users who arrive already authenticated (currentStep === 'phone')
+   * 2. Users who just completed authentication (any step)
    */
   useEffect(() => {
-    // Only redirect if user is authenticated AND we're still in the phone step
-    // This means they arrived already logged in
-    if (!isLoading && isAuthenticated && user && currentStep === 'phone') {
+    if (!isLoading && isAuthenticated && user) {
       // If user has avatar, go to try-on page
       // Otherwise, go to avatar creation
       if (user.hasAvatar) {
+        console.log('[AuthPage] Redirecting to try-on (user has avatar)');
         navigate('/try-on', { replace: true });
-      } else {
+      } else if (currentStep !== 'registration') {
+        // Only auto-redirect to avatar creation if not in registration step
+        // Registration step will handle its own navigation
+        console.log('[AuthPage] Redirecting to avatar creation (user has no avatar)');
         navigate('/avatar-creation', { replace: true });
       }
     }
@@ -68,12 +71,12 @@ export const AuthPage: React.FC = () => {
    */
   const handleCodeVerified = (needsRegistration: boolean): void => {
     if (needsRegistration) {
-      // New user - show registration form
+      // New user without profile - show registration form
       setCurrentStep('registration');
     } else {
-      // Existing user - navigate based on avatar status
-      // Navigation will be handled by the useEffect above
-      navigate('/avatar-creation', { replace: true });
+      // Existing user with profile - navigation based on avatar status
+      // The useEffect above will handle navigation automatically
+      // based on user.hasAvatar value that was set during login
     }
   };
 

@@ -242,7 +242,7 @@ export interface SharedTryOn {
 
 ```bash
 # Try-On Endpoints (Phase 1 + Phase 2)
-VITE_ENDPOINT_TRYON_GENERATE=/tryons/generat
+VITE_ENDPOINT_TRYON_GENERATE=/tryons/generate
 VITE_ENDPOINT_TRYON_GET_USER=/tryons/user
 VITE_ENDPOINT_TRYON_DELETE=/tryons
 VITE_ENDPOINT_TRYON_SHARE=/tryons/share           # NEW

@@ -18,10 +18,13 @@ export interface UserProfile {
 
 /**
  * Basic user info from auth response (Phase 1 - Backend API Spec)
+ * When hasProfile is true, name and email will be populated
  */
 export interface AuthUser {
   id: string;
   phone: string;
+  name?: string;
+  email?: string;
   createdAt: string;
 }
 

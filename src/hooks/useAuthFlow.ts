@@ -11,6 +11,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { sendCode, verifyCode } from '../services/authService.js';
+import { getAvatar } from '../services/avatarService.js';
 import { errorMessages } from '../constants/errorMessages.js';
 import type { AxiosError } from 'axios';
 
@@ -160,27 +161,46 @@ export const useAuthFlow = (): UseAuthFlowReturn => {
           return { success: false, needsRegistration: false };
         }
 
-        // Convert AuthUser to UserProfile with defaults
+        // Check if user needs registration using backend's hasProfile flag
+        // hasProfile: true = user has completed name/email registration (name and email will be present)
+        // hasProfile: false = user needs to complete registration
+        const needsRegistration = !response.data.hasProfile;
+
+        // Map AuthUser data - when hasProfile is true, name and email are included
+        const userName = response.data.user.name || null;
+        const userEmail = response.data.user.email || null;
+
+        // Check if user has avatar by calling getAvatar endpoint
+        // This is important for correct navigation flow
+        let hasAvatar = false;
+        try {
+          const avatar = await getAvatar();
+          hasAvatar = !!avatar.imageUrl;
+          console.log('[useAuthFlow] Avatar check:', { hasAvatar, avatarUrl: avatar.imageUrl });
+        } catch (err) {
+          // If avatar endpoint returns 404, user doesn't have avatar yet
+          console.log('[useAuthFlow] No avatar found for user (expected for new users)');
+          hasAvatar = false;
+        }
+
+        // Convert AuthUser to UserProfile
         const userProfile = {
           id: response.data.user.id,
           phone: response.data.user.phone,
           createdAt: response.data.user.createdAt,
-          name: null,
-          email: null,
-          hasAvatar: false, // Will be updated when user creates avatar
+          name: userName,
+          email: userEmail,
+          hasAvatar,
         };
 
         // Login with token and user data
         login(response.data.token, userProfile);
 
-        // Check if user needs registration using backend's hasProfile flag
-        // hasProfile: true = user has completed name/email registration
-        // hasProfile: false = user needs to complete registration
-        const needsRegistration = !response.data.hasProfile;
-
-        console.log('[useAuthFlow] Registration check:', {
+        console.log('[useAuthFlow] Authentication successful:', {
           hasProfile: response.data.hasProfile,
           needsRegistration,
+          hasAvatar,
+          userName,
           userId: response.data.user.id
         });
 
