@@ -10,6 +10,7 @@ import { Header } from '../components/layout/Header.js';
 import { Navigation } from '../components/layout/Navigation.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
 import { getUserTryOns, deleteTryOn } from '../services/tryOnService.js';
+import { downloadImage, generateTryOnFilename } from '../utils/downloadImage.js';
 import type { TryOnCategory } from '../types/index.js';
 
 // Icons
@@ -39,6 +40,14 @@ const TrashIcon = () => (
     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
     <line x1="10" y1="11" x2="10" y2="17"/>
     <line x1="14" y1="11" x2="14" y2="17"/>
+  </svg>
+);
+
+const DownloadIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
   </svg>
 );
 
@@ -117,6 +126,19 @@ export const GalleryPage: React.FC = () => {
     // Clear selected IDs when modal closes
     setSelectedTryOnId('');
     setSelectedDressId('');
+  };
+
+  const handleDownload = async (e: React.MouseEvent, imageUrl: string, tryOnId: string, dressId: string) => {
+    e.stopPropagation();
+    console.log('[GalleryPage] Download button clicked:', { tryOnId, dressId, imageUrl });
+    try {
+      const filename = generateTryOnFilename(tryOnId, dressId);
+      await downloadImage(imageUrl, filename);
+      console.log('[GalleryPage] Download successful:', filename);
+    } catch (error) {
+      console.error('[GalleryPage] Download failed:', error);
+      alert('Error al descargar la imagen. Por favor, inténtalo de nuevo.');
+    }
   };
 
   const confirmDelete = async () => {
@@ -201,7 +223,7 @@ export const GalleryPage: React.FC = () => {
                               />
 
                               {/* Hover Overlay */}
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                 <button
                                   onClick={e => {
                                     e.stopPropagation();
@@ -211,6 +233,13 @@ export const GalleryPage: React.FC = () => {
                                   title="Ampliar"
                                 >
                                   <MaximizeIcon />
+                                </button>
+                                <button
+                                  onClick={e => handleDownload(e, tryOn.imageUrl, tryOn.id, category.dressId)}
+                                  className="p-2 bg-white/80 rounded-full text-gray-800 hover:scale-110 transition-transform"
+                                  title="Descargar"
+                                >
+                                  <DownloadIcon />
                                 </button>
                                 <button
                                   onClick={e => handleShare(e, tryOn.id, category.dressId)}
