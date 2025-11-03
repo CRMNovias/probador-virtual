@@ -104,9 +104,19 @@ export const GalleryPage: React.FC = () => {
 
   const handleShare = (e: React.MouseEvent, tryOnId: string, dressId: string) => {
     e.stopPropagation();
+    console.log('[GalleryPage] Share button clicked:', { tryOnId, dressId });
     setSelectedTryOnId(tryOnId);
     setSelectedDressId(dressId);
     setShareModalOpen(true);
+    console.log('[GalleryPage] Share modal state:', { shareModalOpen: true, selectedTryOnId: tryOnId, selectedDressId: dressId });
+  };
+
+  const handleCloseShareModal = () => {
+    console.log('[GalleryPage] Closing share modal');
+    setShareModalOpen(false);
+    // Clear selected IDs when modal closes
+    setSelectedTryOnId('');
+    setSelectedDressId('');
   };
 
   const confirmDelete = async () => {
@@ -283,14 +293,12 @@ export const GalleryPage: React.FC = () => {
       )}
 
       {/* Share Modal */}
-      {selectedTryOnId && selectedDressId && (
-        <ShareModal
-          isOpen={shareModalOpen}
-          tryOnId={selectedTryOnId}
-          dressId={selectedDressId}
-          onClose={() => setShareModalOpen(false)}
-        />
-      )}
+      <ShareModal
+        isOpen={shareModalOpen}
+        tryOnId={selectedTryOnId}
+        dressId={selectedDressId}
+        onClose={handleCloseShareModal}
+      />
     </div>
   );
 };

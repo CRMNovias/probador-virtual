@@ -11,7 +11,6 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { sendCode, verifyCode } from '../services/authService.js';
-import { getAvatar } from '../services/avatarService.js';
 import { errorMessages } from '../constants/errorMessages.js';
 import type { AxiosError } from 'axios';
 
@@ -170,18 +169,8 @@ export const useAuthFlow = (): UseAuthFlowReturn => {
         const userName = response.data.user.name || null;
         const userEmail = response.data.user.email || null;
 
-        // Check if user has avatar by calling getAvatar endpoint
-        // This is important for correct navigation flow
-        let hasAvatar = false;
-        try {
-          const avatar = await getAvatar();
-          hasAvatar = !!avatar.imageUrl;
-          console.log('[useAuthFlow] Avatar check:', { hasAvatar, avatarUrl: avatar.imageUrl });
-        } catch (err) {
-          // If avatar endpoint returns 404, user doesn't have avatar yet
-          console.log('[useAuthFlow] No avatar found for user (expected for new users)');
-          hasAvatar = false;
-        }
+        // Backend now provides hasAvatar directly in the response
+        const hasAvatar = response.data.hasAvatar;
 
         // Convert AuthUser to UserProfile
         const userProfile = {
@@ -198,8 +187,8 @@ export const useAuthFlow = (): UseAuthFlowReturn => {
 
         console.log('[useAuthFlow] Authentication successful:', {
           hasProfile: response.data.hasProfile,
+          hasAvatar: response.data.hasAvatar,
           needsRegistration,
-          hasAvatar,
           userName,
           userId: response.data.user.id
         });

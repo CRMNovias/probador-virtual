@@ -89,6 +89,7 @@ export interface VerifyCodeResponse {
     token: string;
     expiresIn: number;
     hasProfile: boolean;  // Indicates if user has completed profile (name + email)
+    hasAvatar: boolean;   // Indicates if user has uploaded/generated an avatar
     user: AuthUser;
   };
   message: string;

@@ -15,6 +15,7 @@ import { useApp } from '../context/AppContext.js';
 import { getAvatar } from '../services/avatarService.js';
 import { generateTryOn, deleteTryOn } from '../services/tryOnService.js';
 import { routes } from '../constants/routes.js';
+import { generateTryOnPrompt, POSE_PROMPTS } from '../constants/promptTemplates.js';
 import type { Avatar, GenerateTryOnRequest } from '../types/index.js';
 
 // Import pose images
@@ -64,24 +65,24 @@ const TrashIcon = () => (
   </svg>
 );
 
-// 3 Poses predefinidas (frontend)
+// 3 Poses predefinidas (frontend) - UI display configuration
 const POSES = [
   {
-    id: 'pose1',
-    name: 'Pose de Estudio',
-    prompt: 'Vista frontal completa, manos en cadera, pose elegante de estudio',
+    id: 'pose1' as const,
+    name: POSE_PROMPTS.pose1.name,
+    description: POSE_PROMPTS.pose1.description,
     image: pose1Img,
   },
   {
-    id: 'pose2',
-    name: 'Pose Natural',
-    prompt: 'Vista 3/4 ligeramente girada, pose natural y relajada',
+    id: 'pose2' as const,
+    name: POSE_PROMPTS.pose2.name,
+    description: POSE_PROMPTS.pose2.description,
     image: pose2Img,
   },
   {
-    id: 'pose3',
-    name: 'Pose de Perfil',
-    prompt: 'Perfil lateral completo, pose elegante de perfil',
+    id: 'pose3' as const,
+    name: POSE_PROMPTS.pose3.name,
+    description: POSE_PROMPTS.pose3.description,
     image: pose3Img,
   },
 ];
@@ -159,19 +160,39 @@ export const TryOnPage: React.FC = () => {
     setLoadingMessage('Generando tu prueba virtual...');
 
     try {
+      // Generate comprehensive AI prompt using professional template
+      const fullPrompt = generateTryOnPrompt(selectedPose.id, dressId);
+
+      console.log('[TryOnPage] Generating try-on with:', {
+        dressId,
+        poseId: selectedPose.id,
+        poseName: selectedPose.name,
+        promptLength: fullPrompt.length,
+        promptPreview: fullPrompt.substring(0, 100) + '...'
+      });
+
       const request: GenerateTryOnRequest = {
         dressId,
-        prompt: selectedPose.prompt,
+        prompt: fullPrompt,
       };
+
+      console.log('[TryOnPage] Full prompt being sent to backend:', fullPrompt);
 
       const response = await generateTryOn(request);
 
+      console.log('[TryOnPage] Try-on generated successfully:', {
+        tryOnId: response.data.id,
+        imageUrl: response.data.imageUrl,
+        thumbnailUrl: response.data.thumbnailUrl
+      });
+
       setGeneratedTryOn({
-        id: response.tryOnId,
-        url: response.imageUrl,
+        id: response.data.id,
+        url: response.data.imageUrl,
         poseId: selectedPoseId,
       });
     } catch (err) {
+      console.error('[TryOnPage] Error generating try-on:', err);
       setError(err instanceof Error ? err.message : 'Error al generar prueba virtual');
     } finally {
       setIsLoading(false);

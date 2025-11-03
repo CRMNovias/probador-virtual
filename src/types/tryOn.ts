@@ -41,14 +41,19 @@ export interface TryOnCategory {
 }
 
 /**
- * Response from try-on generation
+ * Response from try-on generation (Backend API structure)
  */
 export interface UploadTryOnResponse {
   success: boolean;
-  tryOnId: string;
-  imageUrl: string;
-  createdAt: string;
-  status: 'processing' | 'ready' | 'failed';
+  data: {
+    id: string;           // Backend uses 'id' instead of 'tryOnId'
+    userId: string;
+    dressId: string;
+    imageUrl: string;
+    thumbnailUrl?: string;
+    createdAt: string;
+  };
+  message: string;
 }
 
 /**
@@ -56,6 +61,6 @@ export interface UploadTryOnResponse {
  */
 export interface GenerateTryOnRequest {
   dressId: string;
-  poseId?: string; // Optional - can use prompt instead
-  prompt?: string; // Optional - AI generation prompt for custom poses
+  prompt: string; // AI generation prompt (comprehensive prompt with pose and quality specifications)
+  poseId?: string; // Optional - for tracking/logging purposes
 }
