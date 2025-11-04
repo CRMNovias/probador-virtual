@@ -319,8 +319,8 @@ export const AvatarCreationPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Terms */}
-              <div className="pt-4 border-t border-[#000000]/20">
+              {/* Terms - Desktop only */}
+              <div className="hidden md:block pt-4 border-t border-[#000000]/20">
                 <p className="text-xs text-[#333333]/70 leading-relaxed">
                   Al subir, aceptas no crear contenido dañino, explícito o ilegal.
                   Este servicio es solo para uso creativo y responsable.
@@ -331,6 +331,14 @@ export const AvatarCreationPage: React.FC = () => {
             {/* Mobile - Example Comparison (below form) */}
             <div className="md:hidden mt-8">
               <ExampleComparison />
+            </div>
+
+            {/* Terms - Mobile only (after example) */}
+            <div className="md:hidden pt-4 border-t border-[#000000]/20 mt-6">
+              <p className="text-xs text-[#333333]/70 leading-relaxed">
+                Al subir, aceptas no crear contenido dañino, explícito o ilegal.
+                Este servicio es solo para uso creativo y responsable.
+              </p>
             </div>
           </div>
 
