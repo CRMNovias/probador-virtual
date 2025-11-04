@@ -1,18 +1,19 @@
 /**
- * Header Component (Phase 1)
+ * Header Component (Phase 1 - Updated)
  *
- * Top navigation header with branding and user menu.
+ * Top navigation header with main menu and user menu.
  *
  * Features:
- * - App logo and branding
+ * - Main navigation tabs (Probador, Galería, Citas)
  * - User phone display (if authenticated)
  * - Logout button
+ * - Active state highlighting
  * - Sticky positioning
  * - Responsive design
  */
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.js';
 import { useApp } from '../../context/AppContext.js';
 import { routes } from '../../constants/routes.js';
@@ -42,14 +43,95 @@ const getUserDisplayName = (user: { name?: string | null; phone?: string | null 
 };
 
 /**
+ * Navigation tab definition
+ */
+interface NavTab {
+  label: string;
+  path: string;
+  icon: (isActive: boolean) => React.ReactNode;
+}
+
+/**
+ * Navigation tabs configuration
+ */
+const navTabs: NavTab[] = [
+  {
+    label: 'Probador',
+    path: routes.TRY_ON,
+    icon: (isActive: boolean) => (
+      <svg
+        className="w-5 h-5"
+        fill={isActive ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: 'Galería',
+    path: routes.GALLERY,
+    icon: (isActive: boolean) => (
+      <svg
+        className="w-5 h-5"
+        fill={isActive ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: 'Citas',
+    path: routes.APPOINTMENTS,
+    icon: (isActive: boolean) => (
+      <svg
+        className="w-5 h-5"
+        fill={isActive ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+];
+
+/**
  * Header Component
  */
 export const Header: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
-  const { clearAppState } = useApp();
+  const { clearAppState, dressId } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
+
+  /**
+   * Build navigation path with dressId if available
+   */
+  const buildNavPath = (path: string): string => {
+    if (!dressId) return path;
+    return `${path}?dressId=${dressId}`;
+  };
 
   /**
    * Handle logout confirmation
@@ -79,12 +161,34 @@ export const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo / Brand */}
-        <div className="flex items-center space-x-2">
-          <h1 className="text-2xl font-serif text-[#4a3f35]">
-            Atelier de Bodas
-          </h1>
-        </div>
+        {/* Navigation Menu (replaces logo/brand) */}
+        <nav className="flex items-center gap-1">
+          {navTabs.map((tab) => {
+            const isActive = location.pathname === tab.path;
+
+            return (
+              <a
+                key={tab.path}
+                href={buildNavPath(tab.path)}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-lg
+                  transition-colors font-medium text-sm
+                  ${
+                    isActive
+                      ? 'text-[#8C6F5A] bg-[#8C6F5A]/10'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }
+                `}
+              >
+                {/* Icon */}
+                {tab.icon(isActive)}
+
+                {/* Label */}
+                <span className="hidden sm:inline">{tab.label}</span>
+              </a>
+            );
+          })}
+        </nav>
 
         {/* User Menu (if authenticated) */}
         {isAuthenticated && user && (

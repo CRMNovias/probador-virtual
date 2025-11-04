@@ -7,7 +7,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header.js';
-import { Navigation } from '../components/layout/Navigation.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
 import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
 import { getUserTryOns, deleteTryOn } from '../services/tryOnService.js';
@@ -161,7 +160,6 @@ export const GalleryPage: React.FC = () => {
         <main className="flex-1 flex items-center justify-center">
           <p className="text-gray-500">Cargando galería...</p>
         </main>
-        <Navigation />
       </div>
     );
   }
@@ -275,8 +273,6 @@ export const GalleryPage: React.FC = () => {
           )}
         </div>
       </main>
-
-      <Navigation />
 
       {/* Image Viewer Modal */}
       {viewerImage && (

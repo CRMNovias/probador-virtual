@@ -1,15 +1,15 @@
 /**
- * AppContext (Phase 1)
+ * AppContext (Phase 1 - Updated)
  *
  * Global application state context for managing:
- * - DressId from URL parameters (external source)
+ * - DressId and DressName from URL parameters (external source)
  * - Avatar state
  * - Other shared app state
  *
  * CRITICAL ARCHITECTURE:
- * - DressId ALWAYS comes from URL parameter (?dressId=xxx)
+ * - DressId and DressName ALWAYS come from URL parameters (?dressId=xxx&dressName=yyy)
  * - No dress selector UI exists
- * - DressId is extracted on app load and stored in context
+ * - DressId and DressName are extracted on app load and stored in context
  * - If dressId is missing, app shows error state
  */
 
@@ -33,6 +33,12 @@ export interface AppContextState {
    * This comes from the external catalog and is NEVER selected within the app
    */
   dressId: string | null;
+
+  /**
+   * Dress Name from URL parameter (optional)
+   * Display name for the selected dress/garment
+   */
+  dressName: string | null;
 
   /**
    * Whether dressId is missing (error state)
@@ -66,6 +72,7 @@ const AppContext = createContext<AppContextState | undefined>(undefined);
 const STORAGE_KEYS = {
   AVATAR_INFO: 'avatar_info',
   DRESS_ID: 'dress_id',
+  DRESS_NAME: 'dress_name',
 } as const;
 
 /**
@@ -83,15 +90,18 @@ export interface AppProviderProps {
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [searchParams] = useSearchParams();
   const [dressId, setDressId] = useState<string | null>(null);
+  const [dressName, setDressName] = useState<string | null>(null);
   const [isDressIdMissing, setIsDressIdMissing] = useState<boolean>(false);
   const [avatar, setAvatarState] = useState<AvatarInfo | null>(null);
 
   /**
-   * Extract dressId from URL on mount and persist to localStorage
+   * Extract dressId and dressName from URL on mount and persist to localStorage
    */
   useEffect(() => {
     const dressIdParam = searchParams.get('dressId');
+    const dressNameParam = searchParams.get('dressName');
     const storedDressId = localStorage.getItem(STORAGE_KEYS.DRESS_ID);
+    const storedDressName = localStorage.getItem(STORAGE_KEYS.DRESS_NAME);
 
     // Priority: URL param > localStorage
     if (dressIdParam) {
@@ -106,6 +116,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     } else {
       setDressId(null);
       setIsDressIdMissing(true);
+    }
+
+    // Handle dressName parameter
+    if (dressNameParam) {
+      // Decode URI component in case it has special characters
+      const decodedDressName = decodeURIComponent(dressNameParam);
+      setDressName(decodedDressName);
+      localStorage.setItem(STORAGE_KEYS.DRESS_NAME, decodedDressName);
+    } else if (storedDressName) {
+      // Fallback to stored dressName if not in URL
+      setDressName(storedDressName);
+    } else {
+      setDressName(null);
     }
   }, [searchParams]);
 
@@ -145,11 +168,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setAvatarState(null);
     localStorage.removeItem(STORAGE_KEYS.AVATAR_INFO);
     localStorage.removeItem(STORAGE_KEYS.DRESS_ID);
+    localStorage.removeItem(STORAGE_KEYS.DRESS_NAME);
     setDressId(null);
+    setDressName(null);
   }, []);
 
   const value: AppContextState = {
     dressId,
+    dressName,
     isDressIdMissing,
     avatar,
     setAvatar,

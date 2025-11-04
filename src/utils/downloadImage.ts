@@ -8,6 +8,7 @@ import logoImg from '../assets/images/logo/logo.jpg';
 
 /**
  * Download an image with watermark applied
+ * Uses canvas to composite watermark onto the image
  *
  * @param imageUrl - URL of the image to download
  * @param filename - Name for the downloaded file (default: 'image.png')
@@ -16,25 +17,25 @@ export const downloadImage = async (imageUrl: string, filename: string = 'image.
   try {
     console.log('[downloadImage] Starting download with watermark:', { imageUrl, filename });
 
-    // Create a canvas to composite the image with watermark
+    // Create canvas
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw new Error('Failed to get canvas context');
     }
 
-    // Load the main image
-    const mainImage = await loadImage(imageUrl);
+    // Load main image with CORS
+    const mainImage = await loadImageWithCORS(imageUrl);
 
-    // Set canvas size to match image
+    // Set canvas size
     canvas.width = mainImage.width;
     canvas.height = mainImage.height;
 
     // Draw main image
     ctx.drawImage(mainImage, 0, 0);
 
-    // Load and draw watermark
-    const watermark = await loadImage(logoImg);
+    // Load watermark (local file, no CORS issues)
+    const watermark = await loadImageWithCORS(logoImg);
 
     // Watermark dimensions: 254x90 (original size)
     const watermarkWidth = 254;
@@ -44,80 +45,67 @@ export const downloadImage = async (imageUrl: string, filename: string = 'image.
     const xPosition = canvas.width - watermarkWidth - 25;
     const yPosition = canvas.height - watermarkHeight - 25;
 
-    // Draw watermark with slight transparency
+    // Draw watermark with transparency
     ctx.globalAlpha = 0.9;
     ctx.drawImage(watermark, xPosition, yPosition, watermarkWidth, watermarkHeight);
     ctx.globalAlpha = 1.0;
 
-    // Convert canvas to blob
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error('Failed to create blob from canvas'));
-        }
-      }, 'image/png');
-    });
+    // Convert to blob and download
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        throw new Error('Failed to create blob');
+      }
 
-    // Create download link
-    const blobUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
 
-    // Cleanup
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(blobUrl);
+      console.log('[downloadImage] Download successful:', filename);
+    }, 'image/png');
 
-    console.log('[downloadImage] Download successful:', filename);
   } catch (error) {
     console.error('[downloadImage] Download failed:', error);
-    throw error;
+
+    // Fallback: try direct download without watermark
+    console.log('[downloadImage] Attempting fallback: direct download without watermark');
+    try {
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = filename;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      console.log('[downloadImage] Fallback download triggered');
+    } catch (fallbackError) {
+      console.error('[downloadImage] Fallback also failed:', fallbackError);
+      throw error;
+    }
   }
 };
 
 /**
- * Helper function to load an image
- * Uses fetch to bypass CORS issues with S3 images
+ * Load an image with proper CORS handling
  */
-const loadImage = async (url: string): Promise<HTMLImageElement> => {
-  try {
-    // For external URLs (S3), fetch as blob first to bypass CORS
-    if (url.startsWith('http')) {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+const loadImageWithCORS = (url: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
 
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-          URL.revokeObjectURL(blobUrl); // Cleanup
-          resolve(img);
-        };
-        img.onerror = () => {
-          URL.revokeObjectURL(blobUrl); // Cleanup
-          reject(new Error(`Failed to load image from blob: ${url}`));
-        };
-        img.src = blobUrl;
-      });
-    } else {
-      // For local images (like the logo), use direct loading
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-        img.src = url;
-      });
-    }
-  } catch (error) {
-    throw new Error(`Failed to fetch image: ${url} - ${error}`);
-  }
+    // Set crossOrigin BEFORE setting src
+    // Use 'anonymous' for public S3 buckets
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+
+    // Set src after configuring crossOrigin
+    img.src = url;
+  });
 };
 
 /**

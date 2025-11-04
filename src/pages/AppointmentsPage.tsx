@@ -6,7 +6,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header.js';
-import { Navigation } from '../components/layout/Navigation.js';
 import { getUserAppointments } from '../services/appointmentService.js';
 import type { Appointment } from '../types/index.js';
 
@@ -83,7 +82,6 @@ export const AppointmentsPage: React.FC = () => {
         <main className="flex-1 flex items-center justify-center">
           <p className="text-gray-500">Cargando citas...</p>
         </main>
-        <Navigation />
       </div>
     );
   }
@@ -192,8 +190,6 @@ export const AppointmentsPage: React.FC = () => {
           </div>
         </div>
       </main>
-
-      <Navigation />
     </div>
   );
 };

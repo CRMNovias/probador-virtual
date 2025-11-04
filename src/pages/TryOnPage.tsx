@@ -8,7 +8,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header.js';
-import { Navigation } from '../components/layout/Navigation.js';
 import { Loader } from '../components/shared/Loader.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
 import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
@@ -115,7 +114,7 @@ interface GeneratedTryOn {
  */
 export const TryOnPage: React.FC = () => {
   const navigate = useNavigate();
-  const { dressId } = useApp();
+  const { dressId, dressName } = useApp();
 
   const [avatar, setAvatar] = useState<Avatar | null>(null);
   const [selectedPoseId, setSelectedPoseId] = useState(POSES[0]?.id || 'pose1');
@@ -161,7 +160,6 @@ export const TryOnPage: React.FC = () => {
             </p>
           </div>
         </main>
-        <Navigation />
       </div>
     );
   }
@@ -310,7 +308,8 @@ export const TryOnPage: React.FC = () => {
                 <WatermarkedImage
                   src={displayImageUrl}
                   alt="Virtual Try-On"
-                  className="w-full h-full"
+                  className="w-full h-full cursor-pointer"
+                  onClick={() => setViewerImage(displayImageUrl)}
                 />
 
                 {/* Action Buttons (solo si hay try-on generada) */}
@@ -399,7 +398,9 @@ export const TryOnPage: React.FC = () => {
               <div className="text-center text-gray-500 italic text-sm mb-2">
                 Vista previa no disponible
               </div>
-              <p className="text-lg text-[#6B5647] font-light text-center">ID: {dressId}</p>
+              <p className="text-lg text-[#6B5647] font-light text-center">
+                {dressName || `ID: ${dressId}`}
+              </p>
             </div>
 
             {/* Card: Elige una pose */}
@@ -459,8 +460,6 @@ export const TryOnPage: React.FC = () => {
           </div>
         </div>
       </main>
-
-      <Navigation />
 
       {/* Image Viewer Modal */}
       {viewerImage && (
