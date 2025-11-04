@@ -43,12 +43,27 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   // Build full share URL with dressId
   const shareUrl = `${window.location.origin}/share/${tryOnId}?dressId=${dressId}`;
 
+  // Debug logs
+  useEffect(() => {
+    if (isOpen) {
+      console.log('[ShareModal] Modal opened with:', { tryOnId, dressId, shareUrl });
+    }
+  }, [isOpen, tryOnId, dressId, shareUrl]);
+
   /**
    * Copy share URL to clipboard
    */
   const handleCopy = async (): Promise<void> => {
+    console.log('[ShareModal] Copy button clicked, shareUrl:', shareUrl);
+
     try {
+      // Check if Clipboard API is available
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API not available');
+      }
+
       await navigator.clipboard.writeText(shareUrl);
+      console.log('[ShareModal] Copied to clipboard successfully');
       setCopied(true);
 
       // Reset copied state after 2 seconds
@@ -56,11 +71,30 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         setCopied(false);
       }, 2000);
     } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
+      console.error('[ShareModal] Failed to copy to clipboard:', err);
+
       // Fallback: select text for manual copy
       const input = document.getElementById('share-url-input') as HTMLInputElement;
       if (input) {
         input.select();
+        input.setSelectionRange(0, 99999); // For mobile devices
+
+        // Try legacy execCommand as fallback
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            console.log('[ShareModal] Copied using execCommand fallback');
+            setCopied(true);
+            setTimeout(() => {
+              setCopied(false);
+            }, 2000);
+          } else {
+            alert('Por favor, copia el enlace manualmente (ya está seleccionado).');
+          }
+        } catch (execErr) {
+          console.error('[ShareModal] execCommand also failed:', execErr);
+          alert('Por favor, copia el enlace manualmente (ya está seleccionado).');
+        }
       }
     }
   };
