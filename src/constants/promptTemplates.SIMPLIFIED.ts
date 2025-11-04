@@ -5,7 +5,7 @@
  */
 
 export const BASE_TRYON_PROMPT_SIMPLE = `Professional photo of a bride wearing an elegant wedding dress.
-Natural lighting, elegant studio background.
+Natural lighting, elegant dark gray studio background.
 Beautiful bride with professional makeup, realistic photography.`;
 
 export const POSE_PROMPTS_SIMPLE = {

@@ -158,11 +158,21 @@ export const Header: React.FC = () => {
     setShowLogoutConfirm(false);
   };
 
+  // Get current active tab
+  const activeTab = navTabs.find(tab => location.pathname === tab.path);
+
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Navigation Menu (replaces logo/brand) */}
-        <nav className="flex items-center gap-1">
+        {/* Mobile: Show active section name */}
+        <div className="sm:hidden">
+          <h1 className="text-lg font-serif text-black">
+            {activeTab?.label || 'Atelier de Bodas'}
+          </h1>
+        </div>
+
+        {/* Desktop: Navigation Menu */}
+        <nav className="hidden sm:flex items-center gap-1">
           {navTabs.map((tab) => {
             const isActive = location.pathname === tab.path;
 
@@ -175,7 +185,7 @@ export const Header: React.FC = () => {
                   transition-colors font-medium text-sm
                   ${
                     isActive
-                      ? 'text-[#8C6F5A] bg-[#8C6F5A]/10'
+                      ? 'text-black bg-gray-100'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }
                 `}
@@ -184,7 +194,7 @@ export const Header: React.FC = () => {
                 {tab.icon(isActive)}
 
                 {/* Label */}
-                <span className="hidden sm:inline">{tab.label}</span>
+                <span>{tab.label}</span>
               </a>
             );
           })}
@@ -204,7 +214,7 @@ export const Header: React.FC = () => {
               aria-label="Menú de usuario"
             >
               {/* User Icon */}
-              <div className="w-8 h-8 rounded-full bg-[#8C6F5A] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-white"
                   fill="none"

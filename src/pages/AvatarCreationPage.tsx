@@ -193,7 +193,7 @@ export const AvatarCreationPage: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
+      <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <Loader text={loadingMessage} />
@@ -205,7 +205,7 @@ export const AvatarCreationPage: React.FC = () => {
   // Comparison view
   if (showComparison && uploadedPhotoUrl && generatedAvatarUrl) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
+      <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <main className="flex-1 flex items-center justify-center p-4">
           <AvatarComparison
@@ -221,7 +221,7 @@ export const AvatarCreationPage: React.FC = () => {
 
   // Upload view
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
       <main className="flex-1 flex items-center justify-center p-4 md:p-8">
@@ -229,10 +229,10 @@ export const AvatarCreationPage: React.FC = () => {
           {/* Left side - Content */}
           <div className="space-y-8 text-left">
             <div>
-              <h1 className="text-5xl md:text-6xl font-serif text-[#2C2419] leading-tight mb-4">
+              <h1 className="text-5xl md:text-6xl font-serif text-[#000000] leading-tight mb-4">
                 Crea tu Modelo para Cualquier Look.
               </h1>
-              <p className="text-lg text-[#6B5647] leading-relaxed">
+              <p className="text-lg text-[#333333] leading-relaxed">
                 ¿Alguna vez te preguntaste cómo te quedaría un vestido? Deja de imaginar.
                 Sube una foto y descúbrelo. Nuestra IA crea tu modelo personal,
                 listo para probarse cualquier cosa.
@@ -245,7 +245,7 @@ export const AvatarCreationPage: React.FC = () => {
                 htmlFor="photo-upload"
                 className="block w-full cursor-pointer group"
               >
-                <div className="bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white rounded-2xl p-8 text-center hover:shadow-2xl transition-all duration-300 shadow-xl transform hover:scale-[1.02]">
+                <div className="bg-gradient-to-br from-[#000000] to-[#333333] text-white rounded-2xl p-8 text-center hover:shadow-2xl transition-all duration-300 shadow-xl transform hover:scale-[1.02]">
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
                       <svg
@@ -279,23 +279,23 @@ export const AvatarCreationPage: React.FC = () => {
 
               {/* Tips Section */}
               <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 shadow-md border border-white/40">
-                <h3 className="text-sm font-semibold text-[#2C2419] mb-3 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-[#8C6F5A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h3 className="text-sm font-semibold text-[#000000] mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-[#000000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Consejos para mejores resultados
                 </h3>
-                <ul className="space-y-2 text-sm text-[#6B5647]">
+                <ul className="space-y-2 text-sm text-[#333333]">
                   <li className="flex items-start gap-2">
-                    <span className="text-[#8C6F5A] mt-0.5">•</span>
+                    <span className="text-[#000000] mt-0.5">•</span>
                     <span>Primer plano del rostro o cara y hombros</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#8C6F5A] mt-0.5">•</span>
+                    <span className="text-[#000000] mt-0.5">•</span>
                     <span>Buena iluminación frontal</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#8C6F5A] mt-0.5">•</span>
+                    <span className="text-[#000000] mt-0.5">•</span>
                     <span>Hombros descubiertos si el vestido lo requiere</span>
                   </li>
                 </ul>
@@ -308,8 +308,8 @@ export const AvatarCreationPage: React.FC = () => {
               )}
 
               {/* Terms */}
-              <div className="pt-4 border-t border-[#8C6F5A]/20">
-                <p className="text-xs text-[#6B5647]/70 leading-relaxed">
+              <div className="pt-4 border-t border-[#000000]/20">
+                <p className="text-xs text-[#333333]/70 leading-relaxed">
                   Al subir, aceptas no crear contenido dañino, explícito o ilegal.
                   Este servicio es solo para uso creativo y responsable.
                 </p>

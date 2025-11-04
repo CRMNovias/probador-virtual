@@ -288,15 +288,15 @@ export const TryOnPage: React.FC = () => {
             {!isLoading && avatarError && (
               <div className="text-center p-8 max-w-md">
                 <div className="mb-4">
-                  <svg className="w-16 h-16 mx-auto text-[#8C6F5A] opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-16 h-16 mx-auto text-[#000000] opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-serif text-[#2C2419] mb-2">Error al cargar avatar</h3>
-                <p className="text-sm text-[#6B5647] mb-6 leading-relaxed">{avatarError}</p>
+                <h3 className="text-xl font-serif text-[#000000] mb-2">Error al cargar avatar</h3>
+                <p className="text-sm text-[#1a1a1a] mb-6 leading-relaxed">{avatarError}</p>
                 <button
                   onClick={handleChangePhoto}
-                  className="bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white px-8 py-3 rounded-xl hover:shadow-xl transition-all duration-300 shadow-lg transform hover:scale-[1.02]"
+                  className="bg-gradient-to-br from-[#000000] to-[#1a1a1a] text-white px-8 py-3 rounded-xl hover:shadow-xl transition-all duration-300 shadow-lg transform hover:scale-[1.02]"
                 >
                   Crear Avatar
                 </button>
@@ -363,14 +363,22 @@ export const TryOnPage: React.FC = () => {
 
           {/* Columna Derecha: Controles */}
           <div className="flex flex-col gap-6">
+            {/* Card: Prenda Seleccionada */}
+            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/40">
+              <h2 className="text-2xl font-serif text-[#000000] mb-3">Prenda Seleccionada</h2>
+              <p className="text-lg text-[#1a1a1a] font-light text-center">
+                {dressName || `ID: ${dressId}`}
+              </p>
+            </div>
+
             {/* Card: Tu Avatar */}
             <div className="bg-white/60 backdrop-blur-sm p-5 rounded-2xl shadow-lg border border-white/40">
-              <h3 className="text-lg font-serif text-[#2C2419] mb-3">Tu Avatar</h3>
+              <h3 className="text-lg font-serif text-[#000000] mb-3">Tu Avatar</h3>
               <div className="flex gap-2 flex-wrap">
                 {generatedTryOn && (
                   <button
                     onClick={handleViewAvatar}
-                    className="flex-1 text-sm flex items-center justify-center gap-2 bg-white/80 text-[#2C2419] py-2.5 px-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 border border-[#8C6F5A]/20"
+                    className="flex-1 text-sm flex items-center justify-center gap-2 bg-white/80 text-[#000000] py-2.5 px-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 border border-[#000000]/20"
                     title="Ver Avatar"
                   >
                     <EyeIcon /> Ver Avatar
@@ -378,34 +386,22 @@ export const TryOnPage: React.FC = () => {
                 )}
                 <button
                   onClick={handleRegenerateAvatar}
-                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white py-2.5 px-3 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-gradient-to-br from-[#000000] to-[#1a1a1a] text-white py-2.5 px-3 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
                 >
                   <SparklesIcon className="w-4 h-4" /> Regenerar
                 </button>
                 <button
                   onClick={handleChangePhoto}
-                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-white/80 text-[#2C2419] py-2.5 px-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 border border-[#8C6F5A]/20"
+                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-white/80 text-[#000000] py-2.5 px-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 border border-[#000000]/20"
                 >
                   <UploadIcon className="w-4 h-4" /> Cambiar Foto
                 </button>
               </div>
             </div>
 
-            {/* Card: Prenda Seleccionada */}
-            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/40">
-              <h2 className="text-2xl font-serif text-[#2C2419] mb-3">Prenda Seleccionada</h2>
-              {/* Aquí se puede agregar la previsualización y nombre del vestido */}
-              <div className="text-center text-gray-500 italic text-sm mb-2">
-                Vista previa no disponible
-              </div>
-              <p className="text-lg text-[#6B5647] font-light text-center">
-                {dressName || `ID: ${dressId}`}
-              </p>
-            </div>
-
             {/* Card: Elige una pose */}
             <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/40">
-              <h3 className="text-xl font-serif text-[#2C2419] mb-4">Elige una pose</h3>
+              <h3 className="text-xl font-serif text-[#000000] mb-4">Elige una pose</h3>
               <div className="flex justify-center md:justify-start gap-4">
                 {POSES.map(pose => (
                   <button
@@ -413,14 +409,14 @@ export const TryOnPage: React.FC = () => {
                     onClick={() => setSelectedPoseId(pose.id)}
                     className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-200 ${
                       selectedPoseId === pose.id
-                        ? 'border-[#8C6F5A] ring-2 ring-[#8C6F5A]/20 bg-white shadow-md scale-105'
-                        : 'border-white/40 hover:border-[#8C6F5A]/40 bg-white/40 hover:bg-white/60'
+                        ? 'border-[#000000] ring-2 ring-[#000000]/20 bg-white shadow-md scale-105'
+                        : 'border-white/40 hover:border-[#000000]/40 bg-white/40 hover:bg-white/60'
                     }`}
                   >
                     {/* Pose Image Container */}
                     <div className={`w-20 h-28 rounded-lg mb-2 overflow-hidden relative transition-colors ${
                       selectedPoseId === pose.id
-                        ? 'ring-2 ring-[#8C6F5A]'
+                        ? 'ring-2 ring-[#000000]'
                         : ''
                     }`}>
                       {pose.image ? (
@@ -430,12 +426,12 @@ export const TryOnPage: React.FC = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="flex items-center justify-center h-full text-xs text-[#6B5647] p-2 text-center font-medium bg-gradient-to-br from-[#D4C8BE] to-[#B8ACA0]">
+                        <div className="flex items-center justify-center h-full text-xs text-[#1a1a1a] p-2 text-center font-medium bg-gradient-to-br from-[#D4C8BE] to-[#B8ACA0]">
                           {pose.name}
                         </div>
                       )}
                     </div>
-                    <span className="text-xs text-[#2C2419] font-medium">{pose.name}</span>
+                    <span className="text-xs text-[#000000] font-medium">{pose.name}</span>
                   </button>
                 ))}
               </div>
@@ -452,7 +448,7 @@ export const TryOnPage: React.FC = () => {
             <button
               onClick={handleGenerate}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white py-5 rounded-2xl hover:shadow-2xl transition-all duration-300 shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-br from-[#000000] to-[#1a1a1a] text-white py-5 rounded-2xl hover:shadow-2xl transition-all duration-300 shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
             >
               <SparklesIcon className="w-6 h-6" />
               <span className="font-serif">Generar Prueba Virtual</span>
@@ -464,20 +460,29 @@ export const TryOnPage: React.FC = () => {
       {/* Image Viewer Modal */}
       {viewerImage && (
         <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/80 z-50 overflow-auto"
           onClick={() => setViewerImage(null)}
         >
-          <div className="relative max-w-[90vw] max-h-[90vh]">
-            <img src={viewerImage} alt="Ampliado" className="max-w-full max-h-full object-contain rounded-lg" />
-            <button
-              onClick={() => setViewerImage(null)}
-              className="absolute -top-4 -right-4 text-white p-2 bg-black/50 rounded-full hover:bg-black/80"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="relative">
+              <WatermarkedImage
+                src={viewerImage}
+                alt="Vista ampliada"
+                className="max-w-full h-auto rounded-lg"
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewerImage(null);
+                }}
+                className="fixed top-4 right-4 text-white p-3 bg-black/50 rounded-full hover:bg-black/80 z-10"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}

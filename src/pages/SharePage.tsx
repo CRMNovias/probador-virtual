@@ -8,9 +8,10 @@
  * - Displays shared try-on image directly
  * - Shows link to try the dress yourself
  * - No backend calls needed (uses tryOnId from URL)
+ * - Open Graph meta tags for WhatsApp/social media previews
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { envConfig } from '../config/envConfig.js';
 import { routes } from '../constants/routes.js';
@@ -34,6 +35,63 @@ export const SharePage: React.FC = () => {
     ? `${envConfig.apiBaseUrl}/tryons/${tryOnId}/image`
     : '';
 
+  // Update Open Graph meta tags for WhatsApp/social sharing
+  useEffect(() => {
+    const updateMetaTags = () => {
+      // OG Image - Use Atelier de Bodas logo
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage) {
+        ogImage.setAttribute('content', 'https://atelierdebodas.com/wp-content/uploads/2025/10/logo-atelierdebodas.webp');
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('property', 'og:image');
+        meta.content = 'https://atelierdebodas.com/wp-content/uploads/2025/10/logo-atelierdebodas.webp';
+        document.head.appendChild(meta);
+      }
+
+      // OG Title
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      const title = 'Prueba Virtual - Atelier de Bodas';
+      if (ogTitle) {
+        ogTitle.setAttribute('content', title);
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('property', 'og:title');
+        meta.content = title;
+        document.head.appendChild(meta);
+      }
+
+      // OG Description
+      const ogDescription = document.querySelector('meta[property="og:description"]');
+      const description = 'Mira esta prueba virtual de vestido de novia. ¡Crea tu avatar y prueba este y muchos otros vestidos!';
+      if (ogDescription) {
+        ogDescription.setAttribute('content', description);
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('property', 'og:description');
+        meta.content = description;
+        document.head.appendChild(meta);
+      }
+
+      // OG URL
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      const currentUrl = window.location.href;
+      if (ogUrl) {
+        ogUrl.setAttribute('content', currentUrl);
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('property', 'og:url');
+        meta.content = currentUrl;
+        document.head.appendChild(meta);
+      }
+
+      // Update page title
+      document.title = title;
+    };
+
+    updateMetaTags();
+  }, [tryOnId]);
+
   /**
    * Navigate to try-on page with dress ID
    */
@@ -53,10 +111,17 @@ export const SharePage: React.FC = () => {
   // Error state - invalid tryOnId or image failed to load
   if (!tryOnId || imageError) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
+      <div className="min-h-screen flex flex-col bg-gray-50">
         <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
           <div className="container mx-auto px-4 h-16 flex items-center justify-center">
-            <h1 className="text-2xl font-serif text-[#2C2419]">Atelier de Bodas</h1>
+            <a
+              href="https://atelierdebodas.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-2xl font-serif text-[#000000] hover:text-[#000000] transition-colors"
+            >
+              Atelier de Bodas
+            </a>
           </div>
         </header>
         <main className="flex-1 flex items-center justify-center p-4">
@@ -84,7 +149,7 @@ export const SharePage: React.FC = () => {
             </p>
             <button
               onClick={() => navigate(routes.HOME)}
-              className="w-full py-3 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white rounded-xl hover:shadow-lg transition-all font-medium"
+              className="w-full py-3 bg-gradient-to-br from-[#000000] to-[#1a1a1a] text-white rounded-xl hover:shadow-lg transition-all font-medium"
             >
               Ir al Inicio
             </button>
@@ -95,11 +160,18 @@ export const SharePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-center">
-          <h1 className="text-2xl font-serif text-[#2C2419]">Atelier de Bodas</h1>
+          <a
+            href="https://atelierdebodas.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-2xl font-serif text-[#000000] hover:text-[#000000] transition-colors"
+          >
+            Atelier de Bodas
+          </a>
         </div>
       </header>
 
@@ -146,7 +218,7 @@ export const SharePage: React.FC = () => {
           {/* Info Section */}
           <div className="p-6 md:p-8 text-center space-y-6">
             <div>
-              <h2 className="text-2xl md:text-3xl font-serif text-[#2C2419] mb-2">
+              <h2 className="text-2xl md:text-3xl font-serif text-[#000000] mb-2">
                 ¡Mira qué hermoso!
               </h2>
               <p className="text-gray-600 font-light">
@@ -157,7 +229,7 @@ export const SharePage: React.FC = () => {
             {/* CTA Button */}
             <button
               onClick={handleTryItYourself}
-              className="w-full py-4 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white rounded-xl hover:shadow-xl transition-all font-medium text-lg flex items-center justify-center gap-3 group"
+              className="w-full py-4 bg-gradient-to-br from-[#000000] to-[#1a1a1a] text-white rounded-xl hover:shadow-xl transition-all font-medium text-lg flex items-center justify-center gap-3 group"
             >
               <span>Pruébalo Tú Misma</span>
               <svg

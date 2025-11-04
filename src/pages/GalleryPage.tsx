@@ -155,7 +155,7 @@ export const GalleryPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+      <div className="min-h-screen flex flex-col bg-[#ffffff]">
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <p className="text-gray-500">Cargando galería...</p>
@@ -165,12 +165,12 @@ export const GalleryPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+    <div className="min-h-screen flex flex-col bg-[#ffffff]">
       <Header />
 
       <main className="flex-1 pb-24 p-4 md:p-8">
         <div className="w-full max-w-5xl mx-auto">
-          <h1 className="text-4xl font-serif text-[#4a3f35] mb-8 text-center">Mi Galería</h1>
+          <h1 className="text-4xl font-serif text-[#000000] mb-8 text-center">Mi Galería</h1>
 
           {tryOnsByDress.length === 0 ? (
             <p className="text-center text-gray-500 font-light mt-12">
@@ -188,18 +188,34 @@ export const GalleryPage: React.FC = () => {
                     {/* Accordion Header */}
                     <button
                       onClick={() => toggleExpand(category.dressId)}
-                      className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50 transition-colors"
+                      className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50 transition-colors gap-4"
                     >
-                      <div>
-                        <h2 className="text-xl font-serif text-[#4a3f35]">
-                          Prenda ID: {category.dressId || 'No disponible'}
-                        </h2>
-                        <p className="text-sm text-gray-500 font-light">
-                          {category.tryOns.length} prueba(s) generada(s)
-                        </p>
+                      <div className="flex items-center gap-4 flex-1">
+                        {/* Dress Preview Image */}
+                        {category.dressImageUrl && (
+                          <div className="flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden bg-gray-100">
+                            <img
+                              src={category.dressImageUrl}
+                              alt={category.dressName || 'Prenda'}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+
+                        {/* Text Info */}
+                        <div className="flex-1">
+                          <h2 className="text-xl font-serif text-[#000000]">
+                            {category.dressName || `Prenda ID: ${category.dressId}`}
+                          </h2>
+                          <p className="text-sm text-gray-500 font-light">
+                            {category.tryOns.length} prueba(s) generada(s)
+                          </p>
+                        </div>
                       </div>
+
+                      {/* Chevron Icon */}
                       <ChevronDownIcon
-                        className={`transform transition-transform duration-300 ${
+                        className={`flex-shrink-0 transform transition-transform duration-300 ${
                           isExpanded ? 'rotate-180' : ''
                         }`}
                       />
@@ -277,24 +293,29 @@ export const GalleryPage: React.FC = () => {
       {/* Image Viewer Modal */}
       {viewerImage && (
         <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/80 z-50 overflow-auto"
           onClick={() => setViewerImage(null)}
         >
-          <div className="relative max-w-[90vw] max-h-[90vh]">
-            <WatermarkedImage
-              src={viewerImage}
-              alt="Vista ampliada"
-              className="max-w-full max-h-full rounded-lg"
-            />
-            <button
-              onClick={() => setViewerImage(null)}
-              className="absolute -top-4 -right-4 text-white p-2 bg-black/50 rounded-full hover:bg-black/80"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="relative">
+              <WatermarkedImage
+                src={viewerImage}
+                alt="Vista ampliada"
+                className="max-w-full h-auto rounded-lg"
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewerImage(null);
+                }}
+                className="fixed top-4 right-4 text-white p-3 bg-black/50 rounded-full hover:bg-black/80 z-10"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}

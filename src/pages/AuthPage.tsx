@@ -99,18 +99,18 @@ export const AuthPage: React.FC = () => {
   // Show nothing while checking auth state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#faf9f7]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8C6F5A]" />
+      <div className="min-h-screen flex items-center justify-center bg-[#f9fafb]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#000000]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#faf9f7] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#f9fafb] p-4">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-[#d4c4b0] opacity-10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#8C6F5A] opacity-10 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-[#e5e7eb] opacity-10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#000000] opacity-10 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2" />
       </div>
 
       {/* Content */}

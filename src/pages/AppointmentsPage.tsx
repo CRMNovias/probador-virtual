@@ -77,7 +77,7 @@ export const AppointmentsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+      <div className="min-h-screen flex flex-col bg-[#ffffff]">
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <p className="text-gray-500">Cargando citas...</p>
@@ -87,12 +87,12 @@ export const AppointmentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F7F5]">
+    <div className="min-h-screen flex flex-col bg-[#ffffff]">
       <Header />
 
       <main className="flex-1 pb-24 p-4 md:p-8">
         <div className="w-full max-w-2xl mx-auto">
-          <h1 className="text-4xl font-serif text-[#4a3f35] mb-6 text-center">Mis Citas</h1>
+          <h1 className="text-4xl font-serif text-[#000000] mb-6 text-center">Mis Citas</h1>
 
           {/* Book Appointment Button */}
           <div className="mb-8 flex justify-center">
@@ -100,7 +100,7 @@ export const AppointmentsPage: React.FC = () => {
               href="https://atelierdebodas.com/pide-cita/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#8C6F5A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#6e5f53] transition-colors shadow-md"
+              className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors shadow-md"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -120,7 +120,7 @@ export const AppointmentsPage: React.FC = () => {
           <div className="space-y-6">
             {/* Próximas Citas */}
             <div>
-              <h2 className="text-2xl font-serif text-[#4a3f35] border-b pb-2 mb-4">
+              <h2 className="text-2xl font-serif text-[#000000] border-b pb-2 mb-4">
                 Próximas Citas
               </h2>
               {upcomingAppointments.length > 0 ? (
@@ -155,7 +155,7 @@ export const AppointmentsPage: React.FC = () => {
 
             {/* Historial */}
             <div>
-              <h2 className="text-2xl font-serif text-[#4a3f35] border-b pb-2 mb-4">
+              <h2 className="text-2xl font-serif text-[#000000] border-b pb-2 mb-4">
                 Historial
               </h2>
               {pastAppointments.length > 0 ? (
