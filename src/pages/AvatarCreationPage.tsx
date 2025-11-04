@@ -61,7 +61,7 @@ export const AvatarCreationPage: React.FC = () => {
 
     try {
       // Call generate avatar - backend uses the existing uploaded photo
-      const prompt = 'Generate a full-body avatar from this passport-style photo';
+      const prompt = 'You are an expert fashion photographer AI. Transform the person in this image into a full-body fashion model photo suitable for an e-commerce website. The background must be a clean, neutral studio backdrop (dark gray, #A9A9A9). The person should have a neutral, professional model expression. Preserve the person\'s identity, unique features, and body type, but place them in a standard, relaxed standing model pose. The final image must be photorealistic. Return ONLY the final image.';
       const avatarResponse = await generateAvatar(prompt);
       console.log('[AvatarCreation] Regeneration response:', avatarResponse);
 
@@ -130,7 +130,7 @@ export const AvatarCreationPage: React.FC = () => {
 
       // Step 2: Generate avatar
       setLoadingMessage('Nuestra IA está creando tu avatar...');
-      const prompt = 'Generate a full-body avatar from this passport-style photo';
+      const prompt = 'You are an expert fashion photographer AI. Transform the person in this image into a full-body fashion model photo suitable for an e-commerce website. The background must be a clean, neutral studio backdrop (dark gray, #A9A9A9). The person should have a neutral, professional model expression. Preserve the person\'s identity, unique features, and body type, but place them in a standard, relaxed standing model pose. The final image must be photorealistic. Return ONLY the final image.';
       const avatarResponse = await generateAvatar(prompt);
       console.log('[AvatarCreation] Avatar response:', avatarResponse);
 
