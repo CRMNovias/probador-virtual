@@ -2,7 +2,7 @@
  * WatermarkedImage Component
  *
  * Displays an image with a watermark logo overlay in the bottom-right corner.
- * The watermark is positioned 50px from the right and bottom edges.
+ * The watermark is positioned 25px from the right and bottom edges.
  */
 
 import React from 'react';
@@ -34,7 +34,7 @@ export interface WatermarkedImageProps {
  * WatermarkedImage Component
  *
  * Renders an image with the Atelier de Bodas logo watermark
- * positioned in the bottom-right corner (50px offset)
+ * positioned in the bottom-right corner (25px offset)
  */
 export const WatermarkedImage: React.FC<WatermarkedImageProps> = ({
   src,
@@ -51,14 +51,14 @@ export const WatermarkedImage: React.FC<WatermarkedImageProps> = ({
         className="w-full h-full object-cover"
       />
 
-      {/* Watermark Logo - Bottom Right with 50px offset */}
+      {/* Watermark Logo - Bottom Right with 25px offset */}
       <img
         src={logoImg}
         alt="Atelier de Bodas"
         className="absolute pointer-events-none"
         style={{
-          bottom: '50px',
-          right: '50px',
+          bottom: '25px',
+          right: '25px',
           width: '127px',   // 254px / 2 (50% scale for better visibility)
           height: '45px',   // 90px / 2
           opacity: 0.9,

@@ -40,9 +40,9 @@ export const downloadImage = async (imageUrl: string, filename: string = 'image.
     const watermarkWidth = 254;
     const watermarkHeight = 90;
 
-    // Position: 50px from right and bottom
-    const xPosition = canvas.width - watermarkWidth - 50;
-    const yPosition = canvas.height - watermarkHeight - 50;
+    // Position: 25px from right and bottom
+    const xPosition = canvas.width - watermarkWidth - 25;
+    const yPosition = canvas.height - watermarkHeight - 25;
 
     // Draw watermark with slight transparency
     ctx.globalAlpha = 0.9;
@@ -81,15 +81,43 @@ export const downloadImage = async (imageUrl: string, filename: string = 'image.
 
 /**
  * Helper function to load an image
+ * Uses fetch to bypass CORS issues with S3 images
  */
-const loadImage = (url: string): Promise<HTMLImageElement> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous'; // Enable CORS
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-    img.src = url;
-  });
+const loadImage = async (url: string): Promise<HTMLImageElement> => {
+  try {
+    // For external URLs (S3), fetch as blob first to bypass CORS
+    if (url.startsWith('http')) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(blobUrl); // Cleanup
+          resolve(img);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(blobUrl); // Cleanup
+          reject(new Error(`Failed to load image from blob: ${url}`));
+        };
+        img.src = blobUrl;
+      });
+    } else {
+      // For local images (like the logo), use direct loading
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+        img.src = url;
+      });
+    }
+  } catch (error) {
+    throw new Error(`Failed to fetch image: ${url} - ${error}`);
+  }
 };
 
 /**

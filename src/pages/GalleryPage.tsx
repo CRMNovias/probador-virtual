@@ -217,10 +217,16 @@ export const GalleryPage: React.FC = () => {
                               className="group relative rounded-lg overflow-hidden aspect-[2/3] cursor-pointer"
                               onClick={() => setViewerImage(tryOn.imageUrl)}
                             >
-                              <WatermarkedImage
+                              {/* Gallery thumbnail without watermark, with 50px crop on each side */}
+                              <img
                                 src={tryOn.imageUrl}
                                 alt={`Try-on ${tryOn.id}`}
                                 className="w-full h-full"
+                                style={{
+                                  objectFit: 'cover',
+                                  objectPosition: 'center',
+                                  transform: 'scale(1.15)', // Crops ~50px from each side
+                                }}
                               />
 
                               {/* Hover Overlay */}
