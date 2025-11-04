@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
 import { envConfig } from '../config/envConfig.js';
 import { routes } from '../constants/routes.js';
 
@@ -134,11 +135,6 @@ export const SharePage: React.FC = () => {
     }
   };
 
-  // Handle image load error
-  const handleImageError = (): void => {
-    setImageError(true);
-  };
-
   // Loading state
   if (isLoading) {
     return (
@@ -237,18 +233,12 @@ export const SharePage: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-2xl w-full">
           {/* Image Section */}
           <div className="relative bg-gray-100 aspect-[2/3] flex items-center justify-center">
-            <img
+            <WatermarkedImage
               src={imageUrl}
               alt="Prueba Virtual"
-              onError={handleImageError}
               className="w-full h-full object-contain cursor-pointer hover:opacity-95 transition-opacity"
               onClick={() => setImageViewerOpen(true)}
             />
-
-            {/* Watermark */}
-            <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-light">
-              Atelier de Bodas
-            </div>
 
             {/* Enlarge Icon */}
             <button
@@ -317,33 +307,38 @@ export const SharePage: React.FC = () => {
       {/* Image Viewer Modal */}
       {imageViewerOpen && (
         <div
-          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/80 z-50 overflow-auto"
           onClick={() => setImageViewerOpen(false)}
         >
-          <div className="relative max-w-[90vw] max-h-[90vh]">
-            <img
-              src={imageUrl}
-              alt="Vista ampliada"
-              className="max-w-full max-h-full object-contain rounded-lg"
-            />
-            <button
-              onClick={() => setImageViewerOpen(false)}
-              className="absolute -top-4 -right-4 text-white p-2 bg-black/50 rounded-full hover:bg-black/80 transition-colors"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="relative">
+              <WatermarkedImage
+                src={imageUrl}
+                alt="Vista ampliada"
+                className="max-w-full h-auto rounded-lg"
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageViewerOpen(false);
+                }}
+                className="fixed top-4 right-4 text-white p-3 bg-black/50 rounded-full hover:bg-black/80 z-10"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}
