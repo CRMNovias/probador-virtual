@@ -95,7 +95,7 @@ export const SharePage: React.FC = () => {
 
       // OG Description
       const ogDescription = document.querySelector('meta[property="og:description"]');
-      const description = 'Mira esta prueba virtual de vestido de novia. ¡Crea tu avatar y prueba este y muchos otros vestidos!';
+      const description = 'Mira esta prueba virtual. ¡Crea tu avatar y prueba vestidos de novia y trajes de novio con nuestra tecnología de IA!';
       if (ogDescription) {
         ogDescription.setAttribute('content', description);
       } else {
@@ -266,10 +266,10 @@ export const SharePage: React.FC = () => {
           <div className="p-6 md:p-8 text-center space-y-6">
             <div>
               <h2 className="text-2xl md:text-3xl font-serif text-[#000000] mb-2">
-                ¡Mira qué hermoso!
+                ¡Mira qué elegante!
               </h2>
               <p className="text-gray-600 font-light">
-                Esta es una prueba virtual generada con nuestra tecnología
+                Prueba virtual generada con nuestra tecnología de IA
               </p>
             </div>
 
@@ -278,7 +278,7 @@ export const SharePage: React.FC = () => {
               onClick={handleTryItYourself}
               className="w-full py-4 bg-gradient-to-br from-[#000000] to-[#1a1a1a] text-white rounded-xl hover:shadow-xl transition-all font-medium text-lg flex items-center justify-center gap-3 group"
             >
-              <span>Pruébalo Tú Misma</span>
+              <span>Pruébalo Tú</span>
               <svg
                 className="w-6 h-6 group-hover:translate-x-1 transition-transform"
                 fill="none"
@@ -297,7 +297,7 @@ export const SharePage: React.FC = () => {
             {/* Additional Info */}
             <div className="text-sm text-gray-500 border-t border-gray-200 pt-4">
               <p>
-                Crea tu avatar y prueba este y muchos otros vestidos de manera virtual
+                Crea tu avatar y prueba vestidos de novia y trajes de novio de manera virtual
               </p>
             </div>
           </div>
