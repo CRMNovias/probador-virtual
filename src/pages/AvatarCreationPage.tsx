@@ -327,9 +327,14 @@ export const AvatarCreationPage: React.FC = () => {
                 </p>
               </div>
             </div>
+
+            {/* Mobile - Example Comparison (below form) */}
+            <div className="md:hidden mt-8">
+              <ExampleComparison />
+            </div>
           </div>
 
-          {/* Right side - Animated Example Comparison */}
+          {/* Right side - Animated Example Comparison (desktop only) */}
           <div className="hidden md:flex flex-col items-center justify-center">
             <ExampleComparison />
           </div>
