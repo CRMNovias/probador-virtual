@@ -296,7 +296,7 @@ export const TryOnPage: React.FC = () => {
                 <p className="text-sm text-[#1a1a1a] mb-6 leading-relaxed">{avatarError}</p>
                 <button
                   onClick={handleChangePhoto}
-                  className="bg-gradient-to-br from-[#000000] to-[#1a1a1a] text-white px-8 py-3 rounded-xl hover:shadow-xl transition-all duration-300 shadow-lg transform hover:scale-[1.02]"
+                  className="bg-[#333333] text-white px-8 py-3 rounded-xl hover:shadow-xl hover:bg-[#1a1a1a] transition-all duration-300 shadow-lg"
                 >
                   Crear Avatar
                 </button>
@@ -386,7 +386,7 @@ export const TryOnPage: React.FC = () => {
                 )}
                 <button
                   onClick={handleRegenerateAvatar}
-                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-gradient-to-br from-[#000000] to-[#1a1a1a] text-white py-2.5 px-3 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-[#333333] text-white py-2.5 px-3 rounded-xl hover:shadow-lg hover:bg-[#1a1a1a] transition-all duration-200"
                 >
                   <SparklesIcon className="w-4 h-4" /> Regenerar
                 </button>
@@ -448,7 +448,7 @@ export const TryOnPage: React.FC = () => {
             <button
               onClick={handleGenerate}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-br from-[#000000] to-[#1a1a1a] text-white py-5 rounded-2xl hover:shadow-2xl transition-all duration-300 shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+              className="w-full flex items-center justify-center gap-3 bg-[#333333] text-white py-5 rounded-2xl hover:shadow-2xl hover:bg-[#1a1a1a] transition-all duration-300 shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <SparklesIcon className="w-6 h-6" />
               <span className="font-serif">Generar Prueba Virtual</span>

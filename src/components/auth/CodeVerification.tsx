@@ -239,7 +239,7 @@ export const CodeVerification: React.FC<CodeVerificationProps> = ({
     <div className="w-full max-w-md mx-auto p-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-serif text-[#4a3f35] mb-2">
+        <h1 className="text-3xl font-serif text-[#000000] mb-2">
           Verificación de Código
         </h1>
         <p className="text-gray-600">
@@ -267,13 +267,13 @@ export const CodeVerification: React.FC<CodeVerificationProps> = ({
             className={`
               w-12 h-14 text-center text-xl font-semibold
               border-2 rounded-lg
-              focus:outline-none focus:ring-2 focus:ring-[#8C6F5A] focus:border-transparent
+              focus:outline-none focus:ring-2 focus:ring-[#333333] focus:border-transparent
               transition-all
               ${
                 error
                   ? 'border-red-500 bg-red-50'
                   : digit
-                  ? 'border-[#8C6F5A] bg-gray-50'
+                  ? 'border-[#333333] bg-gray-50'
                   : 'border-gray-300 bg-white'
               }
               ${isLoading || codeExpired ? 'opacity-50 cursor-not-allowed' : ''}
@@ -299,7 +299,7 @@ export const CodeVerification: React.FC<CodeVerificationProps> = ({
         ) : (
           <p className="text-gray-600 text-sm">
             Código expira en:{' '}
-            <span className="font-mono font-semibold text-[#8C6F5A]">
+            <span className="font-mono font-semibold text-[#333333]">
               {formatTime(timeLeft)}
             </span>
           </p>
@@ -313,7 +313,7 @@ export const CodeVerification: React.FC<CodeVerificationProps> = ({
             type="button"
             onClick={handleResend}
             disabled={isLoading}
-            className="text-[#8C6F5A] text-sm font-medium hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-[#333333] text-sm font-medium hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Reenviar código
           </button>

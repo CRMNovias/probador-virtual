@@ -125,11 +125,11 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
     <div className="w-full max-w-md mx-auto p-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-serif text-[#4a3f35] mb-2">
+        <h1 className="text-3xl font-serif text-[#000000] mb-2">
           Completa tu Perfil
         </h1>
         <p className="text-gray-600">
-          Bienvenida! Por favor, completa tus datos para continuar.
+          Bienvenido! Por favor, completa tus datos para continuar.
         </p>
       </div>
 

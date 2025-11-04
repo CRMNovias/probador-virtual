@@ -65,8 +65,14 @@ export const AvatarCreationPage: React.FC = () => {
       const avatarResponse = await generateAvatar(prompt);
       console.log('[AvatarCreation] Regeneration response:', avatarResponse);
 
+      // Check for AI processing rejection
+      const fullResponse = avatarResponse as any;
+      if (fullResponse.success === false && fullResponse.message === 'Error en procesamiento IA') {
+        throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
+      }
+
       // Extract avatar URL from response
-      const responseData = (avatarResponse as any).data || avatarResponse;
+      const responseData = fullResponse.data || fullResponse;
       const avatarUrl = responseData.avatarUrl || responseData.url || '';
 
       if (!avatarUrl) {
@@ -134,9 +140,15 @@ export const AvatarCreationPage: React.FC = () => {
       const avatarResponse = await generateAvatar(prompt);
       console.log('[AvatarCreation] Avatar response:', avatarResponse);
 
+      // Check for AI processing rejection
+      const fullResponse = avatarResponse as any;
+      if (fullResponse.success === false && fullResponse.message === 'Error en procesamiento IA') {
+        throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
+      }
+
       // Extract avatar URL from response
       // Backend returns: { success, data: { avatarUrl, avatarId }, message }
-      const responseData = (avatarResponse as any).data || avatarResponse;
+      const responseData = fullResponse.data || fullResponse;
       const avatarUrl = responseData.avatarUrl || responseData.url || '';
 
       console.log('[AvatarCreation] Extracted avatar URL:', avatarUrl);

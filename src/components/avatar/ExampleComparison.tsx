@@ -56,15 +56,15 @@ export const ExampleComparison: React.FC = () => {
     <div className="w-full">
       {/* Title */}
       <div className="text-center mb-4">
-        <p className="text-sm font-medium text-[#8C6F5A] tracking-wide uppercase">
+        <p className="text-sm font-medium text-[#333333] tracking-wide uppercase">
           Vista Previa de Ejemplo
         </p>
       </div>
 
       {/* Comparison Container */}
-      <div className="relative w-full aspect-[3/4] mx-auto rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
+      <div className="relative w-full aspect-[3/4] mx-auto rounded-2xl overflow-hidden shadow-2xl bg-gray-100">
         {/* Avatar/Model (Background - Right Side) */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#D4C8BE] to-[#B8ACA0] flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
           {hasRealImages ? (
             // Real image
             <img
@@ -76,7 +76,7 @@ export const ExampleComparison: React.FC = () => {
             // Placeholder
             <div className="text-center">
               <svg
-                className="w-40 h-40 mx-auto text-[#8C6F5A] opacity-40"
+                className="w-40 h-40 mx-auto text-gray-600 opacity-40"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -86,14 +86,14 @@ export const ExampleComparison: React.FC = () => {
                   clipRule="evenodd"
                 />
               </svg>
-              <p className="text-[#8C6F5A] text-lg font-serif mt-4 opacity-60">
+              <p className="text-gray-600 text-lg font-serif mt-4 opacity-60">
                 Modelo Generado
               </p>
             </div>
           )}
 
           {/* Label */}
-          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-[#2C2419] px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
+          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-[#000000] px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
             Modelo IA
           </div>
         </div>
@@ -103,7 +103,7 @@ export const ExampleComparison: React.FC = () => {
           className="absolute inset-0 overflow-hidden transition-all duration-100"
           style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
             {hasRealImages ? (
               // Real image
               <img
@@ -139,7 +139,7 @@ export const ExampleComparison: React.FC = () => {
             )}
 
             {/* Label */}
-            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[#2C2419] px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
+            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[#000000] px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
               Foto Original
             </div>
           </div>
@@ -154,7 +154,7 @@ export const ExampleComparison: React.FC = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-2xl flex items-center justify-center">
             {/* Left/Right Arrows */}
             <svg
-              className="w-5 h-5 text-[#8C6F5A]"
+              className="w-5 h-5 text-[#333333]"
               fill="none"
               stroke="currentColor"
               strokeWidth={2.5}
@@ -170,7 +170,7 @@ export const ExampleComparison: React.FC = () => {
         </div>
 
         {/* Watermark */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-serif text-[#2C2419] bg-white/60 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-serif text-[#000000] bg-white/60 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
           Ejemplo Ilustrativo
         </div>
       </div>
