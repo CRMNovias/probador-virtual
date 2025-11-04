@@ -26,14 +26,45 @@ export const SharePage: React.FC = () => {
 
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
   // Get dressId from URL params
   const dressId = searchParams.get('dressId');
 
-  // Construct image URL directly from backend
-  const imageUrl = tryOnId
-    ? `${envConfig.apiBaseUrl}/tryons/${tryOnId}/image`
-    : '';
+  // Fetch image URL from backend
+  useEffect(() => {
+    const fetchImageUrl = async () => {
+      if (!tryOnId) {
+        setImageError(true);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${envConfig.apiBaseUrl}/tryons/${tryOnId}/image`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch image');
+        }
+
+        const data = await response.json() as { success: boolean; data: { imageUrl: string } };
+
+        if (data.success && data.data?.imageUrl) {
+          setImageUrl(data.data.imageUrl);
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error) {
+        console.error('[SharePage] Error fetching image:', error);
+        setImageError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImageUrl();
+  }, [tryOnId]);
 
   // Update Open Graph meta tags for WhatsApp/social sharing
   useEffect(() => {
@@ -108,8 +139,34 @@ export const SharePage: React.FC = () => {
     setImageError(true);
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+          <div className="container mx-auto px-4 h-16 flex items-center justify-center">
+            <a
+              href="https://atelierdebodas.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-2xl font-serif text-[#000000] hover:text-[#000000] transition-colors"
+            >
+              Atelier de Bodas
+            </a>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#000000] mx-auto mb-4" />
+            <p className="text-gray-600">Cargando prueba virtual...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // Error state - invalid tryOnId or image failed to load
-  if (!tryOnId || imageError) {
+  if (!tryOnId || imageError || !imageUrl) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">

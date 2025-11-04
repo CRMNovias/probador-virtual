@@ -281,8 +281,8 @@ export const TryOnPage: React.FC = () => {
 
       <main className="flex-1 pb-24">
         <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 p-4 md:p-8 h-full">
-          {/* Columna Izquierda: Canvas */}
-          <div className="relative w-full h-[60vh] lg:h-full bg-white rounded-2xl shadow-xl flex items-center justify-center overflow-hidden border border-white/40 backdrop-blur-sm">
+          {/* Columna Izquierda: Canvas - order-3 en móvil, order-1 en desktop */}
+          <div className="relative w-full h-[60vh] lg:h-full bg-white rounded-2xl shadow-xl flex items-center justify-center overflow-hidden border border-white/40 backdrop-blur-sm order-3 lg:order-1">
             {isLoading && <Loader text={loadingMessage} />}
 
             {!isLoading && avatarError && (
@@ -361,8 +361,8 @@ export const TryOnPage: React.FC = () => {
             )}
           </div>
 
-          {/* Columna Derecha: Controles */}
-          <div className="flex flex-col gap-6">
+          {/* Columna Derecha: Controles - order-1 en móvil (arriba), order-2 en desktop */}
+          <div className="flex flex-col gap-6 order-1 lg:order-2">
             {/* Card: Prenda Seleccionada */}
             <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/40">
               <h2 className="text-2xl font-serif text-[#000000] mb-3">Prenda Seleccionada</h2>
