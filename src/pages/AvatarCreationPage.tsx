@@ -70,7 +70,7 @@ export const AvatarCreationPage: React.FC = () => {
       } catch (apiError: any) {
         // Check if the error response contains AI rejection message
         if (apiError.response?.data?.message === 'Error en procesamiento IA') {
-          throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
+          throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente.');
         }
         // Re-throw other errors
         throw apiError;
@@ -79,7 +79,7 @@ export const AvatarCreationPage: React.FC = () => {
       // Check for AI processing rejection in successful response
       const fullResponse = avatarResponse as any;
       if (fullResponse.success === false && fullResponse.message === 'Error en procesamiento IA') {
-        throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
+        throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente.');
       }
 
       // Extract avatar URL from response
@@ -170,7 +170,7 @@ export const AvatarCreationPage: React.FC = () => {
       } catch (apiError: any) {
         // Check if the error response contains AI rejection message
         if (apiError.response?.data?.message === 'Error en procesamiento IA') {
-          throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
+          throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente.');
         }
         // Re-throw other errors
         throw apiError;
@@ -179,7 +179,7 @@ export const AvatarCreationPage: React.FC = () => {
       // Check for AI processing rejection in successful response
       const fullResponse = avatarResponse as any;
       if (fullResponse.success === false && fullResponse.message === 'Error en procesamiento IA') {
-        throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
+        throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente.');
       }
 
       // Extract avatar URL from response
@@ -301,6 +301,13 @@ export const AvatarCreationPage: React.FC = () => {
               </p>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
+
             {/* Upload Button */}
             <div className="space-y-6">
               <label
@@ -362,12 +369,6 @@ export const AvatarCreationPage: React.FC = () => {
                   </li>
                 </ul>
               </div>
-
-              {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
-              )}
 
               {/* Terms - Desktop only */}
               <div className="hidden md:block pt-4 border-t border-[#000000]/20">

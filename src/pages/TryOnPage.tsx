@@ -206,9 +206,26 @@ export const TryOnPage: React.FC = () => {
         url: response.data.imageUrl,
         poseId: selectedPoseId,
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('[TryOnPage] Error generating try-on:', err);
-      setError(err instanceof Error ? err.message : 'Error al generar prueba virtual');
+
+      // Provide user-friendly error messages
+      let errorMessage = 'Error al generar prueba virtual';
+
+      // Check for AI processing rejection
+      if (err.response?.data?.message === 'Error en procesamiento IA') {
+        errorMessage = 'La IA no pudo procesar esta imagen. Por favor, intenta regenerar tu avatar o inténtalo más tarde.';
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Hubo un problema al generar la prueba virtual. Por favor, intenta regenerar tu avatar o inténtalo más tarde.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
@@ -363,6 +380,20 @@ export const TryOnPage: React.FC = () => {
 
           {/* Columna Derecha: Controles - order-1 en móvil (arriba), order-2 en desktop */}
           <div className="flex flex-col gap-6 order-1 lg:order-2">
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm backdrop-blur-sm">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="font-medium">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Card: Prenda Seleccionada */}
             <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/40">
               <h2 className="text-2xl font-serif text-[#000000] mb-3">Prenda Seleccionada</h2>
@@ -436,13 +467,6 @@ export const TryOnPage: React.FC = () => {
                 ))}
               </div>
             </div>
-
-            {/* Error Display */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm backdrop-blur-sm">
-                {error}
-              </div>
-            )}
 
             {/* Generar Button */}
             <button
