@@ -61,11 +61,22 @@ export const AvatarCreationPage: React.FC = () => {
 
     try {
       // Call generate avatar - backend uses the existing uploaded photo
-      const prompt = 'You are an expert fashion photographer AI. Transform the person in this image into a full-body fashion model photo suitable for an e-commerce website. The background must be a clean, neutral studio backdrop (dark gray, #A9A9A9). The person should have a neutral, professional model expression. Preserve the person\'s identity, unique features, and body type, but place them in a standard, relaxed standing model pose. The final image must be photorealistic. Return ONLY the final image.';
-      const avatarResponse = await generateAvatar(prompt);
-      console.log('[AvatarCreation] Regeneration response:', avatarResponse);
+      const prompt = 'You are an expert fashion photographer AI. Transform the person in this image into a full-body fashion model photo. The background must be a clean, neutral studio backdrop (dark gray, #A9A9A9). The person should have a neutral, professional model expression. Preserve the person\'s identity, unique features, and body type, but place them in a standard, relaxed standing model pose. The final image must be photorealistic. Return ONLY the final image.';
 
-      // Check for AI processing rejection
+      let avatarResponse;
+      try {
+        avatarResponse = await generateAvatar(prompt);
+        console.log('[AvatarCreation] Regeneration response:', avatarResponse);
+      } catch (apiError: any) {
+        // Check if the error response contains AI rejection message
+        if (apiError.response?.data?.message === 'Error en procesamiento IA') {
+          throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
+        }
+        // Re-throw other errors
+        throw apiError;
+      }
+
+      // Check for AI processing rejection in successful response
       const fullResponse = avatarResponse as any;
       if (fullResponse.success === false && fullResponse.message === 'Error en procesamiento IA') {
         throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
@@ -89,9 +100,23 @@ export const AvatarCreationPage: React.FC = () => {
       // Navigate directly to try-on page after regeneration
       const destination = dressId ? `${routes.TRY_ON}?dressId=${dressId}` : routes.TRY_ON;
       navigate(destination, { replace: true });
-    } catch (err) {
+    } catch (err: any) {
       console.error('[AvatarCreation] Regeneration error:', err);
-      setError(err instanceof Error ? err.message : 'Error al regenerar avatar');
+
+      // Provide user-friendly error messages
+      let errorMessage = 'Error al regenerar avatar';
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Hubo un problema al procesar tu imagen. Por favor, intenta con una foto diferente o inténtalo más tarde.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
       setIsLoading(false);
     }
   };
@@ -136,11 +161,22 @@ export const AvatarCreationPage: React.FC = () => {
 
       // Step 2: Generate avatar
       setLoadingMessage('Nuestra IA está creando tu avatar...');
-      const prompt = 'You are an expert fashion photographer AI. Transform the person in this image into a full-body fashion model photo suitable for an e-commerce website. The background must be a clean, neutral studio backdrop (dark gray, #A9A9A9). The person should have a neutral, professional model expression. Preserve the person\'s identity, unique features, and body type, but place them in a standard, relaxed standing model pose. The final image must be photorealistic. Return ONLY the final image.';
-      const avatarResponse = await generateAvatar(prompt);
-      console.log('[AvatarCreation] Avatar response:', avatarResponse);
+      const prompt = 'You are an expert fashion photographer AI. Transform the person in this image into a full-body fashion model photo. The background must be a clean, neutral studio backdrop (dark gray, #A9A9A9). The person should have a neutral, professional model expression. Preserve the person\'s identity, unique features, and body type, but place them in a standard, relaxed standing model pose. The final image must be photorealistic. Return ONLY the final image.';
 
-      // Check for AI processing rejection
+      let avatarResponse;
+      try {
+        avatarResponse = await generateAvatar(prompt);
+        console.log('[AvatarCreation] Avatar response:', avatarResponse);
+      } catch (apiError: any) {
+        // Check if the error response contains AI rejection message
+        if (apiError.response?.data?.message === 'Error en procesamiento IA') {
+          throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
+        }
+        // Re-throw other errors
+        throw apiError;
+      }
+
+      // Check for AI processing rejection in successful response
       const fullResponse = avatarResponse as any;
       if (fullResponse.success === false && fullResponse.message === 'Error en procesamiento IA') {
         throw new Error('La IA no pudo procesar esta imagen. Por favor, prueba con una foto diferente: asegúrate de que sea una foto clara de tu rostro, bien iluminada y sin obstáculos.');
@@ -169,9 +205,23 @@ export const AvatarCreationPage: React.FC = () => {
       // Step 3: Show comparison view
       setIsLoading(false);
       setShowComparison(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[AvatarCreation] Error:', err);
-      setError(err instanceof Error ? err.message : 'Error al generar avatar');
+
+      // Provide user-friendly error messages
+      let errorMessage = 'Error al generar avatar';
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Hubo un problema al procesar tu imagen. Por favor, intenta con una foto diferente o inténtalo más tarde.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
       setIsLoading(false);
     }
   };

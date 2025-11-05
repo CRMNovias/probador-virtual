@@ -115,6 +115,22 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
+      {/* Info Banner */}
+      <div className="mb-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4 shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="text-blue-900 font-medium text-sm md:text-base">
+              Esto es solo tu avatar. Para probarte vestidos y trajes, pulsa en <span className="font-semibold">"Continuar al Probador"</span> abajo.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="text-4xl font-serif text-[#2C2419] mb-3">
