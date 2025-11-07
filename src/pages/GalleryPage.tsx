@@ -301,17 +301,17 @@ export const GalleryPage: React.FC = () => {
       {/* Image Viewer Modal */}
       {viewerImage && (
         <div
-          className="fixed inset-0 bg-black/80 z-50 overflow-auto"
+          className="fixed inset-0 bg-black/80 z-50 overflow-y-auto"
           onClick={() => setViewerImage(null)}
         >
-          <div className="min-h-screen flex flex-col items-center justify-center p-4">
+          <div className="min-h-screen flex flex-col items-center justify-start pt-4 pb-20 px-4">
             {/* Close Button */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setViewerImage(null);
               }}
-              className="fixed top-4 right-4 text-white p-3 bg-black/50 rounded-full hover:bg-black/80 z-10"
+              className="self-end mb-4 text-white p-3 bg-black/50 rounded-full hover:bg-black/80"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -320,16 +320,16 @@ export const GalleryPage: React.FC = () => {
             </button>
 
             {/* Image */}
-            <div className="relative mb-4" onClick={(e) => e.stopPropagation()}>
+            <div className="relative mb-6 w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
               <WatermarkedImage
                 src={viewerImage}
                 alt="Vista ampliada"
-                className="max-w-full h-auto rounded-lg"
+                className="w-full h-auto rounded-lg"
               />
             </div>
 
             {/* Action Buttons - Mobile & Desktop */}
-            <div className="flex gap-3 justify-center" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-3 justify-center flex-wrap" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => {
                   handleDownload(
