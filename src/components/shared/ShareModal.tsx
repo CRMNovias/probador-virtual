@@ -39,16 +39,50 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   onClose,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [supportsWebShare, setSupportsWebShare] = useState(false);
 
   // Build full share URL with dressId
   const shareUrl = `${window.location.origin}/share/${tryOnId}?dressId=${dressId}`;
 
+  // Check if Web Share API is supported
+  useEffect(() => {
+    setSupportsWebShare(!!navigator.share);
+  }, []);
+
   // Debug logs
   useEffect(() => {
     if (isOpen) {
-      console.log('[ShareModal] Modal opened with:', { tryOnId, dressId, shareUrl });
+      console.log('[ShareModal] Modal opened with:', { tryOnId, dressId, shareUrl, supportsWebShare });
     }
-  }, [isOpen, tryOnId, dressId, shareUrl]);
+  }, [isOpen, tryOnId, dressId, shareUrl, supportsWebShare]);
+
+  /**
+   * Share using native Web Share API (mobile)
+   */
+  const handleNativeShare = async (): Promise<void> => {
+    console.log('[ShareModal] Native share button clicked');
+
+    try {
+      if (!navigator.share) {
+        throw new Error('Web Share API not supported');
+      }
+
+      await navigator.share({
+        title: 'Prueba Virtual - Atelier de Bodas',
+        text: 'Mira mi prueba virtual de vestido de novia',
+        url: shareUrl,
+      });
+
+      console.log('[ShareModal] Shared successfully via Web Share API');
+    } catch (err: any) {
+      // User cancelled the share or share failed
+      if (err.name !== 'AbortError') {
+        console.error('[ShareModal] Error sharing:', err);
+        // Fallback to copy
+        handleCopy();
+      }
+    }
+  };
 
   /**
    * Copy share URL to clipboard
@@ -121,7 +155,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-serif text-[#2C2419]">
+          <h2 className="text-2xl font-serif text-[#000000]">
             Compartir Prueba Virtual
           </h2>
           <button
@@ -149,9 +183,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         <>
           {/* Share Icon */}
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#8C6F5A]/10 to-[#6B5647]/10 rounded-full flex items-center justify-center">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
                 <svg
-                  className="w-10 h-10 text-[#8C6F5A]"
+                  className="w-10 h-10 text-[#333333]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -172,7 +206,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               podrá ver tu prueba virtual.
             </p>
 
-            {/* URL Input */}
+            {/* URL Input and Actions */}
             <div className="mb-6">
               <label
                 htmlFor="share-url-input"
@@ -186,52 +220,81 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   type="text"
                   value={shareUrl}
                   readOnly
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#8C6F5A] focus:border-transparent"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#333333] focus:border-transparent"
                 />
-                <button
-                  onClick={handleCopy}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
-                    copied
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white hover:shadow-lg'
-                  }`}
-                >
-                  {copied ? (
-                    <>
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <span>Copiado</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>Copiar</span>
-                    </>
-                  )}
-                </button>
+
+                {/* Show native share button on mobile if supported, otherwise show copy */}
+                {supportsWebShare ? (
+                  <button
+                    onClick={handleNativeShare}
+                    className="px-4 sm:px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 bg-[#333333] text-white hover:bg-[#1a1a1a] hover:shadow-lg"
+                    aria-label="Compartir"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                      />
+                    </svg>
+                    {/* Text hidden on mobile */}
+                    <span className="hidden sm:inline">Compartir</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleCopy}
+                    className={`px-4 sm:px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
+                      copied
+                        ? 'bg-green-500 text-white'
+                        : 'bg-[#333333] text-white hover:bg-[#1a1a1a] hover:shadow-lg'
+                    }`}
+                    aria-label={copied ? 'Copiado' : 'Copiar enlace'}
+                  >
+                    {copied ? (
+                      <>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        {/* Text hidden on mobile */}
+                        <span className="hidden sm:inline">Copiado</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                        {/* Text hidden on mobile */}
+                        <span className="hidden sm:inline">Copiar</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
 
