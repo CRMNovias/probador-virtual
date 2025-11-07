@@ -33,6 +33,11 @@ export interface AvatarComparisonProps {
    * Callback when user wants to regenerate
    */
   onRegenerate: () => void;
+
+  /**
+   * Callback when user wants to upload a different photo
+   */
+  onChangePhoto?: () => void;
 }
 
 /**
@@ -43,6 +48,7 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
   generatedAvatarUrl,
   onContinue,
   onRegenerate,
+  onChangePhoto,
 }) => {
   const [sliderPosition, setSliderPosition] = useState<number>(50); // Percentage
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -133,10 +139,10 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
 
       {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-4xl font-serif text-[#2C2419] mb-3">
+        <h2 className="text-4xl font-serif text-[#000000] mb-3">
           Tu Avatar está Listo
         </h2>
-        <p className="text-[#6B5647] text-lg">
+        <p className="text-[#333333] text-lg">
           Desliza la barra para comparar tu foto con el avatar generado
         </p>
       </div>
@@ -144,7 +150,7 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
       {/* Comparison Container */}
       <div
         ref={containerRef}
-        className="relative w-full h-[75vh] max-h-[800px] mx-auto mb-8 rounded-2xl overflow-hidden shadow-2xl cursor-ew-resize bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]"
+        className="relative w-full h-[75vh] max-h-[800px] mx-auto mb-8 rounded-2xl overflow-hidden shadow-2xl cursor-ew-resize bg-gradient-to-br from-gray-100 to-gray-200"
         onMouseDown={handleMouseDown}
         onTouchStart={handleMouseDown}
       >
@@ -155,7 +161,7 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
             alt="Avatar generado"
             className="w-full h-full object-contain"
           />
-          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-[#2C2419] px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-[#000000] px-4 py-2 rounded-full text-sm font-medium shadow-lg">
             Avatar Generado
           </div>
         </div>
@@ -170,7 +176,7 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
             alt="Foto subida"
             className="w-full h-full object-contain"
           />
-          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[#2C2419] px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[#000000] px-4 py-2 rounded-full text-sm font-medium shadow-lg">
             Foto Original
           </div>
         </div>
@@ -184,7 +190,7 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-full shadow-2xl flex items-center justify-center pointer-events-auto cursor-ew-resize hover:scale-110 transition-transform">
             {/* Left/Right Arrows */}
             <svg
-              className="w-6 h-6 text-[#8C6F5A]"
+              className="w-6 h-6 text-[#333333]"
               fill="none"
               stroke="currentColor"
               strokeWidth={2.5}
@@ -201,7 +207,7 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
       </div>
 
       {/* Instructions */}
-      <p className="text-center text-sm text-[#6B5647] mb-8">
+      <p className="text-center text-sm text-[#333333] mb-8">
         Arrastra la barra central para comparar las imágenes
       </p>
 
@@ -209,13 +215,21 @@ export const AvatarComparison: React.FC<AvatarComparisonProps> = ({
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <button
           onClick={onRegenerate}
-          className="min-w-[220px] px-8 py-4 bg-white/80 text-[#2C2419] rounded-xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-[#8C6F5A]/30 font-serif text-lg transform hover:scale-[1.02]"
+          className="min-w-[220px] px-8 py-4 bg-white/80 text-[#000000] rounded-xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-[#333333]/30 font-serif text-lg transform hover:scale-[1.02]"
         >
           Regenerar Avatar
         </button>
+        {onChangePhoto && (
+          <button
+            onClick={onChangePhoto}
+            className="min-w-[220px] px-8 py-4 bg-white/80 text-[#000000] rounded-xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-[#333333]/30 font-serif text-lg transform hover:scale-[1.02]"
+          >
+            Subir Otra Foto
+          </button>
+        )}
         <button
           onClick={onContinue}
-          className="min-w-[220px] px-8 py-4 bg-gradient-to-br from-[#8C6F5A] to-[#6B5647] text-white rounded-xl hover:shadow-2xl transition-all duration-300 shadow-xl font-serif text-lg transform hover:scale-[1.02]"
+          className="min-w-[220px] px-8 py-4 bg-[#333333] text-white rounded-xl hover:bg-[#1a1a1a] hover:shadow-2xl transition-all duration-300 shadow-xl font-serif text-lg transform hover:scale-[1.02]"
         >
           Continuar al Probador
         </button>

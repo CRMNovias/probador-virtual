@@ -252,6 +252,17 @@ export const AvatarCreationPage: React.FC = () => {
     await processAvatarGeneration(uploadedFile);
   };
 
+  /**
+   * Handle change photo - go back to upload screen
+   */
+  const handleChangePhoto = (): void => {
+    setShowComparison(false);
+    setUploadedPhotoUrl('');
+    setGeneratedAvatarUrl('');
+    setUploadedFile(null);
+    setError(null);
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -275,6 +286,7 @@ export const AvatarCreationPage: React.FC = () => {
             generatedAvatarUrl={generatedAvatarUrl}
             onContinue={handleContinue}
             onRegenerate={handleRegenerate}
+            onChangePhoto={handleChangePhoto}
           />
         </main>
       </div>

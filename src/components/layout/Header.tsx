@@ -158,21 +158,11 @@ export const Header: React.FC = () => {
     setShowLogoutConfirm(false);
   };
 
-  // Get current active tab
-  const activeTab = navTabs.find(tab => location.pathname === tab.path);
-
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Mobile: Show active section name */}
-        <div className="sm:hidden">
-          <h1 className="text-lg font-serif text-black">
-            {activeTab?.label || 'Atelier de Bodas'}
-          </h1>
-        </div>
-
-        {/* Desktop: Navigation Menu */}
-        <nav className="hidden sm:flex items-center gap-1">
+        {/* Navigation Menu - Always visible */}
+        <nav className="flex items-center gap-1">
           {navTabs.map((tab) => {
             const isActive = location.pathname === tab.path;
 
@@ -181,7 +171,7 @@ export const Header: React.FC = () => {
                 key={tab.path}
                 href={buildNavPath(tab.path)}
                 className={`
-                  flex items-center gap-2 px-4 py-2 rounded-lg
+                  flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg
                   transition-colors font-medium text-sm
                   ${
                     isActive
@@ -193,8 +183,15 @@ export const Header: React.FC = () => {
                 {/* Icon */}
                 {tab.icon(isActive)}
 
-                {/* Label */}
-                <span>{tab.label}</span>
+                {/* Label - hidden on mobile for active tab, always hidden for inactive on mobile */}
+                <span className="hidden sm:inline">
+                  {tab.label}
+                </span>
+
+                {/* Mobile: Show label only for active tab */}
+                <span className="sm:hidden">
+                  {isActive ? tab.label : ''}
+                </span>
               </a>
             );
           })}

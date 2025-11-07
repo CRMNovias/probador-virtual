@@ -5,8 +5,8 @@
  * Follows Tailwind CSS utility-first approach with brand colors.
  *
  * Brand Colors:
- * - Primary: #8C6F5A (beige/taupe)
- * - Background: #F8F7F5 (light cream)
+ * - Primary: #333333 (dark gray)
+ * - Background: #F5F5F5 (light gray)
  */
 
 import React from 'react';
@@ -70,13 +70,13 @@ export interface ButtonProps {
 const getVariantClasses = (variant: ButtonProps['variant']): string => {
   switch (variant) {
     case 'primary':
-      return 'bg-[#8C6F5A] text-white hover:bg-[#7a5f4a] focus:ring-[#8C6F5A] focus:ring-offset-2';
+      return 'bg-[#333333] text-white hover:bg-[#1a1a1a] focus:ring-[#333333] focus:ring-offset-2';
     case 'secondary':
-      return 'bg-white text-[#8C6F5A] border-2 border-[#8C6F5A] hover:bg-[#F8F7F5] focus:ring-[#8C6F5A] focus:ring-offset-2';
+      return 'bg-white text-[#333333] border-2 border-[#333333] hover:bg-gray-50 focus:ring-[#333333] focus:ring-offset-2';
     case 'danger':
       return 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 focus:ring-offset-2';
     default:
-      return 'bg-[#8C6F5A] text-white hover:bg-[#7a5f4a] focus:ring-[#8C6F5A] focus:ring-offset-2';
+      return 'bg-[#333333] text-white hover:bg-[#1a1a1a] focus:ring-[#333333] focus:ring-offset-2';
   }
 };
 

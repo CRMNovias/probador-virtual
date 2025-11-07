@@ -5,7 +5,7 @@
  * Can be used inline or centered on screen.
  *
  * Brand Colors:
- * - Primary: #8C6F5A (beige/taupe)
+ * - Primary: #333333 (dark gray)
  */
 
 import React from 'react';
@@ -60,7 +60,7 @@ export const Loader: React.FC<LoaderProps> = ({
   const sparklesIcon = (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className={`${sizeClasses} text-[#8C6F5A] animate-pulse`}
+      className={`${sizeClasses} text-[#333333] animate-pulse`}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -86,13 +86,13 @@ export const Loader: React.FC<LoaderProps> = ({
 
   // Centered variant (for full screen loading) - Mockup design
   return (
-    <div className="flex flex-col items-center justify-center gap-4 text-center text-[#8C6F5A]">
+    <div className="flex flex-col items-center justify-center gap-4 text-center text-[#333333]">
       {sparklesIcon}
       {text && <p className="text-lg font-light">{text}</p>}
 
       {/* Progress Bar (animated) */}
       <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div className="h-full bg-gradient-to-r from-[#EAE0D5] to-[#D4C8BE] animate-loader-progress"></div>
+        <div className="h-full bg-gradient-to-r from-gray-400 to-gray-600 animate-loader-progress"></div>
       </div>
     </div>
   );
