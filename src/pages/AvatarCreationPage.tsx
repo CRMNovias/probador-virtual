@@ -385,6 +385,10 @@ export const AvatarCreationPage: React.FC = () => {
               {/* Terms - Desktop only */}
               <div className="hidden md:block pt-4 border-t border-[#000000]/20">
                 <p className="text-xs text-[#333333]/70 leading-relaxed">
+                  Las imágenes generadas son aproximaciones digitales y pueden diferir de la realidad. La herramienta utiliza inteligencia artificial que a veces ajusta proporciones, tonos o rasgos de forma automática.
+
+                  Puedes eliminar tus fotos o resultados cuando quieras.
+                  
                   Al subir, aceptas no crear contenido dañino, explícito o ilegal.
                   Este servicio es solo para uso creativo y responsable.
                 </p>
@@ -399,6 +403,10 @@ export const AvatarCreationPage: React.FC = () => {
             {/* Terms - Mobile only (after example) */}
             <div className="md:hidden pt-4 border-t border-[#000000]/20 mt-6">
               <p className="text-xs text-[#333333]/70 leading-relaxed">
+                Las imágenes generadas son aproximaciones digitales y pueden diferir de la realidad. La herramienta utiliza inteligencia artificial que a veces ajusta proporciones, tonos o rasgos de forma automática.
+
+                Puedes eliminar tus fotos o resultados cuando quieras.
+                
                 Al subir, aceptas no crear contenido dañino, explícito o ilegal.
                 Este servicio es solo para uso creativo y responsable.
               </p>
