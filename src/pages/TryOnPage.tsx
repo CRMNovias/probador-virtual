@@ -12,7 +12,7 @@ import { Loader } from '../components/shared/Loader.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
 import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
 import { useApp } from '../context/AppContext.js';
-import { getAvatar } from '../services/avatarService.js';
+import { getAvatar, deleteAvatar } from '../services/avatarService.js';
 import { generateTryOn, deleteTryOn } from '../services/tryOnService.js';
 import { downloadImage, generateTryOnFilename } from '../utils/downloadImage.js';
 import { routes } from '../constants/routes.js';
@@ -126,6 +126,7 @@ export const TryOnPage: React.FC = () => {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [showDeleteAvatarConfirm, setShowDeleteAvatarConfirm] = useState(false);
 
   // Load avatar on mount
   useEffect(() => {
@@ -264,6 +265,40 @@ export const TryOnPage: React.FC = () => {
 
   const handleChangePhoto = () => {
     navigate(routes.AVATAR_CREATION + (dressId ? `?dressId=${dressId}` : ''));
+  };
+
+  const handleDeleteAvatarClick = () => {
+    setShowDeleteAvatarConfirm(true);
+  };
+
+  const confirmDeleteAvatar = async () => {
+    try {
+      console.log('[TryOnPage] Deleting avatar...');
+      await deleteAvatar();
+      console.log('[TryOnPage] Avatar deleted successfully');
+
+      // Clear avatar from state and context
+      setAvatar(null);
+
+      // Clear any generated try-on
+      setGeneratedTryOn(null);
+
+      // Close confirmation modal
+      setShowDeleteAvatarConfirm(false);
+
+      // Navigate to avatar creation page
+      const params = new URLSearchParams();
+      if (dressId) params.append('dressId', dressId);
+      navigate(`${routes.AVATAR_CREATION}?${params.toString()}`);
+    } catch (err) {
+      console.error('[TryOnPage] Error deleting avatar:', err);
+      setShowDeleteAvatarConfirm(false);
+      setAvatarError('Error al eliminar el avatar. Por favor, inténtalo de nuevo.');
+    }
+  };
+
+  const cancelDeleteAvatar = () => {
+    setShowDeleteAvatarConfirm(false);
   };
 
   const handleDownloadTryOn = async () => {
@@ -432,6 +467,13 @@ export const TryOnPage: React.FC = () => {
                 >
                   <UploadIcon className="w-4 h-4" /> Cambiar Foto
                 </button>
+                <button
+                  onClick={handleDeleteAvatarClick}
+                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-red-600 text-white py-2.5 px-3 rounded-xl hover:bg-red-700 hover:shadow-lg transition-all duration-200"
+                  title="Eliminar avatar"
+                >
+                  <TrashIcon /> Eliminar
+                </button>
               </div>
             </div>
 
@@ -524,6 +566,44 @@ export const TryOnPage: React.FC = () => {
           dressId={dressId}
           onClose={() => setShareModalOpen(false)}
         />
+      )}
+
+      {/* Delete Avatar Confirmation Modal */}
+      {showDeleteAvatarConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-8 text-center max-w-sm w-full mx-4">
+            {/* Icon */}
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <TrashIcon />
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-[#000000] mb-2">
+              ¿Eliminar avatar?
+            </h2>
+
+            {/* Message */}
+            <p className="text-gray-600 mb-6">
+              Se eliminará tu avatar actual y tendrás que crear uno nuevo. Esta acción no se puede deshacer.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={cancelDeleteAvatar}
+                className="px-8 py-2 rounded-lg bg-white text-[#000000] border-2 border-[#333333] hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteAvatar}
+                className="px-8 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

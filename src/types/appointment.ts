@@ -5,22 +5,31 @@
  */
 
 /**
- * Appointment status
+ * Appointment status (now comes as string from backend)
  */
-export type AppointmentStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled';
+export type AppointmentStatus = string;
+
+/**
+ * Appointment location information
+ */
+export interface AppointmentLocation {
+  name: string;
+  address: string;
+  city: string;
+  phone: string;
+}
 
 /**
  * Appointment information
  */
 export interface Appointment {
-  id: string;
-  userId: string;
-  date: string; // ISO 8601 date string
-  time: string; // HH:MM format
-  dateTime: string; // ISO 8601 combined date-time string (for compatibility)
-  status: AppointmentStatus;
-  notes: string | null;
+  id: number;
+  userId: number;
+  date: string; // ISO 8601 date-time string (e.g., "2026-02-13T12:00:00.000000Z")
+  status: AppointmentStatus; // e.g., "Cita Reservada", "Completada", "Cancelada"
+  location: AppointmentLocation;
   createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -29,6 +38,7 @@ export interface Appointment {
 export interface AppointmentsResponse {
   upcoming: Appointment[];
   past: Appointment[];
+  today: Appointment[];
 }
 
 /**

@@ -13,7 +13,9 @@ import type { Appointment } from '../types/index.js';
  * AppointmentsPage Component
  */
 export const AppointmentsPage: React.FC = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  const [pastAppointments, setPastAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,53 +24,53 @@ export const AppointmentsPage: React.FC = () => {
 
   const loadAppointments = async () => {
     try {
-      const data = await getUserAppointments();
-      // Combine upcoming and past appointments
-      const allAppointments = [...data.upcoming, ...data.past];
-      setAppointments(allAppointments);
+      const response = await getUserAppointments();
+      console.log('[AppointmentsPage] Appointments response:', response);
+
+      // Extract data from backend response
+      const data = (response as any).data || response;
+
+      setTodayAppointments(data.today || []);
+      setUpcomingAppointments(data.upcoming || []);
+      setPastAppointments(data.past || []);
     } catch (err) {
       console.error('Error loading appointments:', err);
+      setTodayAppointments([]);
+      setUpcomingAppointments([]);
+      setPastAppointments([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Separate upcoming and past appointments
-  const now = new Date();
-  const upcomingAppointments = appointments.filter(
-    appt => new Date(appt.dateTime) >= now
-  );
-  const pastAppointments = appointments.filter(
-    appt => new Date(appt.dateTime) < now
-  );
-
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-      case 'confirmada':
-        return 'bg-green-100 text-green-600';
-      case 'completed':
-      case 'completada':
-        return 'bg-gray-100 text-gray-600';
-      case 'pending':
-      case 'pendiente':
-        return 'bg-yellow-100 text-yellow-600';
-      case 'cancelled':
-      case 'cancelada':
-        return 'bg-red-100 text-red-600';
-      default:
-        return 'bg-gray-100 text-gray-600';
+    const lowerStatus = status.toLowerCase();
+
+    // Handle Spanish statuses from backend
+    if (lowerStatus.includes('reservada') || lowerStatus.includes('confirmada') || lowerStatus.includes('confirmed')) {
+      return 'bg-green-100 text-green-600 border border-green-300';
     }
+    if (lowerStatus.includes('completada') || lowerStatus.includes('completed')) {
+      return 'bg-gray-100 text-gray-600 border border-gray-300';
+    }
+    if (lowerStatus.includes('pendiente') || lowerStatus.includes('pending')) {
+      return 'bg-yellow-100 text-yellow-600 border border-yellow-300';
+    }
+    if (lowerStatus.includes('cancelada') || lowerStatus.includes('cancelled')) {
+      return 'bg-red-100 text-red-600 border border-red-300';
+    }
+
+    return 'bg-blue-100 text-blue-600 border border-blue-300';
   };
 
-  const formatDateTime = (dateTime: string) => {
-    const date = new Date(dateTime);
-    const dateStr = date.toLocaleDateString('es-ES', {
+  const formatDateTime = (date: string) => {
+    const dateObj = new Date(date);
+    const dateStr = dateObj.toLocaleDateString('es-ES', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
     });
-    const timeStr = date.toLocaleTimeString('es-ES', {
+    const timeStr = dateObj.toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -117,77 +119,158 @@ export const AppointmentsPage: React.FC = () => {
             </a>
           </div>
 
-          <div className="space-y-6">
-            {/* Próximas Citas */}
-            <div>
-              <h2 className="text-2xl font-serif text-[#000000] border-b pb-2 mb-4">
-                Próximas Citas
-              </h2>
-              {upcomingAppointments.length > 0 ? (
-                upcomingAppointments.map(appt => {
-                  const { dateStr, timeStr } = formatDateTime(appt.dateTime);
-                  return (
-                    <div
-                      key={appt.id}
-                      className="bg-white p-4 rounded-lg shadow-sm border flex justify-between items-center mb-3"
-                    >
-                      <div>
-                        <p className="font-semibold">{dateStr}</p>
-                        <p className="text-gray-600">{timeStr}</p>
-                        {appt.notes && (
-                          <p className="text-sm text-gray-500 mt-1">{appt.notes}</p>
-                        )}
-                      </div>
-                      <span
-                        className={`px-3 py-1 text-sm rounded-full ${getStatusColor(
-                          appt.status
-                        )}`}
-                      >
-                        {appt.status}
-                      </span>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-gray-500 font-light">No tienes citas próximas.</p>
+          {/* Check if there are any appointments at all */}
+          {todayAppointments.length === 0 && upcomingAppointments.length === 0 && pastAppointments.length === 0 ? (
+            <p className="text-center text-gray-500 font-light mt-8">
+              No tienes citas registradas. ¡Agenda tu primera cita!
+            </p>
+          ) : (
+            <div className="space-y-8">
+              {/* Citas de Hoy - Only show if there are appointments */}
+              {todayAppointments.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-serif text-[#000000] border-b-2 border-[#333333] pb-2 mb-4">
+                    Hoy
+                  </h2>
+                  <div className="space-y-3">
+                    {todayAppointments.map(appt => {
+                      const { dateStr, timeStr } = formatDateTime(appt.date);
+                      return (
+                        <div
+                          key={appt.id}
+                          className="bg-gradient-to-r from-blue-50 to-white p-5 rounded-xl shadow-md border-2 border-blue-300"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <p className="font-bold text-lg text-[#000000]">{dateStr}</p>
+                              <p className="text-blue-700 font-semibold text-lg">{timeStr}</p>
+                            </div>
+                            <span className={`px-3 py-1 text-sm rounded-lg font-medium ${getStatusColor(appt.status)}`}>
+                              {appt.status}
+                            </span>
+                          </div>
+                          {/* Location Info */}
+                          <div className="mt-3 pt-3 border-t border-gray-200 space-y-1">
+                            <p className="font-semibold text-gray-800 flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              {appt.location.name}
+                            </p>
+                            <p className="text-sm text-gray-600 ml-6">{appt.location.address}</p>
+                            <p className="text-sm text-gray-600 ml-6">{appt.location.city}</p>
+                            <p className="text-sm text-gray-700 font-medium ml-6 flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                              {appt.location.phone}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
-            </div>
 
-            {/* Historial */}
-            <div>
-              <h2 className="text-2xl font-serif text-[#000000] border-b pb-2 mb-4">
-                Historial
-              </h2>
-              {pastAppointments.length > 0 ? (
-                pastAppointments.map(appt => {
-                  const { dateStr, timeStr } = formatDateTime(appt.dateTime);
-                  return (
-                    <div
-                      key={appt.id}
-                      className="bg-white p-4 rounded-lg shadow-sm border flex justify-between items-center opacity-70 mb-3"
-                    >
-                      <div>
-                        <p className="font-semibold">{dateStr}</p>
-                        <p className="text-gray-600">{timeStr}</p>
-                        {appt.notes && (
-                          <p className="text-sm text-gray-500 mt-1">{appt.notes}</p>
-                        )}
-                      </div>
-                      <span
-                        className={`px-3 py-1 text-sm rounded-full ${getStatusColor(
-                          appt.status
-                        )}`}
-                      >
-                        {appt.status}
-                      </span>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-gray-500 font-light">No tienes citas en tu historial.</p>
+              {/* Próximas Citas - Only show if there are appointments */}
+              {upcomingAppointments.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-serif text-[#000000] border-b-2 border-[#333333] pb-2 mb-4">
+                    Próximas Citas
+                  </h2>
+                  <div className="space-y-3">
+                    {upcomingAppointments.map(appt => {
+                      const { dateStr, timeStr } = formatDateTime(appt.date);
+                      return (
+                        <div
+                          key={appt.id}
+                          className="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <p className="font-bold text-lg text-[#000000]">{dateStr}</p>
+                              <p className="text-gray-700 font-semibold">{timeStr}</p>
+                            </div>
+                            <span className={`px-3 py-1 text-sm rounded-lg font-medium ${getStatusColor(appt.status)}`}>
+                              {appt.status}
+                            </span>
+                          </div>
+                          {/* Location Info */}
+                          <div className="mt-3 pt-3 border-t border-gray-200 space-y-1">
+                            <p className="font-semibold text-gray-800 flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              {appt.location.name}
+                            </p>
+                            <p className="text-sm text-gray-600 ml-6">{appt.location.address}</p>
+                            <p className="text-sm text-gray-600 ml-6">{appt.location.city}</p>
+                            <p className="text-sm text-gray-700 font-medium ml-6 flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                              {appt.location.phone}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Historial - Only show if there are appointments */}
+              {pastAppointments.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-serif text-[#000000] border-b-2 border-[#333333] pb-2 mb-4">
+                    Historial
+                  </h2>
+                  <div className="space-y-3">
+                    {pastAppointments.map(appt => {
+                      const { dateStr, timeStr } = formatDateTime(appt.date);
+                      return (
+                        <div
+                          key={appt.id}
+                          className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 opacity-60"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <p className="font-bold text-lg text-[#000000]">{dateStr}</p>
+                              <p className="text-gray-600">{timeStr}</p>
+                            </div>
+                            <span className={`px-3 py-1 text-sm rounded-lg font-medium ${getStatusColor(appt.status)}`}>
+                              {appt.status}
+                            </span>
+                          </div>
+                          {/* Location Info */}
+                          <div className="mt-3 pt-3 border-t border-gray-200 space-y-1">
+                            <p className="font-semibold text-gray-700 flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              {appt.location.name}
+                            </p>
+                            <p className="text-sm text-gray-500 ml-6">{appt.location.address}</p>
+                            <p className="text-sm text-gray-500 ml-6">{appt.location.city}</p>
+                            <p className="text-sm text-gray-600 ml-6 flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                              {appt.location.phone}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
-          </div>
+          )}
         </div>
       </main>
     </div>

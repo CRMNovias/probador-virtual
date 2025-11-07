@@ -52,3 +52,13 @@ export const getAvatar = async (): Promise<Avatar> => {
 
   return avatar;
 };
+
+/**
+ * Delete current user's avatar
+ * @returns Promise with deletion response
+ */
+export const deleteAvatar = async (): Promise<void> => {
+  console.log('[avatarService] Deleting avatar...');
+  await apiClient.delete('/avatar');
+  console.log('[avatarService] Avatar deleted successfully');
+};
