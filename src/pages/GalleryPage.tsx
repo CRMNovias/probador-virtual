@@ -67,6 +67,8 @@ export const GalleryPage: React.FC = () => {
   const [expandedDressId, setExpandedDressId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
+  const [viewerTryOnId, setViewerTryOnId] = useState<string>('');
+  const [viewerDressId, setViewerDressId] = useState<string>('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; url: string } | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedTryOnId, setSelectedTryOnId] = useState<string>('');
@@ -229,7 +231,11 @@ export const GalleryPage: React.FC = () => {
                             <div
                               key={tryOn.id}
                               className="group relative rounded-lg overflow-hidden aspect-[2/3] cursor-pointer"
-                              onClick={() => setViewerImage(tryOn.imageUrl)}
+                              onClick={() => {
+                                setViewerImage(tryOn.imageUrl);
+                                setViewerTryOnId(tryOn.id);
+                                setViewerDressId(category.dressId);
+                              }}
                             >
                               {/* Gallery thumbnail without watermark, with 50px crop on each side */}
                               <img
@@ -243,12 +249,14 @@ export const GalleryPage: React.FC = () => {
                                 }}
                               />
 
-                              {/* Hover Overlay */}
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              {/* Hover Overlay - Desktop only */}
+                              <div className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2">
                                 <button
                                   onClick={e => {
                                     e.stopPropagation();
                                     setViewerImage(tryOn.imageUrl);
+                                    setViewerTryOnId(tryOn.id);
+                                    setViewerDressId(category.dressId);
                                   }}
                                   className="p-2 bg-white/80 rounded-full text-gray-800 hover:scale-110 transition-transform"
                                   title="Ampliar"
@@ -271,7 +279,7 @@ export const GalleryPage: React.FC = () => {
                                 </button>
                                 <button
                                   onClick={e => handleDelete(e, tryOn.id, tryOn.imageUrl)}
-                                  className="p-2 bg-white/80 rounded-full text-red-500 hover:scale-110 transition-transform"
+                                  className="p-2 bg-white/80 rounded-full text-gray-800 hover:scale-110 transition-transform"
                                   title="Eliminar"
                                 >
                                   <TrashIcon />
@@ -296,24 +304,71 @@ export const GalleryPage: React.FC = () => {
           className="fixed inset-0 bg-black/80 z-50 overflow-auto"
           onClick={() => setViewerImage(null)}
         >
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="relative">
+          <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            {/* Close Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setViewerImage(null);
+              }}
+              className="fixed top-4 right-4 text-white p-3 bg-black/50 rounded-full hover:bg-black/80 z-10"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+
+            {/* Image */}
+            <div className="relative mb-4" onClick={(e) => e.stopPropagation()}>
               <WatermarkedImage
                 src={viewerImage}
                 alt="Vista ampliada"
                 className="max-w-full h-auto rounded-lg"
               />
+            </div>
+
+            {/* Action Buttons - Mobile & Desktop */}
+            <div className="flex gap-3 justify-center" onClick={(e) => e.stopPropagation()}>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setViewerImage(null);
+                onClick={() => {
+                  handleDownload(
+                    { stopPropagation: () => {} } as React.MouseEvent,
+                    viewerImage,
+                    viewerTryOnId,
+                    viewerDressId
+                  );
                 }}
-                className="fixed top-4 right-4 text-white p-3 bg-black/50 rounded-full hover:bg-black/80 z-10"
+                className="flex items-center gap-2 px-6 py-3 bg-white rounded-xl text-gray-800 hover:bg-gray-100 transition-colors shadow-lg"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <DownloadIcon />
+                <span className="hidden sm:inline">Descargar</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleShare(
+                    { stopPropagation: () => {} } as React.MouseEvent,
+                    viewerTryOnId,
+                    viewerDressId
+                  );
+                }}
+                className="flex items-center gap-2 px-6 py-3 bg-white rounded-xl text-gray-800 hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                <ShareIcon />
+                <span className="hidden sm:inline">Compartir</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleDelete(
+                    { stopPropagation: () => {} } as React.MouseEvent,
+                    viewerTryOnId,
+                    viewerImage
+                  );
+                }}
+                className="flex items-center gap-2 px-6 py-3 bg-white rounded-xl text-gray-800 hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                <TrashIcon />
+                <span className="hidden sm:inline">Eliminar</span>
               </button>
             </div>
           </div>
@@ -324,19 +379,21 @@ export const GalleryPage: React.FC = () => {
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl p-8 text-center max-w-sm w-full mx-4">
-            <AlertTriangleIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">¿Confirmas la eliminación?</h2>
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangleIcon className="w-12 h-12 text-gray-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-[#000000] mb-2">¿Confirmas la eliminación?</h2>
             <p className="text-gray-600 mb-6">Esta acción no se puede deshacer.</p>
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-8 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors"
+                className="px-8 py-2 rounded-lg bg-white text-[#000000] border-2 border-[#333333] hover:bg-gray-50 transition-colors font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-8 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+                className="px-8 py-2 rounded-lg bg-[#333333] text-white hover:bg-[#1a1a1a] transition-colors font-medium"
               >
                 Eliminar
               </button>

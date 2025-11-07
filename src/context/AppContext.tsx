@@ -163,14 +163,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   /**
    * Clear all app state (on logout)
+   * NOTE: dressId and dressName are NOT cleared because they come from external catalog
+   * and should persist across login sessions
    */
   const clearAppState = useCallback((): void => {
+    // Only clear user-specific data (avatar)
     setAvatarState(null);
     localStorage.removeItem(STORAGE_KEYS.AVATAR_INFO);
-    localStorage.removeItem(STORAGE_KEYS.DRESS_ID);
-    localStorage.removeItem(STORAGE_KEYS.DRESS_NAME);
-    setDressId(null);
-    setDressName(null);
+
+    // DO NOT clear dressId and dressName - they come from external catalog
+    // and should persist so user can continue with the same dress after re-login
   }, []);
 
   const value: AppContextState = {

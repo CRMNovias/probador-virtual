@@ -271,7 +271,7 @@ export const Header: React.FC = () => {
                   onClick={handleLogoutClick}
                   className="
                     w-full text-left px-4 py-2
-                    text-sm text-red-600 hover:bg-red-50
+                    text-sm text-gray-700 hover:bg-gray-100
                     transition-colors flex items-center gap-2
                   "
                 >
@@ -300,8 +300,8 @@ export const Header: React.FC = () => {
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-2xl p-8 text-center max-w-sm w-full mx-4">
               {/* Icon */}
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-600">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-700">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                   <polyline points="16 17 21 12 16 7"/>
                   <line x1="21" y1="12" x2="9" y2="12"/>
@@ -309,7 +309,7 @@ export const Header: React.FC = () => {
               </div>
 
               {/* Title */}
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              <h2 className="text-2xl font-bold text-[#000000] mb-2">
                 ¿Cerrar sesión?
               </h2>
 
@@ -322,13 +322,13 @@ export const Header: React.FC = () => {
               <div className="flex justify-center gap-4">
                 <button
                   onClick={cancelLogout}
-                  className="px-8 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors font-medium"
+                  className="px-8 py-2 rounded-lg bg-white text-[#000000] border-2 border-[#333333] hover:bg-gray-50 transition-colors font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={confirmLogout}
-                  className="px-8 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors font-medium"
+                  className="px-8 py-2 rounded-lg bg-[#333333] text-white hover:bg-[#1a1a1a] transition-colors font-medium"
                 >
                   Cerrar Sesión
                 </button>
