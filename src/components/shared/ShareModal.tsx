@@ -39,22 +39,30 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   onClose,
 }) => {
   const [copied, setCopied] = useState(false);
-  const [supportsWebShare, setSupportsWebShare] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [canShare, setCanShare] = useState(false);
 
   // Build full share URL with dressId
   const shareUrl = `${window.location.origin}/share/${tryOnId}?dressId=${dressId}`;
 
-  // Check if Web Share API is supported
+  // Detect mobile and Web Share API support
   useEffect(() => {
-    setSupportsWebShare(!!navigator.share);
+    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const mobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+    setIsMobile(mobile);
+
+    // Only enable share on mobile with Web Share API support
+    setCanShare(mobile && !!navigator.share && !!navigator.canShare);
+
+    console.log('[ShareModal] Device detection:', { mobile, hasShare: !!navigator.share, hasCanShare: !!navigator.canShare });
   }, []);
 
   // Debug logs
   useEffect(() => {
     if (isOpen) {
-      console.log('[ShareModal] Modal opened with:', { tryOnId, dressId, shareUrl, supportsWebShare });
+      console.log('[ShareModal] Modal opened with:', { tryOnId, dressId, shareUrl, isMobile, canShare });
     }
-  }, [isOpen, tryOnId, dressId, shareUrl, supportsWebShare]);
+  }, [isOpen, tryOnId, dressId, shareUrl, isMobile, canShare]);
 
   /**
    * Share using native Web Share API (mobile)
@@ -64,23 +72,36 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
     try {
       if (!navigator.share) {
-        throw new Error('Web Share API not supported');
+        console.warn('[ShareModal] Web Share API not available, falling back to copy');
+        await handleCopy();
+        return;
       }
 
-      await navigator.share({
+      // Check if we can share this content
+      const shareData = {
         title: 'Prueba Virtual - Atelier de Bodas',
         text: 'Mira mi prueba virtual de vestido de novia',
         url: shareUrl,
-      });
+      };
 
+      if (navigator.canShare && !navigator.canShare(shareData)) {
+        console.warn('[ShareModal] Cannot share this content, falling back to copy');
+        await handleCopy();
+        return;
+      }
+
+      await navigator.share(shareData);
       console.log('[ShareModal] Shared successfully via Web Share API');
     } catch (err: any) {
-      // User cancelled the share or share failed
-      if (err.name !== 'AbortError') {
-        console.error('[ShareModal] Error sharing:', err);
-        // Fallback to copy
-        handleCopy();
+      // User cancelled the share (AbortError) - do nothing
+      if (err.name === 'AbortError') {
+        console.log('[ShareModal] User cancelled share');
+        return;
       }
+
+      // Other errors - fallback to copy
+      console.error('[ShareModal] Error sharing:', err);
+      await handleCopy();
     }
   };
 
@@ -223,11 +244,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#333333] focus:border-transparent"
                 />
 
-                {/* Show native share button on mobile if supported, otherwise show copy */}
-                {supportsWebShare ? (
+                {/* Show native share button ONLY on mobile if supported, otherwise always show copy */}
+                {isMobile && canShare ? (
                   <button
                     onClick={handleNativeShare}
-                    className="px-4 sm:px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 bg-[#333333] text-white hover:bg-[#1a1a1a] hover:shadow-lg"
+                    className="px-4 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 bg-[#333333] text-white hover:bg-[#1a1a1a] hover:shadow-lg"
                     aria-label="Compartir"
                   >
                     <svg
@@ -243,8 +264,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                         d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                       />
                     </svg>
-                    {/* Text hidden on mobile */}
-                    <span className="hidden sm:inline">Compartir</span>
                   </button>
                 ) : (
                   <button
