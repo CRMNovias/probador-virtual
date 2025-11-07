@@ -150,6 +150,10 @@ export const GalleryPage: React.FC = () => {
       await deleteTryOn(deleteConfirm.id);
       await loadTryOns();
       setDeleteConfirm(null);
+      // Close the image viewer modal if open
+      setViewerImage(null);
+      setViewerTryOnId('');
+      setViewerDressId('');
     } catch (err) {
       console.error('Error deleting try-on:', err);
     }

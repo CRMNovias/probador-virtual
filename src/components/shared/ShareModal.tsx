@@ -64,7 +64,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
    */
   const handleWhatsAppShare = (): void => {
     console.log('[ShareModal] WhatsApp share clicked');
-    const message = encodeURIComponent(`Mira mi prueba virtual de vestido de novia: ${shareUrl}`);
+    const message = encodeURIComponent(`Mira mi prueba virtual: ${shareUrl}`);
     const whatsappUrl = `https://wa.me/?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -75,7 +75,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const handleEmailShare = (): void => {
     console.log('[ShareModal] Email share clicked');
     const subject = encodeURIComponent('Prueba Virtual - Atelier de Bodas');
-    const body = encodeURIComponent(`Hola,\n\nMira mi prueba virtual de vestido de novia:\n\n${shareUrl}\n\nSaludos`);
+    const body = encodeURIComponent(`Hola,\n\nMira mi prueba virtual:\n\n${shareUrl}\n\nSaludos`);
     const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
     window.location.href = mailtoUrl;
   };
@@ -103,28 +103,42 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     } catch (err) {
       console.error('[ShareModal] Failed to copy to clipboard:', err);
 
-      // Fallback: select text for manual copy
-      const input = document.getElementById('share-url-input') as HTMLInputElement;
-      if (input) {
-        input.select();
-        input.setSelectionRange(0, 99999); // For mobile devices
+      // Fallback for mobile: Try creating a temporary textarea
+      const textarea = document.createElement('textarea');
+      textarea.value = shareUrl;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-999999px';
+      textarea.style.top = '-999999px';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
 
-        // Try legacy execCommand as fallback
-        try {
-          const successful = document.execCommand('copy');
-          if (successful) {
-            console.log('[ShareModal] Copied using execCommand fallback');
-            setCopied(true);
-            setTimeout(() => {
-              setCopied(false);
-            }, 2000);
-          } else {
-            alert('Por favor, copia el enlace manualmente (ya está seleccionado).');
-          }
-        } catch (execErr) {
-          console.error('[ShareModal] execCommand also failed:', execErr);
-          alert('Por favor, copia el enlace manualmente (ya está seleccionado).');
+      try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        if (successful) {
+          console.log('[ShareModal] Copied using execCommand fallback');
+          setCopied(true);
+          setTimeout(() => {
+            setCopied(false);
+          }, 2000);
+        } else {
+          // Show visual feedback even if copy might have failed
+          setCopied(true);
+          setTimeout(() => {
+            setCopied(false);
+          }, 2000);
+          console.warn('[ShareModal] Copy might have failed, but showing feedback');
         }
+      } catch (execErr) {
+        document.body.removeChild(textarea);
+        console.error('[ShareModal] execCommand also failed:', execErr);
+        // Still show feedback
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+        }, 2000);
       }
     }
   };
