@@ -8,11 +8,12 @@
  * - Login/logout functionality
  * - Automatic token, user, and phone number persistence in localStorage
  * - Loading state during initialization
- * - Automatic token validation on mount
- * - Session restoration on app restart
+ * - Automatic token validation on mount (only clears on 401, not network errors)
+ * - Session restoration on app restart (resilient to network failures)
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import type { AxiosError } from 'axios';
 import { STORAGE_KEYS } from '../constants/storageKeys.js';
 import { getProfile } from '../services/userService.js';
 import type { UserProfile } from '../types/index.js';
@@ -154,11 +155,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const storedUserJson = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
 
         if (storedToken && storedUserJson) {
-          // Set token first so apiClient can use it for validation
-          setToken(storedToken);
+          const storedUser = JSON.parse(storedUserJson) as UserProfile;
 
-          // Validate token by calling /user/profile
-          // This ensures the token is still valid and gets fresh user data
+          // Set token and user from localStorage first
+          setToken(storedToken);
+          setUser(storedUser);
+
+          // Try to validate token and get fresh data from backend
+          // But don't clear session on network errors - only on 401 Unauthorized
           try {
             console.log('[AuthContext] Validating stored token...');
             const validatedUser = await getProfile();
@@ -173,9 +177,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               id: validatedUser.id
             });
           } catch (error) {
-            // Token invalid or expired, clear auth
-            console.warn('[AuthContext] Token validation failed, clearing auth:', error);
-            logout();
+            const axiosError = error as AxiosError;
+
+            // Only clear session if token is explicitly unauthorized (401)
+            // For network errors or server errors, keep the local session
+            if (axiosError.response?.status === 401) {
+              console.warn('[AuthContext] Token unauthorized (401), clearing auth');
+              logout();
+            } else {
+              // Network error or server error - keep local session
+              console.warn('[AuthContext] Token validation failed (network/server error), using cached session:', error);
+            }
           }
         }
       } catch (error) {
