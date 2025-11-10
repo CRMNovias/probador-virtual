@@ -182,8 +182,8 @@ export const useAuthFlow = (): UseAuthFlowReturn => {
           hasAvatar,
         };
 
-        // Login with token and user data
-        login(response.data.token, userProfile);
+        // Login with token, user data, and phone number
+        login(response.data.token, userProfile, phone);
 
         console.log('[useAuthFlow] Authentication successful:', {
           hasProfile: response.data.hasProfile,

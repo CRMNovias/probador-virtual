@@ -10,6 +10,7 @@
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'auth_token',
   USER_PROFILE: 'user_profile',
+  PHONE_NUMBER: 'phone_number',
   AVATAR_URL: 'avatar_url',
   LAST_SELECTED_DRESS: 'last_selected_dress',
   LAST_SELECTED_POSE: 'last_selected_pose',
