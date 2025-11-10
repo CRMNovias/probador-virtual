@@ -6,13 +6,15 @@
  * Features:
  * - User and token state management
  * - Login/logout functionality
- * - Automatic token persistence in localStorage
+ * - Automatic token, user, and phone number persistence in localStorage
  * - Loading state during initialization
- * - Token validation on mount (optional)
+ * - Automatic token validation on mount
+ * - Session restoration on app restart
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { STORAGE_KEYS } from '../constants/storageKeys.js';
+import { getProfile } from '../services/userService.js';
 import type { UserProfile } from '../types/index.js';
 
 /**
@@ -41,8 +43,11 @@ export interface AuthContextState {
 
   /**
    * Login user with token and profile
+   * @param token - JWT authentication token
+   * @param user - User profile data
+   * @param phone - Optional phone number to persist (will be extracted from user if not provided)
    */
-  login: (token: string, user: UserProfile) => void;
+  login: (token: string, user: UserProfile, phone?: string) => void;
 
   /**
    * Logout user and clear auth data
@@ -79,18 +84,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   /**
    * Login handler
-   * Stores token and user in state and localStorage
+   * Stores token, user, and phone number in state and localStorage
    */
-  const login = useCallback((newToken: string, newUser: UserProfile) => {
+  const login = useCallback((newToken: string, newUser: UserProfile, phone?: string) => {
     console.log('[AuthContext] Login called with user:', {
       hasAvatar: newUser.hasAvatar,
       name: newUser.name,
-      id: newUser.id
+      id: newUser.id,
+      phone: phone || newUser.phone
     });
     setToken(newToken);
     setUser(newUser);
     localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, newToken);
     localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(newUser));
+
+    // Save phone number for session persistence
+    const phoneToSave = phone || newUser.phone;
+    if (phoneToSave) {
+      localStorage.setItem(STORAGE_KEYS.PHONE_NUMBER, phoneToSave);
+    }
+
     console.log('[AuthContext] User saved to localStorage:', JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_PROFILE) || '{}'));
   }, []);
 
@@ -106,6 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Clear ALL localStorage keys (complete cleanup)
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
+    localStorage.removeItem(STORAGE_KEYS.PHONE_NUMBER);
     localStorage.removeItem(STORAGE_KEYS.AVATAR_URL);
     localStorage.removeItem(STORAGE_KEYS.LAST_SELECTED_DRESS);
     localStorage.removeItem(STORAGE_KEYS.LAST_SELECTED_POSE);
@@ -131,6 +145,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   /**
    * Initialize auth state from localStorage on mount
+   * Validates token by calling the backend
    */
   useEffect(() => {
     const initializeAuth = async (): Promise<void> => {
@@ -139,23 +154,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const storedUserJson = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
 
         if (storedToken && storedUserJson) {
-          const storedUser = JSON.parse(storedUserJson) as UserProfile;
+          // Set token first so apiClient can use it for validation
           setToken(storedToken);
-          setUser(storedUser);
 
-          // Optional: Validate token by calling /user/profile
-          // Uncomment if backend team confirms this endpoint doesn't require
-          // additional authentication beyond the token
-          /*
+          // Validate token by calling /user/profile
+          // This ensures the token is still valid and gets fresh user data
           try {
+            console.log('[AuthContext] Validating stored token...');
             const validatedUser = await getProfile();
+
+            // Update user with fresh data from backend
             setUser(validatedUser);
             localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(validatedUser));
+
+            console.log('[AuthContext] Token validated successfully:', {
+              hasAvatar: validatedUser.hasAvatar,
+              name: validatedUser.name,
+              id: validatedUser.id
+            });
           } catch (error) {
             // Token invalid or expired, clear auth
+            console.warn('[AuthContext] Token validation failed, clearing auth:', error);
             logout();
           }
-          */
         }
       } catch (error) {
         // Error parsing stored data, clear everything

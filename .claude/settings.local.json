@@ -29,7 +29,8 @@
       "mcp__chrome-devtools__select_page",
       "Bash(git restore:*)",
       "Bash(timeout 10 sleep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
