@@ -167,14 +167,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log('[AuthContext] Validating stored token...');
             const validatedUser = await getProfile();
 
-            // Update user with fresh data from backend
-            setUser(validatedUser);
-            localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(validatedUser));
+            // Preserve local hasAvatar if it's true
+            // Backend may not have this flag correctly implemented yet
+            const mergedUser: UserProfile = {
+              ...validatedUser,
+              // Keep local hasAvatar:true if exists, otherwise use backend value (default false)
+              hasAvatar: storedUser.hasAvatar === true ? true : (validatedUser.hasAvatar || false),
+            };
+
+            // Update user with fresh data from backend (with preserved hasAvatar)
+            setUser(mergedUser);
+            localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(mergedUser));
 
             console.log('[AuthContext] Token validated successfully:', {
-              hasAvatar: validatedUser.hasAvatar,
-              name: validatedUser.name,
-              id: validatedUser.id
+              hasAvatar: mergedUser.hasAvatar,
+              hasAvatarFromBackend: validatedUser.hasAvatar,
+              hasAvatarFromLocal: storedUser.hasAvatar,
+              name: mergedUser.name,
+              id: mergedUser.id
             });
           } catch (error) {
             const axiosError = error as AxiosError;
