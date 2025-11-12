@@ -46,6 +46,12 @@ export interface AppContextState {
   isDressIdMissing: boolean;
 
   /**
+   * Whether AppContext has finished initializing (processing URL params)
+   * Used to prevent premature redirects before dressId is extracted from URL
+   */
+  isInitialized: boolean;
+
+  /**
    * Current user avatar
    */
   avatar: AvatarInfo | null;
@@ -115,16 +121,25 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [dressId, setDressId] = useState<string | null>(getInitialDressId());
   const [dressName, setDressName] = useState<string | null>(getInitialDressName());
   const [isDressIdMissing, setIsDressIdMissing] = useState<boolean>(!getInitialDressId());
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [avatar, setAvatarState] = useState<AvatarInfo | null>(null);
 
   /**
    * Extract dressId and dressName from URL on mount and persist to localStorage
+   * Mark as initialized after processing to prevent premature redirects
    */
   useEffect(() => {
     const dressIdParam = searchParams.get('dressId');
     const dressNameParam = searchParams.get('dressName');
     const storedDressId = localStorage.getItem(STORAGE_KEYS.DRESS_ID);
     const storedDressName = localStorage.getItem(STORAGE_KEYS.DRESS_NAME);
+
+    console.log('[AppContext] Initializing with params:', {
+      dressIdParam,
+      dressNameParam,
+      storedDressId,
+      storedDressName
+    });
 
     // Priority: URL param > localStorage
     if (dressIdParam) {
@@ -153,6 +168,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     } else {
       setDressName(null);
     }
+
+    // Mark as initialized after processing URL params
+    setIsInitialized(true);
+    console.log('[AppContext] Initialization complete');
   }, [searchParams]);
 
   /**
@@ -202,6 +221,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     dressId,
     dressName,
     isDressIdMissing,
+    isInitialized,
     avatar,
     setAvatar,
     clearAppState,

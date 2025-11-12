@@ -17,6 +17,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/routing/ProtectedRoute.js';
 import { useAuth } from './context/AuthContext.js';
+import { useApp } from './context/AppContext.js';
 import { routes } from './constants/routes.js';
 
 // Page imports
@@ -30,12 +31,15 @@ import { SharePage } from './pages/SharePage.js';
 /**
  * Home Route Component
  * Redirects based on authentication state
+ * Waits for both AuthContext and AppContext to initialize before redirecting
  */
 const HomeRoute: React.FC = () => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
+  const { isInitialized: isAppInitialized } = useApp();
 
-  // Show loading while checking auth
-  if (isLoading) {
+  // Show loading while checking auth OR while AppContext is initializing
+  // This prevents premature redirects before dressId is extracted from URL
+  if (isAuthLoading || !isAppInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#faf9f7]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8C6F5A]" />
