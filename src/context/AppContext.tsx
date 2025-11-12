@@ -83,15 +83,38 @@ export interface AppProviderProps {
 }
 
 /**
+ * Helper function to get initial dressId from localStorage (synchronous)
+ */
+const getInitialDressId = (): string | null => {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.DRESS_ID);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Helper function to get initial dressName from localStorage (synchronous)
+ */
+const getInitialDressName = (): string | null => {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.DRESS_NAME);
+  } catch {
+    return null;
+  }
+};
+
+/**
  * AppProvider Component
  *
  * Provides global app state to all components
  */
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [searchParams] = useSearchParams();
-  const [dressId, setDressId] = useState<string | null>(null);
-  const [dressName, setDressName] = useState<string | null>(null);
-  const [isDressIdMissing, setIsDressIdMissing] = useState<boolean>(false);
+  // Initialize dressId and dressName synchronously from localStorage to avoid race condition
+  const [dressId, setDressId] = useState<string | null>(getInitialDressId());
+  const [dressName, setDressName] = useState<string | null>(getInitialDressName());
+  const [isDressIdMissing, setIsDressIdMissing] = useState<boolean>(!getInitialDressId());
   const [avatar, setAvatarState] = useState<AvatarInfo | null>(null);
 
   /**
