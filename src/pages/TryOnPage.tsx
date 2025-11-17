@@ -81,6 +81,12 @@ const EyeIcon = () => (
   </svg>
 );
 
+const RefreshIcon = ({ className = '' }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+  </svg>
+);
+
 // 3 Poses predefinidas (frontend) - UI display configuration
 const POSES = [
   {
@@ -254,6 +260,35 @@ export const TryOnPage: React.FC = () => {
     }
   };
 
+  const handleRegenerateTryOn = async () => {
+    if (!generatedTryOn) return;
+
+    // Store the current pose to regenerate with same parameters
+    const currentPoseId = generatedTryOn.poseId as 'pose1' | 'pose2' | 'pose3';
+
+    try {
+      // Delete current try-on
+      console.log('[TryOnPage] Deleting current try-on for regeneration...');
+      await deleteTryOn(generatedTryOn.id);
+
+      // Clear the current try-on from state
+      setGeneratedTryOn(null);
+
+      // Set the pose to the one that was used
+      setSelectedPoseId(currentPoseId);
+
+      // Wait a brief moment for UI update
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Trigger generation with the same parameters
+      console.log('[TryOnPage] Regenerating try-on with same parameters...');
+      await handleGenerate();
+    } catch (err) {
+      console.error('[TryOnPage] Error regenerating try-on:', err);
+      setError(err instanceof Error ? err.message : 'Error al regenerar prueba virtual');
+    }
+  };
+
   const handleShare = () => {
     if (!generatedTryOn) return;
     setShareModalOpen(true);
@@ -372,9 +407,32 @@ export const TryOnPage: React.FC = () => {
                   onClick={() => setViewerImage(displayImageUrl)}
                 />
 
-                {/* Action Buttons (solo si hay try-on generada) */}
+                {/* Regenerate Button and Info Note (solo si hay try-on generada) */}
                 {generatedTryOn && (
-                  <div className="absolute top-4 right-4 flex flex-col gap-2">
+                  <>
+                    {/* Info Note */}
+                    <div className="absolute top-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-[#D4C8BE]">
+                      <p className="text-xs text-center text-[#1a1a1a] leading-relaxed">
+                        Si el vestido o traje no aparecen correctamente pulsa en <span className="font-semibold">Reintentar</span>
+                      </p>
+                    </div>
+
+                    {/* Prominent Regenerate Button */}
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <button
+                        onClick={handleRegenerateTryOn}
+                        className="w-full flex items-center justify-center gap-3 bg-[#333333] text-white py-4 px-6 rounded-xl hover:shadow-2xl hover:bg-[#1a1a1a] transition-all duration-300 shadow-xl font-semibold"
+                      >
+                        <RefreshIcon className="w-5 h-5" />
+                        <span>Reintentar</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* Secondary Action Buttons (solo si hay try-on generada) */}
+                {generatedTryOn && (
+                  <div className="absolute top-20 right-4 flex flex-col gap-2">
                     <button
                       onClick={() => setViewerImage(displayImageUrl)}
                       className="p-3 bg-white/80 rounded-full text-gray-800 shadow-lg hover:scale-110 transition-transform"
