@@ -1,0 +1,418 @@
+/**
+ * GalleryPage (Phase 2 - Complete Implementation)
+ *
+ * Gallery view showing all generated try-on images grouped by dress.
+ * Features: Accordion layout, image grid, modals (viewer, delete, share)
+ */
+
+import React, { useState, useEffect } from 'react';
+import { Header } from '../components/layout/Header.js';
+import { ShareModal } from '../components/shared/ShareModal.js';
+import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
+import { getUserTryOns, deleteTryOn } from '../services/tryOnService.js';
+import { downloadImage, generateTryOnFilename } from '../utils/downloadImage.js';
+import type { TryOnCategory } from '../types/index.js';
+
+// Icons
+const ChevronDownIcon = ({ className = '' }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <polyline points="6 9 12 15 18 9"></polyline>
+  </svg>
+);
+
+const MaximizeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+  </svg>
+);
+
+const ShareIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+    <polyline points="16 6 12 2 8 6"/>
+    <line x1="12" y1="2" x2="12" y2="15"/>
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M3 6h18"/>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    <line x1="10" y1="11" x2="10" y2="17"/>
+    <line x1="14" y1="11" x2="14" y2="17"/>
+  </svg>
+);
+
+const DownloadIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+);
+
+const AlertTriangleIcon = ({ className = '' }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/>
+    <line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+
+/**
+ * GalleryPage Component
+ */
+export const GalleryPage: React.FC = () => {
+  const [tryOnsByDress, setTryOnsByDress] = useState<TryOnCategory[]>([]);
+  const [expandedDressId, setExpandedDressId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [viewerImage, setViewerImage] = useState<string | null>(null);
+  const [viewerTryOnId, setViewerTryOnId] = useState<string>('');
+  const [viewerDressId, setViewerDressId] = useState<string>('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; url: string } | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [selectedTryOnId, setSelectedTryOnId] = useState<string>('');
+  const [selectedDressId, setSelectedDressId] = useState<string>('');
+
+  useEffect(() => {
+    loadTryOns();
+  }, []);
+
+  const loadTryOns = async () => {
+    try {
+      const response = await getUserTryOns();
+      console.log('[GalleryPage] Try-ons response:', response);
+
+      // Backend returns: { success, data: { total, tryOnsByDress: [...] } }
+      // Extract the array from the nested structure
+      const data = (response as any).data?.tryOnsByDress || response;
+
+      console.log('[GalleryPage] Extracted try-ons data:', data);
+
+      // Ensure it's an array
+      if (Array.isArray(data)) {
+        setTryOnsByDress(data);
+      } else {
+        console.error('[GalleryPage] Expected array but got:', typeof data, data);
+        setTryOnsByDress([]);
+      }
+    } catch (err) {
+      console.error('[GalleryPage] Error loading try-ons:', err);
+      setTryOnsByDress([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleExpand = (dressId: string) => {
+    setExpandedDressId(prev => (prev === dressId ? null : dressId));
+  };
+
+  const handleDelete = (e: React.MouseEvent, id: string, url: string) => {
+    e.stopPropagation();
+    setDeleteConfirm({ id, url });
+  };
+
+  const handleShare = (e: React.MouseEvent, tryOnId: string, dressId: string) => {
+    e.stopPropagation();
+    console.log('[GalleryPage] Share button clicked:', { tryOnId, dressId });
+    setSelectedTryOnId(tryOnId);
+    setSelectedDressId(dressId);
+    setShareModalOpen(true);
+    console.log('[GalleryPage] Share modal state:', { shareModalOpen: true, selectedTryOnId: tryOnId, selectedDressId: dressId });
+  };
+
+  const handleCloseShareModal = () => {
+    console.log('[GalleryPage] Closing share modal');
+    setShareModalOpen(false);
+    // Clear selected IDs when modal closes
+    setSelectedTryOnId('');
+    setSelectedDressId('');
+  };
+
+  const handleDownload = async (e: React.MouseEvent, imageUrl: string, tryOnId: string, dressId: string) => {
+    e.stopPropagation();
+    console.log('[GalleryPage] Download button clicked:', { tryOnId, dressId, imageUrl });
+    try {
+      const filename = generateTryOnFilename(tryOnId, dressId);
+      await downloadImage(imageUrl, filename);
+      console.log('[GalleryPage] Download successful:', filename);
+    } catch (error) {
+      console.error('[GalleryPage] Download failed:', error);
+      alert('Error al descargar la imagen. Por favor, inténtalo de nuevo.');
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
+    try {
+      await deleteTryOn(deleteConfirm.id);
+      await loadTryOns();
+      setDeleteConfirm(null);
+      // Close the image viewer modal if open
+      setViewerImage(null);
+      setViewerTryOnId('');
+      setViewerDressId('');
+    } catch (err) {
+      console.error('Error deleting try-on:', err);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#ffffff]">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-gray-500">Cargando galería...</p>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#ffffff]">
+      <Header />
+
+      <main className="flex-1 pb-24 p-4 md:p-8">
+        <div className="w-full max-w-5xl mx-auto">
+          <h1 className="text-4xl font-serif text-[#000000] mb-8 text-center">Mi Galería</h1>
+
+          {tryOnsByDress.length === 0 ? (
+            <p className="text-center text-gray-500 font-light mt-12">
+              Aún no has generado ninguna prueba. ¡Ve al probador para empezar!
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {tryOnsByDress.map(category => {
+                const isExpanded = expandedDressId === category.dressId;
+                return (
+                  <div
+                    key={category.dressId}
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                  >
+                    {/* Accordion Header */}
+                    <button
+                      onClick={() => toggleExpand(category.dressId)}
+                      className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50 transition-colors gap-4"
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        {/* Dress Preview Image */}
+                        {category.dressImageUrl && (
+                          <div className="flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden bg-gray-100">
+                            <img
+                              src={category.dressImageUrl}
+                              alt={category.dressName || 'Prenda'}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+
+                        {/* Text Info */}
+                        <div className="flex-1">
+                          <h2 className="text-xl font-serif text-[#000000]">
+                            {category.dressName || `Prenda ID: ${category.dressId}`}
+                          </h2>
+                          <p className="text-sm text-gray-500 font-light">
+                            {category.tryOns.length} prueba(s) generada(s)
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Chevron Icon */}
+                      <ChevronDownIcon
+                        className={`flex-shrink-0 transform transition-transform duration-300 ${
+                          isExpanded ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+
+                    {/* Accordion Content - Grid de Imágenes */}
+                    {isExpanded && (
+                      <div className="p-4 bg-gray-50 border-t border-gray-200">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                          {category.tryOns.map(tryOn => (
+                            <div
+                              key={tryOn.id}
+                              className="group relative rounded-lg overflow-hidden aspect-[2/3] cursor-pointer"
+                              onClick={() => {
+                                setViewerImage(tryOn.imageUrl);
+                                setViewerTryOnId(tryOn.id);
+                                setViewerDressId(category.dressId);
+                              }}
+                            >
+                              {/* Gallery thumbnail without watermark, with 50px crop on each side */}
+                              <img
+                                src={tryOn.imageUrl}
+                                alt={`Try-on ${tryOn.id}`}
+                                className="w-full h-full"
+                                style={{
+                                  objectFit: 'cover',
+                                  objectPosition: 'center',
+                                  transform: 'scale(1.15)', // Crops ~50px from each side
+                                }}
+                              />
+
+                              {/* Hover Overlay - Desktop only */}
+                              <div className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2">
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    setViewerImage(tryOn.imageUrl);
+                                    setViewerTryOnId(tryOn.id);
+                                    setViewerDressId(category.dressId);
+                                  }}
+                                  className="p-2 bg-white/80 rounded-full text-gray-800 hover:scale-110 transition-transform"
+                                  title="Ampliar"
+                                >
+                                  <MaximizeIcon />
+                                </button>
+                                <button
+                                  onClick={e => handleDownload(e, tryOn.imageUrl, tryOn.id, category.dressId)}
+                                  className="p-2 bg-white/80 rounded-full text-gray-800 hover:scale-110 transition-transform"
+                                  title="Descargar"
+                                >
+                                  <DownloadIcon />
+                                </button>
+                                <button
+                                  onClick={e => handleShare(e, tryOn.id, category.dressId)}
+                                  className="p-2 bg-white/80 rounded-full hover:scale-110 transition-transform text-gray-800"
+                                  title="Compartir"
+                                >
+                                  <ShareIcon />
+                                </button>
+                                <button
+                                  onClick={e => handleDelete(e, tryOn.id, tryOn.imageUrl)}
+                                  className="p-2 bg-white/80 rounded-full text-gray-800 hover:scale-110 transition-transform"
+                                  title="Eliminar"
+                                >
+                                  <TrashIcon />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Image Viewer Modal */}
+      {viewerImage && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 overflow-y-auto"
+          onClick={() => setViewerImage(null)}
+        >
+          <div className="min-h-screen flex flex-col items-center justify-start pt-4 pb-20 px-4">
+            {/* Close Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setViewerImage(null);
+              }}
+              className="self-end mb-4 text-white p-3 bg-black/50 rounded-full hover:bg-black/80"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+
+            {/* Image */}
+            <div className="relative mb-6 w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+              <WatermarkedImage
+                src={viewerImage}
+                alt="Vista ampliada"
+                className="w-full h-auto rounded-lg"
+              />
+            </div>
+
+            {/* Action Buttons - Mobile & Desktop */}
+            <div className="flex gap-3 justify-center flex-wrap" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => {
+                  handleDownload(
+                    { stopPropagation: () => {} } as React.MouseEvent,
+                    viewerImage,
+                    viewerTryOnId,
+                    viewerDressId
+                  );
+                }}
+                className="flex items-center gap-2 px-6 py-3 bg-white rounded-xl text-gray-800 hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                <DownloadIcon />
+                <span className="hidden sm:inline">Descargar</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleShare(
+                    { stopPropagation: () => {} } as React.MouseEvent,
+                    viewerTryOnId,
+                    viewerDressId
+                  );
+                }}
+                className="flex items-center gap-2 px-6 py-3 bg-white rounded-xl text-gray-800 hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                <ShareIcon />
+                <span className="hidden sm:inline">Compartir</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleDelete(
+                    { stopPropagation: () => {} } as React.MouseEvent,
+                    viewerTryOnId,
+                    viewerImage
+                  );
+                }}
+                className="flex items-center gap-2 px-6 py-3 bg-white rounded-xl text-gray-800 hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                <TrashIcon />
+                <span className="hidden sm:inline">Eliminar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-8 text-center max-w-sm w-full mx-4">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangleIcon className="w-12 h-12 text-gray-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-[#000000] mb-2">¿Confirmas la eliminación?</h2>
+            <p className="text-gray-600 mb-6">Esta acción no se puede deshacer.</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-8 py-2 rounded-lg bg-white text-[#000000] border-2 border-[#333333] hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-8 py-2 rounded-lg bg-[#333333] text-white hover:bg-[#1a1a1a] transition-colors font-medium"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={shareModalOpen}
+        tryOnId={selectedTryOnId}
+        dressId={selectedDressId}
+        onClose={handleCloseShareModal}
+      />
+    </div>
+  );
+};

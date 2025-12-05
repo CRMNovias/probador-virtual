@@ -1,0 +1,114 @@
+PHASE 1.1: AUTHENTICATION & ROUTING - NEXT STEPS
+Probador Virtual de Vestidos de Novia - Atelier de Bodas
+
+VERSION: 1.0
+CREATED: 2025-10-17
+PREREQUISITE: Phase 1 Tasks 1-2 COMPLETED
+
+================================================================================
+CURRENT STATUS (2025-10-17)
+================================================================================
+
+COMPLETED TASKS:
+- Task 1: Project Setup (Vite + React + TypeScript + Dependencies)
+- Task 2: Complete folder structure with all files created
+
+PENDING TASKS FROM PHASE 1:
+- Task 3: API Client with Interceptors
+- Task 4: Auth Flow (Phone + SMS Code)
+- Task 5: Basic Routing with Protected Routes
+- Task 6: Layout Components (Header, Navigation)
+
+================================================================================
+TASK 3: API CLIENT WITH INTERCEPTORS
+================================================================================
+
+FILE: src/services/apiClient.ts
+
+WHAT TO IMPLEMENT:
+- Complete retry logic with exponential backoff
+- Enhanced error transformation to ApiError
+- Request/response logging based on envConfig
+- Test with backend or mock endpoints
+
+ESTIMATED TIME: 2-3 hours
+
+================================================================================
+TASK 4: AUTH FLOW
+================================================================================
+
+FILES TO IMPLEMENT:
+- src/context/AuthContext.tsx (user state management)
+- src/hooks/useAuthFlow.ts (new file)
+- src/components/auth/PhoneInput.tsx
+- src/components/auth/CodeVerification.tsx
+- src/pages/AuthPage.tsx
+
+FEATURES:
+- Phone number input with validation
+- SMS code verification
+- User login/logout
+- Navigate after auth based on user.hasAvatar
+
+ESTIMATED TIME: 4-6 hours
+
+================================================================================
+TASK 5: ROUTING
+================================================================================
+
+FILES TO IMPLEMENT:
+- src/components/routing/ProtectedRoute.tsx (new file)
+- src/router.tsx
+
+FEATURES:
+- Protected routes that require authentication
+- Routes that require avatar
+- Navigation after login
+- 404 handling
+
+ESTIMATED TIME: 2-3 hours
+
+================================================================================
+TASK 6: LAYOUT COMPONENTS
+================================================================================
+
+FILES TO IMPLEMENT:
+- src/components/shared/Button.tsx
+- src/components/shared/Input.tsx
+- src/components/shared/Loader.tsx
+- src/components/shared/Modal.tsx
+- src/components/layout/Header.tsx
+- src/components/layout/Navigation.tsx
+- src/components/layout/Layout.tsx (new file)
+
+FEATURES:
+- Reusable UI components with Tailwind CSS
+- Header with logo and logout button
+- Bottom navigation bar
+- Responsive design
+
+ESTIMATED TIME: 3-4 hours
+
+================================================================================
+RECOMMENDED ORDER
+================================================================================
+
+1. Task 3: API Client (foundation for everything)
+2. Task 6: Shared Components (needed for auth)
+3. Task 4: Auth Flow (core functionality)
+4. Task 5: Routing (navigation logic)
+5. Task 6: Layout (final polish)
+
+TOTAL TIME: 12-18 hours (2-3 work days)
+
+================================================================================
+GIT WORKFLOW
+================================================================================
+
+Create new branch: feature/phase-1.1-auth-routing
+Branch from: develop
+Commit frequently with clear messages
+
+================================================================================
+END OF PHASE 1.1 NEXT STEPS
+================================================================================

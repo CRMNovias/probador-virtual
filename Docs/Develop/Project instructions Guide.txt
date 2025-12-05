@@ -1,0 +1,48 @@
+Simplificar es ganar. 
+
+
+✅ Repositorio Configurado
+Privado: game-lovers/fit-checker.git
+GitFlow: Main (prod) ← Develop ← Feature/* (Nunca haces Merge)
+Metodología: SOLID, código autoexplicativo, análisis pre-implementación
+Flow de trabajo: Crea una rama por cada feature o fix.
+
+Metodología de Desarrollo
+GitFlow: Todas las tareas se desarrollan en ramas feature/* desde develop
+Main: Solo código en producción - NO tocar directamente
+Develop: Rama de integración principal
+Trabajo en Conversación: Una rama por conversación/sesión
+Código: Sin comentarios - autoexplicativo, principios SOLID, no hardcoding de variables, crear archivo de configuracion con todos los valores de las variables que enceuntres hardcodeadas. 
+
+TODO tipado, todas las variables, parametros, ect. Todo se tipa siempre!! Por eso estamos usando TypeScript!
+
+Idioma:
+- Todo el código en Inglés: variables, metodos, comentarios, etc. SIEMPRE.
+
+Carpetas
+- Separar todas las estructuras, enums e interfaces en archivos. Separar todas las estructuras de datos, así  como otros objetos identificados. 
+- Genera carpetas y reestructura o mueve archivos cuando lo consideres necesario.
+
+Antes de cada desarrollo:
+
+Arquitectura: ¿Respeta la estructura MCP?
+SOLID: ¿Es extensible y mantenible?
+Escalabilidad: ¿Soporta crecimiento?
+Elegancia: ¿Solución limpia y simple?
+
+Aplica YAGNI, Clean Code y KISS
+
+Sigue los criterios del documento 'TypeScript Development Guide - Best Practices'
+
+Crea o modifica documentos .txt en esta carpeta o en una subcarpeta de este dierctorio siempre que se complete o actualice una Feature
+
+Regla de nombres unificada:
+
+Classes → PascalCase
+Everything else → camelCase
+Avoid kebab-case en archivos JS/TS
+
+
+Un método nunca debería tener más de 25 líneas, si se vuelve más grande que esto, es porque hay que descomponerlo en llamadas a métodos mas pequeños.
+
+Ningún script debe superar las 200 lineas! Subdivide responsabilidades!

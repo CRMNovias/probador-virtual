@@ -1,0 +1,1443 @@
+PHASE 1: FOUNDATION (MVP) - FRONTEND DEVELOPMENT PLAN
+Probador Virtual de Vestidos de Novia - Atelier de Bodas
+
+================================================================================
+VERSION: 2.1
+LAST UPDATED: 2025-10-17
+STATUS: In Progress (2/6 completed)
+PROJECT SCOPE: FRONTEND ONLY
+================================================================================
+
+⚠️ IMPORTANT: This is a FRONTEND-ONLY project. We do NOT develop, maintain, or
+configure any backend services, databases, or server infrastructure. The backend
+APIs are developed and maintained by a separate team.
+
+================================================================================
+
+OVERVIEW
+--------
+Phase 1 establishes the foundational architecture for the React frontend
+application. This phase creates the core infrastructure required for:
+- API communication with backend services
+- User authentication flow
+- Basic application navigation
+- Component structure and styling
+
+OBJECTIVES:
+- ✅ Set up React + TypeScript + Vite project
+- ✅ Create organized folder structure following best practices
+- ⬜ Configure API client with interceptors for backend communication
+- ⬜ Implement authentication UI flow (phone + SMS code)
+- ⬜ Set up React Router with protected routes
+- ⬜ Build reusable layout components (Header, Navigation, Footer)
+
+COMPLETION CRITERIA:
+- Users can authenticate via phone/SMS code verification
+- Frontend can communicate with backend APIs
+- Basic navigation between screens works
+- All TypeScript strict mode checks pass
+- No hardcoded values (all via environment variables)
+- Responsive design on mobile/tablet/desktop
+
+
+================================================================================
+TASK 1: PROJECT SETUP ✅ COMPLETED
+================================================================================
+
+1.1 Frontend Setup
+------------------
+✅ Initialize Vite + React + TypeScript project
+✅ Install core dependencies:
+   - React 19.x
+   - TypeScript ~5.8.x
+   - Vite 6.x
+   - React Router 6.x
+   - Tailwind CSS 3.x
+
+✅ Install additional libraries:
+   - framer-motion (animations)
+   - axios (HTTP client)
+   - react-hook-form (forms)
+   - date-fns (date formatting)
+
+✅ Configure development tools:
+   - ESLint + TypeScript ESLint
+   - Prettier
+   - Git hooks (optional)
+
+✅ TypeScript configuration (tsconfig.json):
+   - strict: true
+   - noImplicitAny: true
+   - module: "ESNext"
+   - moduleResolution: "node"
+   - target: "ES2020"
+   - jsx: "react-jsx"
+
+✅ Tailwind CSS configuration
+✅ Git repository initialized
+✅ .gitignore configured
+
+✅ Package.json configured:
+   - type: "module"
+   - engines: node >= 16.0.0
+
+
+================================================================================
+TASK 2: FOLDER STRUCTURE AND CONFIG ✅ COMPLETED
+================================================================================
+
+2.1 Frontend Folder Structure
+------------------------------
+Create complete React project structure:
+
+src/
+├── config/
+│   ├── apiConfig.ts          # API base URLs, timeouts, retry logic
+│   ├── appConfig.ts           # Application-wide configuration
+│   └── envConfig.ts           # Environment variables wrapper + validation
+│
+├── services/
+│   ├── apiClient.ts           # Axios instance, interceptors, error handling
+│   ├── authService.ts         # Authentication API calls (send code, verify)
+│   ├── userService.ts         # User profile operations
+│   ├── avatarService.ts       # Avatar upload and management
+│   ├── dressService.ts        # Dress catalog operations
+│   ├── poseService.ts         # Pose catalog operations
+│   ├── tryOnService.ts        # Try-on generation and retrieval
+│   └── appointmentService.ts  # Appointment management
+│
+├── types/
+│   ├── api.ts                 # Generic API request/response types
+│   ├── user.ts                # User, UserProfile interfaces
+│   ├── dress.ts               # Dress types
+│   ├── pose.ts                # Pose types
+│   ├── avatar.ts              # Avatar types
+│   ├── tryOn.ts               # TryOn, TryOnImage types
+│   ├── appointment.ts         # Appointment types
+│   └── index.ts               # Barrel export (export all types)
+│
+├── hooks/
+│   ├── useAuth.ts             # Authentication hook
+│   ├── useApi.ts              # Generic API call hook with loading/error
+│   ├── useImageUpload.ts      # Image upload with progress
+│   └── useDebounce.ts         # Debounce utility hook
+│
+├── context/
+│   ├── AuthContext.tsx        # Auth state provider (user, token)
+│   └── AppContext.tsx         # Global app state (avatar, current view)
+│
+├── components/
+│   ├── layout/
+│   │   ├── Header.tsx         # Top header component
+│   │   ├── Footer.tsx         # Footer (if needed)
+│   │   └── Navigation.tsx     # Bottom navigation bar
+│   │
+│   ├── shared/
+│   │   ├── Button.tsx         # Reusable button component
+│   │   ├── Input.tsx          # Form input component
+│   │   ├── Modal.tsx          # Modal overlay component
+│   │   ├── Loader.tsx         # Loading spinner
+│   │   └── ImageUploader.tsx  # Image upload widget
+│   │
+│   ├── auth/
+│   │   ├── PhoneInput.tsx     # Phone number input form
+│   │   └── CodeVerification.tsx # SMS code verification form
+│   │
+│   ├── avatar/
+│   │   ├── AvatarUpload.tsx   # Avatar photo upload
+│   │   └── AvatarPreview.tsx  # Avatar preview display
+│   │
+│   ├── tryon/
+│   │   ├── Canvas.tsx         # Main display canvas
+│   │   ├── PoseSelector.tsx   # Pose selection component
+│   │   └── DressSelector.tsx  # Dress selection grid
+│   │
+│   ├── gallery/
+│   │   ├── GalleryGrid.tsx    # Gallery grid layout
+│   │   └── ImageCard.tsx      # Individual image card
+│   │
+│   └── appointments/
+│       └── AppointmentList.tsx # Appointment list display
+│
+├── pages/
+│   ├── AuthPage.tsx           # Authentication screen
+│   ├── AvatarCreationPage.tsx # Avatar creation flow
+│   ├── TryOnPage.tsx          # Main try-on screen
+│   ├── GalleryPage.tsx        # Gallery view
+│   ├── AppointmentsPage.tsx   # Appointments screen
+│   └── SharePage.tsx          # Public share page
+│
+├── utils/
+│   ├── validators.ts          # Input validation functions
+│   ├── formatters.ts          # Date, phone number formatters
+│   ├── errorHandlers.ts       # Error message mapping
+│   └── imageUtils.ts          # Image processing utilities
+│
+├── constants/
+│   ├── routes.ts              # Route path constants
+│   ├── apiEndpoints.ts        # API endpoint paths
+│   ├── errorMessages.ts       # User-facing error messages (Spanish)
+│   └── storageKeys.ts         # localStorage key constants
+│
+├── assets/
+│   ├── icons/                 # Icon files
+│   └── images/                # Static images
+│
+├── styles/
+│   └── globals.css            # Tailwind imports + global styles
+│
+├── App.tsx                    # Root component
+├── main.tsx                   # Entry point
+└── router.tsx                 # Route configuration
+
+
+Actions Required:
+-----------------
+✅ Create all folder structure above
+✅ Create placeholder files with basic TypeScript interfaces
+✅ Add JSDoc comments explaining purpose of each file
+✅ Ensure all files use .tsx extension for React components
+✅ Ensure all files use .ts extension for utilities/services
+✅ All files must export named exports (not default exports)
+
+COMPLETION NOTES (2025-10-17):
+- Complete folder structure created with all directories
+- All placeholder files created with JSDoc documentation
+- Proper file extensions applied (.tsx for components, .ts for utilities)
+- Named exports used throughout (except App.tsx which has default export for compatibility)
+
+
+2.2 Configuration Files
+------------------------
+
+A. Environment Variables
+✅ Create .env.development:
+   # Base API Configuration
+   VITE_API_BASE_URL=http://localhost:3000/api
+   VITE_API_TIMEOUT=30000
+   VITE_MAX_UPLOAD_SIZE_MB=10
+   VITE_ENABLE_LOGS=true
+
+   # Auth Endpoints (Phase 1)
+   VITE_ENDPOINT_AUTH_SEND_CODE=/auth/send-code
+   VITE_ENDPOINT_AUTH_VERIFY_CODE=/auth/verify-code
+
+   # User Endpoints (Phase 1)
+   VITE_ENDPOINT_USER_PROFILE=/user/profile
+   VITE_ENDPOINT_USER_CREATE=/user/profile
+   VITE_ENDPOINT_USER_UPLOAD=/user/upload
+
+   # Avatar Endpoints (Phase 1)
+   VITE_ENDPOINT_AVATAR_GET=/avatar
+   VITE_ENDPOINT_AVATAR_GENERATE=/avatar/generate
+
+   # Try-On Endpoints (Phase 1)
+   VITE_ENDPOINT_TRYON_GENERATE=/tryons/generate
+   VITE_ENDPOINT_TRYON_GET_USER=/tryons/user
+   VITE_ENDPOINT_TRYON_DELETE=/tryons
+
+   # Appointment Endpoints (Phase 1)
+   VITE_ENDPOINT_APPOINTMENTS_GET_USER=/appointments/user
+
+✅ Create .env.production:
+   # Base API Configuration
+   VITE_API_BASE_URL=https://api.atelierdebodas.com/api
+   VITE_API_TIMEOUT=60000
+   VITE_MAX_UPLOAD_SIZE_MB=5
+   VITE_ENABLE_LOGS=false
+
+   # Auth Endpoints (Phase 1)
+   VITE_ENDPOINT_AUTH_SEND_CODE=/auth/send-code
+   VITE_ENDPOINT_AUTH_VERIFY_CODE=/auth/verify-code
+
+   # User Endpoints (Phase 1)
+   VITE_ENDPOINT_USER_PROFILE=/user/profile
+   VITE_ENDPOINT_USER_CREATE=/user/profile
+   VITE_ENDPOINT_USER_UPLOAD=/user/upload
+
+   # Avatar Endpoints (Phase 1)
+   VITE_ENDPOINT_AVATAR_GET=/avatar
+   VITE_ENDPOINT_AVATAR_GENERATE=/avatar/generate
+
+   # Try-On Endpoints (Phase 1)
+   VITE_ENDPOINT_TRYON_GENERATE=/tryons/generate
+   VITE_ENDPOINT_TRYON_GET_USER=/tryons/user
+   VITE_ENDPOINT_TRYON_DELETE=/tryons
+
+   # Appointment Endpoints (Phase 1)
+   VITE_ENDPOINT_APPOINTMENTS_GET_USER=/appointments/user
+
+✅ Create .env.example (template for developers with all endpoints)
+
+B. Environment Config Wrapper (src/config/envConfig.ts)
+✅ Implement envConfig object with validation
+✅ Throw errors if required variables are missing
+✅ Parse integer values correctly
+✅ Export as const object
+
+Example:
+```typescript
+export const envConfig = {
+  // Base configuration
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+  apiTimeout: parseInt(import.meta.env.VITE_API_TIMEOUT, 10),
+  maxUploadSizeMB: parseInt(import.meta.env.VITE_MAX_UPLOAD_SIZE_MB, 10),
+  enableLogs: import.meta.env.VITE_ENABLE_LOGS === 'true',
+
+  // Endpoints - Phase 1 only (validated with Backend API Spec)
+  endpoints: {
+    auth: {
+      sendCode: import.meta.env.VITE_ENDPOINT_AUTH_SEND_CODE,
+      verifyCode: import.meta.env.VITE_ENDPOINT_AUTH_VERIFY_CODE,
+    },
+    user: {
+      profile: import.meta.env.VITE_ENDPOINT_USER_PROFILE,
+      create: import.meta.env.VITE_ENDPOINT_USER_CREATE,
+      upload: import.meta.env.VITE_ENDPOINT_USER_UPLOAD,
+    },
+    avatar: {
+      get: import.meta.env.VITE_ENDPOINT_AVATAR_GET,
+      generate: import.meta.env.VITE_ENDPOINT_AVATAR_GENERATE,
+    },
+    tryOn: {
+      generate: import.meta.env.VITE_ENDPOINT_TRYON_GENERATE,
+      getUserTryOns: import.meta.env.VITE_ENDPOINT_TRYON_GET_USER,
+      delete: import.meta.env.VITE_ENDPOINT_TRYON_DELETE,
+    },
+    appointment: {
+      getUserAppointments: import.meta.env.VITE_ENDPOINT_APPOINTMENTS_GET_USER,
+    },
+  },
+} as const;
+
+// Validation
+if (!envConfig.apiBaseUrl) {
+  throw new Error('VITE_API_BASE_URL is required');
+}
+
+// Validate all endpoints are defined
+const validateEndpoints = (obj: any, path = ''): void => {
+  for (const [key, value] of Object.entries(obj)) {
+    const currentPath = path ? `${path}.${key}` : key;
+    if (typeof value === 'object' && value !== null) {
+      validateEndpoints(value, currentPath);
+    } else if (!value) {
+      console.warn(`Warning: Endpoint ${currentPath} is not defined`);
+    }
+  }
+};
+
+validateEndpoints(envConfig.endpoints);
+```
+
+C. API Configuration (src/config/apiConfig.ts)
+✅ Define ApiConfig interface
+✅ Export apiConfig object with:
+   - baseUrl (from envConfig)
+   - timeout (from envConfig)
+   - retryAttempts: 3
+   - headers: default headers
+
+D. App Configuration (src/config/appConfig.ts)
+✅ Define app-wide constants:
+   - maxUploadSizeMB
+   - allowedImageTypes: ['image/jpeg', 'image/png']
+   - codeLength: 6
+   - codeExpirationMinutes: 5
+
+E. Constants Files
+✅ Create src/constants/routes.ts:
+   export const routes = {
+     AUTH: '/',
+     AVATAR_CREATION: '/avatar/create',
+     TRY_ON: '/try-on',
+     GALLERY: '/gallery',
+     APPOINTMENTS: '/appointments',
+     SHARE: '/share/:id',
+   } as const;
+
+✅ Create src/constants/apiEndpoints.ts:
+   NOTE: This file is DEPRECATED. Use envConfig.endpoints instead.
+
+   All endpoints are now defined in environment variables and accessed via:
+   import { envConfig } from '../config/envConfig.js';
+
+   Example usage:
+   const endpoint = envConfig.endpoints.auth.sendCode;
+
+   This ensures all endpoints can be configured per environment without
+   changing code.
+
+   IMPORTANT: Phase 1 only includes endpoints validated in "Backend API
+   Specification - Phase 1.md". Other endpoints (dresses, poses, share,
+   book appointments) will be added in Phase 2.
+
+✅ Create src/constants/storageKeys.ts:
+   export const STORAGE_KEYS = {
+     AUTH_TOKEN: 'auth_token',
+     USER_PROFILE: 'user_profile',
+     AVATAR_URL: 'avatar_url',
+   } as const;
+
+✅ Create src/constants/errorMessages.ts (Spanish messages):
+   export const errorMessages = {
+     // Auth errors
+     AUTH_INVALID_PHONE: 'Número de teléfono no válido.',
+     AUTH_SEND_CODE_FAILED: 'Error al enviar el código. Inténtalo de nuevo.',
+     AUTH_INVALID_CODE: 'Código incorrecto. Inténtalo de nuevo.',
+     AUTH_EXPIRED_CODE: 'El código ha expirado. Solicita uno nuevo.',
+     AUTH_TOO_MANY_ATTEMPTS: 'Demasiados intentos. Intenta más tarde.',
+     AUTH_SESSION_EXPIRED: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+
+     // Upload errors
+     UPLOAD_FAILED: 'Error al subir la imagen. Verifica tu conexión.',
+     INVALID_FILE_TYPE: 'Formato de archivo no válido. Usa JPG o PNG.',
+     FILE_TOO_LARGE: 'La imagen es demasiado grande. Máximo 5MB.',
+     UPLOAD_TIMEOUT: 'La subida está tardando demasiado. Verifica tu conexión.',
+
+     // Avatar errors
+     AVATAR_GENERATION_FAILED: 'Error al generar tu avatar. Inténtalo de nuevo.',
+     AVATAR_GENERATION_TIMEOUT: 'La generación del avatar está tardando demasiado.',
+     AVATAR_NOT_FOUND: 'No se encontró tu avatar. Por favor, crea uno nuevo.',
+
+     // Try-On errors
+     TRYON_GENERATION_FAILED: 'Error al generar la prueba virtual. Inténtalo de nuevo.',
+     TRYON_GENERATION_TIMEOUT: 'La generación está tardando demasiado.',
+     TRYON_DELETE_FAILED: 'Error al eliminar la imagen.',
+     TRYON_NO_DRESS_SELECTED: 'Selecciona un vestido primero.',
+     TRYON_NO_POSE_SELECTED: 'Selecciona una pose primero.',
+
+     // Dress/Catalog errors
+     DRESSES_LOAD_FAILED: 'Error al cargar el catálogo de vestidos.',
+     DRESS_NOT_FOUND: 'Vestido no encontrado.',
+     POSES_LOAD_FAILED: 'Error al cargar las poses disponibles.',
+
+     // Appointment errors
+     APPOINTMENTS_LOAD_FAILED: 'Error al cargar tus citas.',
+     APPOINTMENT_BOOK_FAILED: 'Error al reservar la cita.',
+
+     // Network errors
+     NETWORK_ERROR: 'Error de conexión. Verifica tu internet.',
+     TIMEOUT_ERROR: 'La petición está tardando demasiado. Inténtalo de nuevo.',
+     SERVER_ERROR: 'Error del servidor. Inténtalo más tarde.',
+     SERVER_UNAVAILABLE: 'El servicio no está disponible. Inténtalo más tarde.',
+
+     // Authorization errors
+     UNAUTHORIZED: 'No autorizado. Por favor, inicia sesión.',
+     FORBIDDEN: 'No tienes permiso para realizar esta acción.',
+     NOT_FOUND: 'Recurso no encontrado.',
+
+     // Generic errors
+     UNKNOWN_ERROR: 'Algo salió mal. Inténtalo más tarde.',
+     VALIDATION_ERROR: 'Los datos ingresados no son válidos.',
+   } as const;
+
+   // Error messages by HTTP status code
+   export const httpStatusMessages: Record<number, string> = {
+     400: errorMessages.VALIDATION_ERROR,
+     401: errorMessages.UNAUTHORIZED,
+     403: errorMessages.FORBIDDEN,
+     404: errorMessages.NOT_FOUND,
+     408: errorMessages.TIMEOUT_ERROR,
+     500: errorMessages.SERVER_ERROR,
+     503: errorMessages.SERVER_UNAVAILABLE,
+   };
+
+
+2.3 Type Definitions
+--------------------
+
+✅ Create src/types/api.ts:
+```typescript
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: ApiError;
+}
+
+export interface ApiError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+```
+
+✅ Create src/types/user.ts:
+```typescript
+export interface UserProfile {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string;
+  createdAt: string;
+  hasAvatar: boolean;
+}
+
+export interface CreateProfileRequest {
+  name: string;
+  email?: string;
+}
+
+export interface UpdateProfileRequest {
+  name?: string;
+  email?: string;
+}
+
+export interface UploadPhotoResponse {
+  success: boolean;
+  photoUrl: string;
+  message: string;
+}
+```
+
+✅ Create src/types/dress.ts:
+```typescript
+export interface Dress {
+  id: string;
+  name: string;
+  imageUrl: string;
+  description: string;
+}
+```
+
+✅ Create src/types/pose.ts:
+```typescript
+export interface Pose {
+  id: string;
+  name: string;
+  imageUrl: string;
+  description?: string;
+}
+```
+
+✅ Create src/types/avatar.ts:
+```typescript
+export interface Avatar {
+  id: string;
+  userId: string;
+  imageUrl: string;
+  createdAt: string;
+}
+
+export interface UploadAvatarResponse {
+  success: boolean;
+  avatarId: string;
+  avatarUrl: string;
+}
+```
+
+✅ Create src/types/tryOn.ts:
+```typescript
+export interface TryOn {
+  id: string;
+  userId: string;
+  dressId: string;
+  poseId: string;
+  imageUrl: string;
+  createdAt: string;
+}
+
+export interface TryOnImage {
+  id: string;
+  imageUrl: string;
+  poseId: string;
+  poseName: string;
+  createdAt: string;
+}
+
+export interface TryOnCategory {
+  dressId: string;
+  dressName: string;
+  dressImageUrl: string;
+  images: TryOnImage[];
+}
+
+export interface UploadTryOnResponse {
+  success: boolean;
+  tryOnId: string;
+  imageUrl: string;
+  createdAt: string;
+}
+```
+
+✅ Create src/types/appointment.ts:
+```typescript
+export type AppointmentStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled';
+
+export interface Appointment {
+  id: string;
+  date: string; // ISO 8601
+  time: string; // HH:MM
+  status: AppointmentStatus;
+  notes: string | null;
+}
+
+export interface AppointmentsResponse {
+  upcoming: Appointment[];
+  past: Appointment[];
+}
+```
+
+✅ Create src/types/index.ts (barrel export):
+```typescript
+export type * from './api.js';
+export type * from './user.js';
+export type * from './dress.js';
+export type * from './pose.js';
+export type * from './avatar.js';
+export type * from './tryOn.js';
+export type * from './appointment.js';
+```
+
+
+================================================================================
+TASK 3: API CLIENT WITH INTERCEPTORS ⬜ PENDING
+================================================================================
+
+3.1 Axios Instance Setup
+-------------------------
+
+Create: src/services/apiClient.ts
+
+□ Create axios instance with:
+   - baseURL from envConfig
+   - timeout from envConfig
+   - default headers: { 'Content-Type': 'application/json' }
+
+□ Implement REQUEST interceptor:
+   - Add Authorization header if token exists in localStorage
+   - Log request details (if logs enabled in envConfig)
+   - Add request timestamp for monitoring
+
+□ Implement RESPONSE interceptor (success):
+   - Log response details (if logs enabled)
+   - Return response.data directly
+
+□ Implement RESPONSE interceptor (error):
+   - Handle 401 Unauthorized:
+     * Clear localStorage (token, user)
+     * Redirect to auth page
+     * Show "Sesión expirada" message
+
+   - Handle 403 Forbidden:
+     * Show "Acceso denegado" message
+
+   - Handle 404 Not Found:
+     * Show "Recurso no encontrado" message
+
+   - Handle 500 Server Error:
+     * Show generic error message
+     * Log error details (if logs enabled)
+
+   - Handle Network Errors:
+     * Check if error.response exists
+     * Show "Verifica tu conexión a internet" message
+
+   - Transform error to ApiError type:
+     ```typescript
+     interface ApiError {
+       code: string;
+       message: string;
+       details?: unknown;
+     }
+     ```
+
+□ Implement retry logic:
+   - Retry on network errors (3 attempts max)
+   - Exponential backoff: 1s, 2s, 4s
+   - Do NOT retry on 4xx errors (client errors)
+   - Only retry on 5xx or network errors
+
+□ Export configured axios instance
+
+Example structure:
+```typescript
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
+import { envConfig } from '../config/envConfig.js';
+import { STORAGE_KEYS } from '../constants/storageKeys.js';
+
+const apiClient: AxiosInstance = axios.create({
+  baseURL: envConfig.apiBaseUrl,
+  timeout: envConfig.apiTimeout,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Log if enabled
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor
+apiClient.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    // Handle errors
+    return Promise.reject(transformedError);
+  }
+);
+
+export { apiClient };
+```
+
+
+3.2 Service Layer Implementation (Phase 1 Only)
+-----------------------------------------------
+
+All API calls should go through service files. Each service should:
+- Import the apiClient
+- Define typed request/response interfaces
+- Handle service-specific errors
+- Return typed responses
+
+Create the following services for Phase 1:
+
+A. authService.ts (Phase 1)
+---------------------------
+□ sendCode(phone: string): Promise<SendCodeResponse>
+   - POST to envConfig.endpoints.auth.sendCode
+   - Handle response
+   - Return formatted response
+
+□ verifyCode(phone: string, code: string): Promise<VerifyCodeResponse>
+   - POST to envConfig.endpoints.auth.verifyCode
+   - Store token in localStorage on success
+   - Store user in localStorage on success
+   - Return user + token
+
+Example:
+```typescript
+import { apiClient } from './apiClient.js';
+import { envConfig } from '../config/envConfig.js';
+import { STORAGE_KEYS } from '../constants/storageKeys.js';
+import type { SendCodeResponse, VerifyCodeResponse } from '../types/api.js';
+
+export const sendCode = async (phone: string): Promise<SendCodeResponse> => {
+  const response = await apiClient.post(envConfig.endpoints.auth.sendCode, { phone });
+  return response as SendCodeResponse;
+};
+
+export const verifyCode = async (
+  phone: string,
+  code: string
+): Promise<VerifyCodeResponse> => {
+  const response = await apiClient.post(envConfig.endpoints.auth.verifyCode, {
+    phone,
+    code,
+  });
+  const data = response as VerifyCodeResponse;
+
+  // Store auth data
+  if (data.success && data.token) {
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+    localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(data.user));
+  }
+
+  return data;
+};
+```
+
+B. userService.ts (Phase 1)
+---------------------------
+□ getProfile(): Promise<UserProfile>
+   - GET to envConfig.endpoints.user.profile
+□ createProfile(data: CreateProfileRequest): Promise<CreateProfileResponse>
+   - POST to envConfig.endpoints.user.create
+□ uploadPhoto(file: File): Promise<UploadPhotoResponse>
+   - POST to envConfig.endpoints.user.upload (multipart/form-data)
+
+C. avatarService.ts (Phase 1)
+------------------------------
+□ getAvatar(): Promise<Avatar>
+   - GET to envConfig.endpoints.avatar.get
+□ generateAvatar(prompt: string): Promise<GenerateAvatarResponse>
+   - POST to envConfig.endpoints.avatar.generate
+
+D. tryOnService.ts (Phase 1)
+-----------------------------
+□ generateTryOn(dressId: string, prompt: string): Promise<GenerateTryOnResponse>
+   - POST to envConfig.endpoints.tryOn.generate
+□ getUserTryOns(): Promise<TryOnsByDress[]>
+   - GET to envConfig.endpoints.tryOn.getUserTryOns
+□ deleteTryOn(id: string): Promise<void>
+   - DELETE to envConfig.endpoints.tryOn.delete
+
+E. appointmentService.ts (Phase 1)
+-----------------------------------
+□ getUserAppointments(): Promise<AppointmentsResponse>
+   - GET to envConfig.endpoints.appointment.getUserAppointments
+
+NOTE: dressService.ts and poseService.ts will be added in Phase 2 when
+those endpoints are available from the backend.
+
+
+================================================================================
+TASK 4: AUTH FLOW (PHONE + CODE VERIFICATION) ⬜ PENDING
+================================================================================
+
+4.1 Auth Context Setup
+-----------------------
+
+Create: src/context/AuthContext.tsx
+
+□ Create AuthContext with:
+   - user: UserProfile | null
+   - token: string | null
+   - isAuthenticated: boolean
+   - isLoading: boolean
+   - login: (token: string, user: UserProfile) => void
+   - logout: () => void
+
+□ Implement AuthProvider component:
+   - Load user/token from localStorage on mount
+   - Provide login method (store user + token in state + localStorage)
+   - Provide logout method (clear localStorage + state + redirect to /)
+   - Optional: Validate token on mount by calling /user/profile
+
+□ Export useAuth hook:
+   ```typescript
+   export const useAuth = () => {
+     const context = useContext(AuthContext);
+     if (!context) {
+       throw new Error('useAuth must be used within AuthProvider');
+     }
+     return context;
+   };
+   ```
+
+
+4.2 Custom Hooks
+----------------
+
+Create: src/hooks/useAuth.ts (if not in context)
+
+□ Wrapper around AuthContext that adds:
+   - sendCode function (with loading/error states)
+   - verifyCode function (with loading/error states)
+   - Error handling and user-friendly messages
+
+Example:
+```typescript
+export const useAuthFlow = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
+
+  const sendCodeHandler = async (phone: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await sendCode(phone);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyCodeHandler = async (phone: string, code: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await verifyCode(phone, code);
+      login(response.token, response.user);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { sendCodeHandler, verifyCodeHandler, isLoading, error };
+};
+```
+
+
+4.3 Auth Components
+-------------------
+
+A. PhoneInput Component
+Create: src/components/auth/PhoneInput.tsx
+
+□ Features:
+   - Phone number input field with country code
+   - Default country code: +34 (Spain)
+   - Format phone as user types (e.g., +34 600 000 000)
+   - Validate phone format (must be valid format)
+   - "Enviar Código" button
+   - Show loading state while sending
+   - Show success message when code sent
+   - Show error message if sending fails
+   - Disable button if phone invalid or loading
+
+□ Props interface:
+   ```typescript
+   interface PhoneInputProps {
+     onCodeSent: (phone: string) => void;
+   }
+   ```
+
+□ Styling:
+   - Use Tailwind CSS
+   - Match brand colors (#8C6F5A primary, #F8F7F5 background)
+   - Responsive design (mobile-first)
+
+Example structure:
+```typescript
+export const PhoneInput: React.FC<PhoneInputProps> = ({ onCodeSent }) => {
+  const [phone, setPhone] = useState('');
+  const { sendCodeHandler, isLoading, error } = useAuthFlow();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendCodeHandler(phone);
+    onCodeSent(phone);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Phone input field */}
+      {/* Submit button */}
+      {/* Error display */}
+    </form>
+  );
+};
+```
+
+
+B. CodeVerification Component
+Create: src/components/auth/CodeVerification.tsx
+
+□ Features:
+   - 6-digit code input (could be single field or 6 separate boxes)
+   - Auto-focus on mount
+   - Auto-submit when 6 digits entered
+   - "Verificar" button
+   - Show loading state while verifying
+   - Show error if code invalid
+   - "Reenviar código" link
+   - Timer showing code expiration (5 minutes)
+
+□ Props interface:
+   ```typescript
+   interface CodeVerificationProps {
+     phone: string;
+     onVerified: () => void;
+   }
+   ```
+
+□ Styling:
+   - Tailwind CSS
+   - Large, centered code input boxes
+   - Monospace font for code
+
+
+C. AuthPage Component
+Create: src/pages/AuthPage.tsx
+
+□ Features:
+   - Render PhoneInput by default
+   - After code sent, show CodeVerification
+   - Handle successful verification:
+     * Navigate to /avatar/create (if user.hasAvatar === false)
+     * Navigate to /try-on (if user.hasAvatar === true)
+   - Show loading overlay during verification
+   - Handle errors with user-friendly messages
+
+Example flow:
+```typescript
+export const AuthPage: React.FC = () => {
+  const [step, setStep] = useState<'phone' | 'code'>('phone');
+  const [phone, setPhone] = useState('');
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      navigate(user.hasAvatar ? routes.TRY_ON : routes.AVATAR_CREATION);
+    }
+  }, [user, navigate]);
+
+  return (
+    <div className="auth-page">
+      {step === 'phone' && (
+        <PhoneInput onCodeSent={(p) => { setPhone(p); setStep('code'); }} />
+      )}
+      {step === 'code' && (
+        <CodeVerification phone={phone} onVerified={() => {}} />
+      )}
+    </div>
+  );
+};
+```
+
+
+================================================================================
+TASK 5: BASIC ROUTING ⬜ PENDING
+================================================================================
+
+5.1 Route Configuration
+------------------------
+
+Create: src/router.tsx
+
+□ Import React Router components
+□ Define routes:
+   - / (AuthPage) - public
+   - /avatar/create (AvatarCreationPage) - protected
+   - /try-on (TryOnPage) - protected, requires avatar
+   - /gallery (GalleryPage) - protected, requires avatar
+   - /appointments (AppointmentsPage) - protected
+   - /share/:id (SharePage) - public
+
+□ Implement ProtectedRoute wrapper:
+   ```typescript
+   interface ProtectedRouteProps {
+     children: React.ReactNode;
+     requiresAvatar?: boolean;
+   }
+
+   const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+     children,
+     requiresAvatar = false,
+   }) => {
+     const { user, isAuthenticated } = useAuth();
+
+     if (!isAuthenticated) {
+       return <Navigate to={routes.AUTH} replace />;
+     }
+
+     if (requiresAvatar && !user?.hasAvatar) {
+       return <Navigate to={routes.AVATAR_CREATION} replace />;
+     }
+
+     return <>{children}</>;
+   };
+   ```
+
+□ Wrap routes with AuthProvider:
+   ```typescript
+   export const AppRouter: React.FC = () => {
+     return (
+       <AuthProvider>
+         <BrowserRouter>
+           <Routes>
+             <Route path={routes.AUTH} element={<AuthPage />} />
+             <Route
+               path={routes.AVATAR_CREATION}
+               element={
+                 <ProtectedRoute>
+                   <AvatarCreationPage />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path={routes.TRY_ON}
+               element={
+                 <ProtectedRoute requiresAvatar>
+                   <TryOnPage />
+                 </ProtectedRoute>
+               }
+             />
+             {/* Other routes */}
+           </Routes>
+         </BrowserRouter>
+       </AuthProvider>
+     );
+   };
+   ```
+
+
+5.2 Page Placeholders
+----------------------
+
+Create basic placeholder pages (full implementation in Phase 2):
+
+□ AvatarCreationPage.tsx:
+   ```typescript
+   export const AvatarCreationPage: React.FC = () => {
+     return (
+       <div className="page-container">
+         <h1>Avatar Creation</h1>
+         <p>TODO: Implement photo upload and avatar generation</p>
+       </div>
+     );
+   };
+   ```
+
+□ TryOnPage.tsx:
+   ```typescript
+   export const TryOnPage: React.FC = () => {
+     return (
+       <div className="page-container">
+         <h1>Try-On Screen</h1>
+         <p>TODO: Implement dress selector, pose selector, and try-on generation</p>
+       </div>
+     );
+   };
+   ```
+
+□ GalleryPage.tsx:
+   ```typescript
+   export const GalleryPage: React.FC = () => {
+     return (
+       <div className="page-container">
+         <h1>Gallery</h1>
+         <p>TODO: Implement try-on gallery grid</p>
+       </div>
+     );
+   };
+   ```
+
+□ AppointmentsPage.tsx:
+   ```typescript
+   export const AppointmentsPage: React.FC = () => {
+     return (
+       <div className="page-container">
+         <h1>Appointments</h1>
+         <p>TODO: Implement appointment list</p>
+       </div>
+     );
+   };
+   ```
+
+□ SharePage.tsx:
+   ```typescript
+   export const SharePage: React.FC = () => {
+     const { id } = useParams();
+     return (
+       <div className="page-container">
+         <h1>Shared Try-On</h1>
+         <p>TODO: Display shared image {id}</p>
+       </div>
+     );
+   };
+   ```
+
+
+5.3 Navigation Testing
+-----------------------
+□ Test navigation between all routes
+□ Test protected route redirects to /
+□ Test authentication required logic
+□ Test avatar required logic (try-on/gallery redirect to avatar creation)
+□ Test browser back/forward buttons
+□ Test direct URL access to protected routes
+
+
+================================================================================
+TASK 6: LAYOUT COMPONENTS (HEADER, NAVIGATION) ⬜ PENDING
+================================================================================
+
+6.1 Layout Structure
+--------------------
+
+Create: src/components/layout/Layout.tsx
+
+□ Wrapper component that includes:
+   - Header (optional, based on props)
+   - Main content area
+   - Navigation (optional, based on auth state)
+   - Footer (optional)
+
+□ Props interface:
+   ```typescript
+   interface LayoutProps {
+     children: React.ReactNode;
+     showHeader?: boolean;
+     showNavigation?: boolean;
+   }
+   ```
+
+□ Responsive design:
+   - Mobile: Full width, bottom navigation
+   - Tablet: Wider margins
+   - Desktop: Max width container, centered
+
+
+6.2 Header Component
+--------------------
+
+Create: src/components/layout/Header.tsx
+
+□ Features:
+   - App logo/name: "Atelier de Bodas"
+   - Display user name (if logged in)
+   - Logout button (icon or text, if logged in)
+   - Sticky header (stays at top on scroll)
+   - Backdrop blur effect
+   - Responsive design
+
+□ Styling:
+   - Background: white/80 with backdrop-blur
+   - Height: 80px (desktop), 64px (mobile)
+   - Shadow: subtle bottom shadow
+   - Text: brand color #4a3f35
+   - Font: serif for logo
+
+Example:
+```typescript
+export const Header: React.FC = () => {
+  const { user, logout } = useAuth();
+
+  return (
+    <header className="sticky top-0 bg-white/80 backdrop-blur-md z-10 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-20">
+        <h1 className="text-2xl font-serif tracking-wider text-[#4a3f35]">
+          Atelier de Bodas
+        </h1>
+        {user && (
+          <button onClick={logout} className="logout-button">
+            Cerrar Sesión
+          </button>
+        )}
+      </div>
+    </header>
+  );
+};
+```
+
+
+6.3 Navigation Component
+-------------------------
+
+Create: src/components/layout/Navigation.tsx
+
+□ Bottom navigation bar with 3 tabs:
+   - Probador (Try-On) - Camera icon
+   - Galería (Gallery) - Image icon
+   - Citas (Appointments) - Calendar icon
+
+□ Features:
+   - Highlight active tab (based on current route)
+   - Navigate on click (using React Router)
+   - Fixed to bottom of screen
+   - Icons from heroicons or lucide-react
+   - Responsive design
+
+□ Styling:
+   - Background: white/80 with backdrop-blur
+   - Border top: subtle gray
+   - Active tab: primary color #8C6F5A
+   - Inactive tabs: gray #6e5f53
+   - Hover effect
+
+□ Only show on authenticated routes (not on AuthPage)
+
+Example:
+```typescript
+export const Navigation: React.FC = () => {
+  const location = useLocation();
+
+  const navItems = [
+    { path: routes.TRY_ON, label: 'Probador', Icon: CameraIcon },
+    { path: routes.GALLERY, label: 'Galería', Icon: ImageIcon },
+    { path: routes.APPOINTMENTS, label: 'Citas', Icon: CalendarIcon },
+  ];
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-10 bg-white/80 backdrop-blur-lg border-t border-gray-200">
+      <div className="max-w-md mx-auto flex justify-around items-center p-2">
+        {navItems.map(({ path, label, Icon }) => (
+          <Link
+            key={path}
+            to={path}
+            className={`nav-button ${location.pathname === path ? 'active' : ''}`}
+          >
+            <Icon className="w-6 h-6" />
+            <span className="text-xs mt-1">{label}</span>
+          </Link>
+        ))}
+      </div>
+    </nav>
+  );
+};
+```
+
+
+6.4 Shared Components (Basic)
+------------------------------
+
+These components will be used throughout the app:
+
+A. Button Component
+Create: src/components/shared/Button.tsx
+
+□ Variants: primary, secondary, danger
+□ Sizes: sm, md, lg
+□ States: loading, disabled
+□ Full width option
+
+Example:
+```typescript
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
+  disabled?: boolean;
+  fullWidth?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+}
+```
+
+
+B. Input Component
+Create: src/components/shared/Input.tsx
+
+□ Types: text, email, tel, number
+□ Label support
+□ Error message display
+□ Validation styling (error border)
+□ Icon support (left/right)
+
+Example:
+```typescript
+interface InputProps {
+  type?: 'text' | 'email' | 'tel' | 'number';
+  label?: string;
+  placeholder?: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  leftIcon?: React.ReactNode;
+  disabled?: boolean;
+}
+```
+
+
+C. Loader Component
+Create: src/components/shared/Loader.tsx
+
+□ Spinning icon (use SparklesIcon or similar)
+□ Optional text message
+□ Center on screen or inline
+□ Tailwind animation
+
+Example:
+```typescript
+interface LoaderProps {
+  text?: string;
+  inline?: boolean;
+}
+```
+
+
+D. Modal Component
+Create: src/components/shared/Modal.tsx
+
+□ Overlay with backdrop
+□ Close button (X icon)
+□ Title and content slots
+□ Click outside to close (optional)
+□ Framer Motion animations (fade in/out)
+□ Portal rendering (React.createPortal)
+
+Example:
+```typescript
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+  closeOnOverlayClick?: boolean;
+}
+```
+
+
+================================================================================
+PHASE 1 COMPLETION CHECKLIST
+================================================================================
+
+Before marking Phase 1 as complete, verify:
+
+FRONTEND:
+□ Project compiles without errors (npm run build)
+□ TypeScript strict mode enabled, no type errors
+□ All imports use .js extension for relative paths
+□ Environment variables properly configured
+□ API client configured with interceptors
+□ Auth flow works end-to-end (with mock backend or real)
+□ Routing works, protected routes redirect correctly
+□ Layout components render properly
+□ No hardcoded values (all via config/env)
+□ ESLint passes with no errors
+□ Code follows naming conventions (PascalCase/camelCase)
+□ All components have proper TypeScript types
+□ No console errors in browser
+□ Responsive design works on mobile/tablet/desktop
+
+DOCUMENTATION:
+□ Update this document with actual implementation notes
+□ Document any deviations from plan
+□ Create .txt files for completed features
+□ Update README.md with setup instructions
+
+
+================================================================================
+NOTES AND DECISIONS
+================================================================================
+
+Key Technical Decisions:
+1. ES Modules: Using "type": "module" in package.json
+   - All relative imports must use .js extension
+   - No CommonJS require()
+
+2. Authentication:
+   - JWT-based tokens from backend
+   - Token stored in localStorage
+   - Auto-redirect on 401 errors
+
+3. File Structure:
+   - React best practices
+   - Separation of concerns
+   - No file > 200 lines
+   - No method > 25 lines
+
+4. Type Safety:
+   - Everything typed (no any)
+   - Explicit type casting for API responses
+   - Type-only imports where possible
+
+5. Configuration:
+   - All values from environment variables (VITE_*)
+   - Validation on startup
+   - Throw errors if missing required vars
+
+6. Styling:
+   - Tailwind CSS utility-first
+   - Brand colors: #8C6F5A (primary), #F8F7F5 (background)
+   - Mobile-first responsive design
+
+
+Risk Mitigation:
+- API errors: Implement robust error handling with user-friendly messages
+- Token expiration: Auto-redirect to auth page
+- File uploads: Validate size/type on client side
+- CORS issues: Contact backend team if issues arise
+- Network errors: Show clear error messages and retry logic
+
+
+Next Steps (Phase 2):
+After Phase 1 completion, proceed to:
+1. Avatar creation flow implementation
+2. Try-on screen with dress/pose selection
+3. Image generation integration
+4. Gallery view with CRUD operations
+5. Share functionality
+6. Appointments screen
+
+
+================================================================================
+END OF PHASE 1 DEVELOPMENT PLAN (FRONTEND ONLY)
+================================================================================

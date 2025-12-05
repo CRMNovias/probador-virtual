@@ -1,0 +1,985 @@
+PHASE 1.2: REMAINING IMPLEMENTATION
+Probador Virtual de Vestidos de Novia - Atelier de Bodas
+
+================================================================================
+VERSION: 1.0
+CREATED: 2025-10-22
+PREREQUISITE: Phase 1.1 Part 1 & Part 2 (Partially) COMPLETED
+================================================================================
+
+CURRENT STATUS (2025-10-22)
+================================================================================
+
+✅ COMPLETED IN PHASE 1.1:
+- Task 1: Project Setup (Vite + React + TypeScript + Dependencies)
+- Task 2: Complete folder structure with all files created
+- Task 3: API Client with retry logic and interceptors ✅
+- Task 6 (Partial): Shared Components (Button, Input, Loader) ✅
+- Architecture Decision: DressId External Parameter documented ✅
+- Backend API alignment: Phase 1 endpoints validated ✅
+- Auth Context and useAuth hook ✅
+- useAuthFlow custom hook ✅
+- PhoneInput component ✅
+
+⏳ REMAINING FOR PHASE 1 COMPLETION:
+- CodeVerification component
+- AuthPage component with flow logic
+- ProtectedRoute component
+- Router configuration with routes
+- App Context (for dressId management)
+- Header component
+- Navigation component
+- Modal component (from Task 6)
+- Placeholder pages (Avatar, TryOn, Gallery, Appointments, Share)
+- App.tsx integration
+- index.html creation
+- main.tsx entry point
+- Testing and validation
+
+================================================================================
+TASK 4: AUTH FLOW - REMAINING COMPONENTS
+================================================================================
+
+4.1 CodeVerification Component ⬜ PENDING
+-----------------------------------------
+
+FILE: src/components/auth/CodeVerification.tsx
+
+FEATURES:
+- 6-digit code input field
+- Auto-focus on mount
+- Auto-submit when 6 digits entered (optional)
+- "Verificar" button
+- Loading state during verification
+- Error display for invalid/expired codes
+- "Reenviar código" link
+- Countdown timer (5 minutes code expiration)
+
+PROPS INTERFACE:
+```typescript
+interface CodeVerificationProps {
+  phone: string;  // Phone number that received the code
+  onVerified: () => void;  // Callback when verified successfully
+  onResendCode: () => void;  // Callback to resend code
+}
+```
+
+IMPLEMENTATION NOTES:
+- Use useAuthFlow hook for verifyCode
+- Format code input (spaces every 3 digits optional)
+- Max length: 6 digits
+- Disable verify button if code length < 6
+- Show timer countdown (5 minutes)
+- Enable "Reenviar código" only after cooldown
+
+EXAMPLE STRUCTURE:
+```typescript
+export const CodeVerification: React.FC<CodeVerificationProps> = ({
+  phone,
+  onVerified,
+  onResendCode
+}) => {
+  const [code, setCode] = useState('');
+  const [timer, setTimer] = useState(300); // 5 minutes in seconds
+  const { verifyCodeHandler, isLoading, error } = useAuthFlow();
+
+  // Timer countdown logic
+  useEffect(() => {
+    if (timer > 0) {
+      const interval = setInterval(() => setTimer(t => t - 1), 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timer]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = await verifyCodeHandler(phone, code);
+    if (success) {
+      onVerified();
+    }
+  };
+
+  return (
+    <div>
+      {/* Code input */}
+      {/* Verify button */}
+      {/* Timer display */}
+      {/* Resend link */}
+      {/* Error display */}
+    </div>
+  );
+};
+```
+
+TIME ESTIMATE: 2-3 hours
+
+
+4.2 AuthPage Component ⬜ PENDING
+----------------------------------
+
+FILE: src/pages/AuthPage.tsx
+
+FEATURES:
+- Step management (phone input → code verification)
+- Conditional rendering based on step
+- Redirect logic after successful authentication
+- Loading overlay during navigation
+- Responsive design
+
+FLOW LOGIC:
+1. Show PhoneInput by default
+2. After code sent → show CodeVerification
+3. After code verified → check user.hasAvatar
+   - If hasAvatar = false → navigate to /avatar/create
+   - If hasAvatar = true → navigate to /try-on?dressId=XXX (preserve dressId)
+
+IMPLEMENTATION NOTES:
+- Use React useState for step management ('phone' | 'code')
+- Use React Router's useNavigate for navigation
+- Use useAuth to access user data
+- Preserve dressId from URL parameters during navigation
+- Show Loader component during auth checks
+
+EXAMPLE STRUCTURE:
+```typescript
+export const AuthPage: React.FC = () => {
+  const [step, setStep] = useState<'phone' | 'code'>('phone');
+  const [phone, setPhone] = useState('');
+  const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Get dressId from URL
+  const dressId = searchParams.get('dressId');
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Redirect based on avatar status
+      const destination = user.hasAvatar
+        ? `/try-on${dressId ? `?dressId=${dressId}` : ''}`
+        : `/avatar/create${dressId ? `?dressId=${dressId}` : ''}`;
+      navigate(destination, { replace: true });
+    }
+  }, [isAuthenticated, user, dressId, navigate]);
+
+  if (isLoading) {
+    return <Loader text="Cargando..." />;
+  }
+
+  return (
+    <div className="auth-page-container">
+      {step === 'phone' && (
+        <PhoneInput
+          onCodeSent={(p) => {
+            setPhone(p);
+            setStep('code');
+          }}
+        />
+      )}
+
+      {step === 'code' && (
+        <CodeVerification
+          phone={phone}
+          onVerified={() => {
+            // Context will handle login, useEffect will navigate
+          }}
+          onResendCode={() => setStep('phone')}
+        />
+      )}
+    </div>
+  );
+};
+```
+
+TIME ESTIMATE: 2 hours
+
+
+================================================================================
+TASK 5: ROUTING - COMPLETE IMPLEMENTATION
+================================================================================
+
+5.1 App Context (DressId Management) ⬜ PENDING
+-----------------------------------------------
+
+FILE: src/context/AppContext.tsx
+
+PURPOSE: Global app state management (dressId, UI state, etc.)
+
+FEATURES:
+- Store dressId from URL parameters
+- Persist dressId across navigation
+- Provide dressId to all components
+
+INTERFACE:
+```typescript
+export interface AppContextState {
+  dressId: string | null;
+  setDressId: (id: string | null) => void;
+}
+
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [dressId, setDressId] = useState<string | null>(null);
+
+  // Persist to sessionStorage
+  useEffect(() => {
+    if (dressId) {
+      sessionStorage.setItem('dressId', dressId);
+    }
+  }, [dressId]);
+
+  // Load from sessionStorage on mount
+  useEffect(() => {
+    const stored = sessionStorage.getItem('dressId');
+    if (stored) {
+      setDressId(stored);
+    }
+  }, []);
+
+  return (
+    <AppContext.Provider value={{ dressId, setDressId }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within AppProvider');
+  }
+  return context;
+};
+```
+
+TIME ESTIMATE: 1 hour
+
+
+5.2 ProtectedRoute Component ⬜ PENDING
+---------------------------------------
+
+FILE: src/components/routing/ProtectedRoute.tsx
+
+PURPOSE: Protect routes that require authentication/avatar
+
+FEATURES:
+- Check authentication status
+- Optionally check avatar requirement
+- Redirect to appropriate page if not authorized
+- Preserve dressId in redirect URL
+- Show loader while checking auth
+
+INTERFACE:
+```typescript
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requiresAvatar?: boolean;
+}
+
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requiresAvatar = false,
+}) => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const dressId = searchParams.get('dressId');
+
+  if (isLoading) {
+    return <Loader text="Verificando..." />;
+  }
+
+  if (!isAuthenticated) {
+    // Redirect to auth with return URL
+    const authUrl = `/${dressId ? `?dressId=${dressId}` : ''}`;
+    return <Navigate to={authUrl} replace />;
+  }
+
+  if (requiresAvatar && !user?.hasAvatar) {
+    // Redirect to avatar creation
+    const avatarUrl = `/avatar/create${dressId ? `?dressId=${dressId}` : ''}`;
+    return <Navigate to={avatarUrl} replace />;
+  }
+
+  return <>{children}</>;
+};
+```
+
+TIME ESTIMATE: 1 hour
+
+
+5.3 Router Configuration ⬜ PENDING
+-----------------------------------
+
+FILE: src/router.tsx
+
+PURPOSE: Define all application routes
+
+ROUTES:
+- `/` - AuthPage (public)
+- `/avatar/create` - AvatarCreationPage (protected, no avatar required)
+- `/try-on` - TryOnPage (protected, requires avatar)
+- `/gallery` - GalleryPage (protected, requires avatar)
+- `/appointments` - AppointmentsPage (protected)
+- `/share/:id` - SharePage (public)
+
+IMPLEMENTATION:
+```typescript
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext.js';
+import { AppProvider } from './context/AppContext.js';
+import { ProtectedRoute } from './components/routing/ProtectedRoute.js';
+import { routes } from './constants/routes.js';
+
+// Import pages
+import { AuthPage } from './pages/AuthPage.js';
+import { AvatarCreationPage } from './pages/AvatarCreationPage.js';
+import { TryOnPage } from './pages/TryOnPage.js';
+import { GalleryPage } from './pages/GalleryPage.js';
+import { AppointmentsPage } from './pages/AppointmentsPage.js';
+import { SharePage } from './pages/SharePage.js';
+
+export const AppRouter: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <AppProvider>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path={routes.AUTH} element={<AuthPage />} />
+            <Route path={routes.SHARE} element={<SharePage />} />
+
+            {/* Protected routes (auth required) */}
+            <Route
+              path={routes.AVATAR_CREATION}
+              element={
+                <ProtectedRoute>
+                  <AvatarCreationPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path={routes.APPOINTMENTS}
+              element={
+                <ProtectedRoute>
+                  <AppointmentsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Protected routes (auth + avatar required) */}
+            <Route
+              path={routes.TRY_ON}
+              element={
+                <ProtectedRoute requiresAvatar>
+                  <TryOnPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path={routes.GALLERY}
+              element={
+                <ProtectedRoute requiresAvatar>
+                  <GalleryPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* 404 catch-all */}
+            <Route path="*" element={<Navigate to={routes.AUTH} replace />} />
+          </Routes>
+        </AuthProvider>
+      </AppProvider>
+    </BrowserRouter>
+  );
+};
+```
+
+TIME ESTIMATE: 1-2 hours
+
+
+================================================================================
+TASK 6: LAYOUT COMPONENTS - REMAINING
+================================================================================
+
+6.1 Modal Component ⬜ PENDING
+------------------------------
+
+FILE: src/components/shared/Modal.tsx
+
+FEATURES:
+- Overlay with backdrop
+- Close button (X icon)
+- Click outside to close (optional)
+- Framer Motion animations
+- React Portal rendering
+
+INTERFACE:
+```typescript
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+  closeOnOverlayClick?: boolean;
+}
+
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  closeOnOverlayClick = true,
+}) => {
+  if (!isOpen) return null;
+
+  return ReactDOM.createPortal(
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={closeOnOverlayClick ? onClose : undefined}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="bg-white rounded-lg max-w-lg w-full p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header with close button */}
+        {/* Content */}
+      </motion.div>
+    </motion.div>,
+    document.body
+  );
+};
+```
+
+TIME ESTIMATE: 2 hours
+
+
+6.2 Header Component ⬜ PENDING
+-------------------------------
+
+FILE: src/components/layout/Header.tsx
+
+FEATURES:
+- App logo/name: "Atelier de Bodas"
+- Display user name (if logged in)
+- Logout button (icon or text, if logged in)
+- Sticky header
+- Backdrop blur effect
+
+IMPLEMENTATION:
+```typescript
+export const Header: React.FC = () => {
+  const { user, logout, isAuthenticated } = useAuth();
+
+  return (
+    <header className="sticky top-0 bg-white/80 backdrop-blur-md z-10 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-20">
+        <h1 className="text-2xl font-serif tracking-wider text-[#4a3f35]">
+          Atelier de Bodas
+        </h1>
+
+        {isAuthenticated && user && (
+          <div className="flex items-center gap-4">
+            {user.name && (
+              <span className="text-sm text-gray-600">Hola, {user.name}</span>
+            )}
+            <button
+              onClick={logout}
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
+```
+
+TIME ESTIMATE: 1 hour
+
+
+6.3 Navigation Component ⬜ PENDING
+-----------------------------------
+
+FILE: src/components/layout/Navigation.tsx
+
+FEATURES:
+- Bottom navigation bar with 3 tabs:
+  * Probador (Try-On) - Camera icon
+  * Galería (Gallery) - Image icon
+  * Citas (Appointments) - Calendar icon
+- Highlight active tab
+- Fixed to bottom
+- Only show when authenticated
+
+IMPLEMENTATION:
+```typescript
+import { Link, useLocation } from 'react-router-dom';
+import { routes } from '../../constants/routes.js';
+
+export const Navigation: React.FC = () => {
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  const navItems = [
+    { path: routes.TRY_ON, label: 'Probador', icon: CameraIcon },
+    { path: routes.GALLERY, label: 'Galería', icon: ImageIcon },
+    { path: routes.APPOINTMENTS, label: 'Citas', icon: CalendarIcon },
+  ];
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-10 bg-white/80 backdrop-blur-lg border-t border-gray-200">
+      <div className="max-w-md mx-auto flex justify-around items-center p-2">
+        {navItems.map(({ path, label, icon: Icon }) => (
+          <Link
+            key={path}
+            to={path}
+            className={`nav-button ${
+              location.pathname === path ? 'text-[#8C6F5A]' : 'text-gray-500'
+            }`}
+          >
+            <Icon className="w-6 h-6" />
+            <span className="text-xs mt-1">{label}</span>
+          </Link>
+        ))}
+      </div>
+    </nav>
+  );
+};
+```
+
+NOTE: Needs icon library (heroicons or lucide-react)
+```bash
+npm install lucide-react
+```
+
+TIME ESTIMATE: 2 hours
+
+
+================================================================================
+PLACEHOLDER PAGES
+================================================================================
+
+All page placeholders already exist in src/pages/ but need basic implementation:
+
+6.4 AvatarCreationPage ⬜ PENDING
+---------------------------------
+
+FILE: src/pages/AvatarCreationPage.tsx
+
+BASIC PLACEHOLDER:
+```typescript
+export const AvatarCreationPage: React.FC = () => {
+  const { user } = useAuth();
+
+  return (
+    <div className="page-container min-h-screen flex items-center justify-center">
+      <div className="max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">Crear Avatar</h1>
+        <p className="text-gray-600 mb-4">
+          Sube una foto tipo carnet para generar tu avatar de cuerpo completo.
+        </p>
+        <p className="text-sm text-gray-500">
+          TODO: Implementar en Phase 2
+        </p>
+      </div>
+    </div>
+  );
+};
+```
+
+TIME ESTIMATE: 30 minutes (each placeholder page)
+
+
+6.5 TryOnPage ⬜ PENDING
+------------------------
+
+FILE: src/pages/TryOnPage.tsx
+
+FEATURES (PLACEHOLDER):
+- Display dressId from URL
+- Show message about try-on functionality
+
+```typescript
+export const TryOnPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const dressId = searchParams.get('dressId');
+
+  return (
+    <div className="page-container min-h-screen flex items-center justify-center">
+      <div className="max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">Probador Virtual</h1>
+        {dressId ? (
+          <p className="text-gray-600 mb-4">
+            Vestido seleccionado: {dressId}
+          </p>
+        ) : (
+          <p className="text-red-600 mb-4">
+            Error: No se ha seleccionado ningún vestido
+          </p>
+        )}
+        <p className="text-sm text-gray-500">
+          TODO: Implementar selección de poses y generación en Phase 2
+        </p>
+      </div>
+    </div>
+  );
+};
+```
+
+
+6.6 GalleryPage ⬜ PENDING
+--------------------------
+
+FILE: src/pages/GalleryPage.tsx
+
+```typescript
+export const GalleryPage: React.FC = () => {
+  return (
+    <div className="page-container min-h-screen flex items-center justify-center">
+      <div className="max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">Galería</h1>
+        <p className="text-gray-600 mb-4">
+          Aquí verás todas tus pruebas virtuales organizadas por vestido.
+        </p>
+        <p className="text-sm text-gray-500">
+          TODO: Implementar grid de imágenes en Phase 2
+        </p>
+      </div>
+    </div>
+  );
+};
+```
+
+
+6.7 AppointmentsPage ⬜ PENDING
+-------------------------------
+
+FILE: src/pages/AppointmentsPage.tsx
+
+```typescript
+export const AppointmentsPage: React.FC = () => {
+  return (
+    <div className="page-container min-h-screen flex items-center justify-center">
+      <div className="max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">Citas</h1>
+        <p className="text-gray-600 mb-4">
+          Gestiona tus citas con Atelier de Bodas.
+        </p>
+        <p className="text-sm text-gray-500">
+          TODO: Implementar lista de citas en Phase 2
+        </p>
+      </div>
+    </div>
+  );
+};
+```
+
+
+6.8 SharePage ⬜ PENDING
+------------------------
+
+FILE: src/pages/SharePage.tsx
+
+```typescript
+export const SharePage: React.FC = () => {
+  const { id } = useParams();
+
+  return (
+    <div className="page-container min-h-screen flex items-center justify-center">
+      <div className="max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">Prueba Virtual Compartida</h1>
+        <p className="text-gray-600 mb-4">
+          ID de prueba: {id}
+        </p>
+        <p className="text-sm text-gray-500">
+          TODO: Implementar visualización de imagen compartida en Phase 2
+        </p>
+      </div>
+    </div>
+  );
+};
+```
+
+
+================================================================================
+APP INTEGRATION
+================================================================================
+
+7.1 App.tsx ⬜ PENDING
+----------------------
+
+FILE: src/App.tsx
+
+PURPOSE: Root component that renders the router
+
+```typescript
+import { AppRouter } from './router.js';
+import './styles/globals.css';
+
+export default function App() {
+  return <AppRouter />;
+}
+```
+
+TIME ESTIMATE: 15 minutes
+
+
+7.2 main.tsx ⬜ PENDING
+-----------------------
+
+FILE: src/main.tsx
+
+PURPOSE: React entry point
+
+```typescript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.js';
+import './styles/globals.css';
+
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  throw new Error('Root element not found');
+}
+
+ReactDOM.createRoot(rootElement).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
+
+TIME ESTIMATE: 15 minutes
+
+
+7.3 index.html ⬜ PENDING
+-------------------------
+
+FILE: index.html (root directory)
+
+PURPOSE: HTML entry point
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Probador Virtual - Atelier de Bodas</title>
+    <meta name="description" content="Prueba vestidos de novia virtualmente con nuestro probador virtual impulsado por IA" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+TIME ESTIMATE: 15 minutes
+
+
+7.4 styles/globals.css ⬜ PENDING
+---------------------------------
+
+FILE: src/styles/globals.css
+
+PURPOSE: Global styles and Tailwind imports
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global styles */
+@layer base {
+  body {
+    @apply bg-[#F8F7F5] text-gray-900 antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+/* Custom utilities */
+@layer utilities {
+  .page-container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+}
+```
+
+TIME ESTIMATE: 15 minutes
+
+
+================================================================================
+DEPENDENCIES TO INSTALL
+================================================================================
+
+Install icon library (choose one):
+
+Option 1: Lucide React (recommended)
+```bash
+npm install lucide-react
+```
+
+Option 2: Heroicons
+```bash
+npm install @heroicons/react
+```
+
+TIME ESTIMATE: 5 minutes
+
+
+================================================================================
+TESTING AND VALIDATION
+================================================================================
+
+8.1 Manual Testing Checklist ⬜ PENDING
+---------------------------------------
+
+□ Auth Flow:
+  - Phone input accepts +34 format
+  - Code is sent successfully
+  - Code verification works
+  - Login redirects based on hasAvatar
+
+□ Protected Routes:
+  - Unauthenticated users redirected to /
+  - Users without avatar redirected to /avatar/create
+  - Protected pages accessible when authenticated
+
+□ DressId Preservation:
+  - DressId persists through auth flow
+  - DressId available in TryOnPage
+  - DressId in URL parameters
+
+□ Navigation:
+  - Bottom navigation shows when authenticated
+  - Active tab highlights correctly
+  - Navigation hidden when not authenticated
+
+□ Responsive Design:
+  - Mobile layout works (320px - 768px)
+  - Tablet layout works (768px - 1024px)
+  - Desktop layout works (1024px+)
+
+□ TypeScript:
+  - No type errors: `npm run type-check`
+  - Build succeeds: `npm run build`
+
+□ Code Quality:
+  - Linting passes: `npm run lint`
+  - No console errors in browser
+  - All imports use .js extension
+
+TIME ESTIMATE: 3-4 hours
+
+
+8.2 Development Server Testing ⬜ PENDING
+-----------------------------------------
+
+Run development server:
+```bash
+npm run dev
+```
+
+Test URLs:
+- http://localhost:5173/ (Auth page)
+- http://localhost:5173/?dressId=test-001 (Auth with dressId)
+- http://localhost:5173/try-on?dressId=test-001 (Try-on page)
+- http://localhost:5173/gallery (Gallery)
+- http://localhost:5173/appointments (Appointments)
+
+TIME ESTIMATE: 1-2 hours
+
+
+================================================================================
+TOTAL TIME ESTIMATES
+================================================================================
+
+Components & Pages:
+- CodeVerification: 2-3 hours
+- AuthPage: 2 hours
+- AppContext: 1 hour
+- ProtectedRoute: 1 hour
+- Router: 1-2 hours
+- Modal: 2 hours
+- Header: 1 hour
+- Navigation: 2 hours
+- Placeholder pages (5): 2.5 hours
+
+Integration:
+- App.tsx: 15 min
+- main.tsx: 15 min
+- index.html: 15 min
+- globals.css: 15 min
+
+Testing:
+- Manual testing: 3-4 hours
+- Dev server testing: 1-2 hours
+
+TOTAL: 18-24 hours (2-3 work days)
+
+================================================================================
+COMPLETION CRITERIA FOR PHASE 1
+================================================================================
+
+Before marking Phase 1 as complete, verify:
+
+FRONTEND:
+□ Project compiles without errors (npm run build)
+□ TypeScript strict mode enabled, no type errors
+□ All imports use .js extension for relative paths
+□ Environment variables properly configured
+□ API client configured with interceptors ✅
+□ Auth flow works end-to-end (with mock or real backend)
+□ Routing works, protected routes redirect correctly
+□ Layout components render properly
+□ DressId management works (URL params → AppContext → components)
+□ No hardcoded values (all via config/env)
+□ ESLint passes with no errors
+□ Code follows naming conventions (PascalCase/camelCase)
+□ All components have proper TypeScript types
+□ No console errors in browser
+□ Responsive design works on mobile/tablet/desktop
+
+DOCUMENTATION:
+□ Update Phase 1 plan with actual implementation notes
+□ Document any deviations from plan
+□ Create completion summary document
+□ Update README.md with setup instructions
+
+================================================================================
+PHASE 2 PREPARATION
+================================================================================
+
+After Phase 1 completion, prepare for Phase 2:
+
+1. Review Backend API Specification Phase 2
+2. Create Phase 2 Development Plan
+3. Identify new dependencies needed
+4. Plan avatar creation flow implementation
+5. Plan try-on generation implementation
+6. Plan gallery functionality
+7. Design image handling and optimization strategy
+
+================================================================================
+END OF PHASE 1.2 REMAINING IMPLEMENTATION PLAN
+================================================================================
