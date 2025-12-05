@@ -122,15 +122,28 @@ apiClient.interceptors.response.use(
       console.error(`[API Response Error] ${timestamp} ${status} ${error.message}`);
     }
 
-    // Handle 401 Unauthorized - clear auth and redirect
+    // Handle 401 Unauthorized
+    // Only clear auth and redirect if user was previously authenticated
+    // During initial authentication (login/verify code), let the component handle the error
     if (error.response && error.response.status === 401) {
-      if (envConfig.enableLogs) {
-        console.warn('[API] 401 Unauthorized - Clearing auth and redirecting');
+      const hasStoredToken = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      // Only redirect if there was a stored token (user was authenticated)
+      // This prevents redirect during initial authentication flow
+      if (hasStoredToken) {
+        if (envConfig.enableLogs) {
+          console.warn('[API] 401 Unauthorized - Clearing auth and redirecting');
+        }
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
+        localStorage.removeItem(STORAGE_KEYS.AVATAR_URL);
+        window.location.href = '/';
+      } else {
+        if (envConfig.enableLogs) {
+          console.warn('[API] 401 Unauthorized during auth flow - letting component handle error');
+        }
       }
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
-      localStorage.removeItem(STORAGE_KEYS.AVATAR_URL);
-      window.location.href = '/';
+
       return Promise.reject(error);
     }
 
