@@ -14,7 +14,7 @@ export const BASE_TRYON_PROMPT = `You are an expert virtual try-on AI. You will 
 **Crucial Rules:**
 1. **Complete Garment Replacement:** You MUST completely REMOVE and REPLACE the clothing item worn by the person in the 'model image' with the new garment. No part of the original clothing (e.g., collars, sleeves, patterns) should be visible in the final image.
 2. **Preserve the Model:** The person's face, hair, body shape, and pose from the 'model image' MUST remain unchanged.
-3. **Preserve the Background:** The entire background from the 'model image' MUST be preserved perfectly dark gray #A9A9A9.
+3. **Preserve the Background:** The entire background from the 'model image' MUST be preserved perfectly light gray #BAB8B8.
 4. **Apply the Garment:** Realistically fit the new garment onto the person. It should adapt to their pose with natural folds, shadows, and lighting consistent with the original scene.
 5. **Output:** Return ONLY the final, edited image. Do not include any text.`;
 
