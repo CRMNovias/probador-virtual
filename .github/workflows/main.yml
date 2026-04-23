@@ -1,0 +1,23 @@
+name: Deploy
+
+on:
+  push:
+    branches: ["master"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 144.76.145.228
+          username: root
+          port: 5555
+          key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/probador/probador-virtual
+            git pull origin main
+            npm install
+            npm run buil 
