@@ -20,4 +20,4 @@ jobs:
             cd /home/probador/probador-virtual
             git pull origin main
             npm install
-            npm run buil 
+            npm run build
