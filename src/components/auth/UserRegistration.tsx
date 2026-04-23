@@ -14,12 +14,14 @@
  */
 
 import React, { useState } from 'react';
+import type { AxiosError } from 'axios';
 import { Button } from '../shared/Button.js';
 import { Input } from '../shared/Input.js';
 import { isValidEmail } from '../../utils/validators.js';
 import { createProfile } from '../../services/userService.js';
 import { useAuth } from '../../context/AuthContext.js';
 import { errorMessages } from '../../constants/errorMessages.js';
+import type { UserProfile } from '../../types/user.js';
 
 export interface UserRegistrationProps {
   /**
@@ -45,7 +47,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
-  const { updateUser, user: currentUser } = useAuth();
+  const { updateUser, user: currentUser, login } = useAuth();
 
   /**
    * Validate form fields
@@ -85,40 +87,61 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
     setIsLoading(true);
 
     try {
-      // Create user profile - backend should return complete profile
       const response = await createProfile({
         phone,
         name: name.trim(),
         email: email.trim().toLowerCase(),
       });
 
-      console.log('[UserRegistration] Profile created:', response);
+      console.log('[UserRegistration] Profile completed:', {
+        merged: response.data.merged,
+        userId: response.data.user.id,
+      });
 
-      // WORKAROUND: Backend is not returning user object in response
-      // Construct UserProfile from available data and current user context
-      const userProfile: import('../../types/user.js').UserProfile = response.data.user || {
-        id: currentUser?.id || '', // Get ID from current user context (set during code verification)
-        phone,
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        createdAt: currentUser?.createdAt || new Date().toISOString(),
-        hasAvatar: false,
+      const userProfile: UserProfile = {
+        id: String(response.data.user.id),
+        phone: response.data.user.phone,
+        name: response.data.user.name ?? name.trim(),
+        email: response.data.user.email ?? email.trim().toLowerCase(),
+        createdAt: response.data.user.createdAt ?? currentUser?.createdAt ?? new Date().toISOString(),
+        hasAvatar: response.data.user.hasAvatar ?? currentUser?.hasAvatar ?? false,
       };
 
-      console.log('[UserRegistration] User profile constructed:', userProfile);
-      console.log('[UserRegistration] Current user from context:', currentUser);
+      // If backend reissued a token (always now, but specially important on merge)
+      // we must re-login so future API calls use the new JWT.
+      if (response.data.token) {
+        login(response.data.token, userProfile, userProfile.phone);
+      } else {
+        updateUser(userProfile);
+      }
 
-      // Update auth context with new user data
-      updateUser(userProfile);
-
-      // Call completion callback
       onCompleted();
     } catch (err) {
       console.error('Error creating user profile:', err);
-      setGeneralError(errorMessages.UNKNOWN_ERROR);
+      setGeneralError(resolveRegistrationError(err));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /**
+   * Map API errors to user-friendly messages
+   */
+  const resolveRegistrationError = (err: unknown): string => {
+    const axiosError = err as AxiosError<{ message?: string; errors?: Record<string, string[]> }>;
+    const status = axiosError?.response?.status;
+
+    if (status === 422 || status === 400) {
+      const fieldErrors = axiosError.response?.data?.errors;
+      const firstFieldMsg = fieldErrors
+        ? Object.values(fieldErrors).flat()[0]
+        : axiosError.response?.data?.message;
+      return firstFieldMsg || errorMessages.REGISTRATION_FAILED;
+    }
+    if (status === 401) return errorMessages.AUTH_SESSION_EXPIRED;
+    if (status && status >= 500) return errorMessages.SERVER_ERROR;
+    if (!axiosError?.response) return errorMessages.NETWORK_ERROR;
+    return errorMessages.REGISTRATION_FAILED;
   };
 
   return (

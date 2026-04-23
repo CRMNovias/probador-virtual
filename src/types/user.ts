@@ -39,12 +39,18 @@ export interface CreateProfileRequest {
 
 /**
  * Response from creating user profile (Phase 1 - Backend returns complete profile)
+ *
+ * `token` is reissued by the backend (always when profile is completed), so the
+ * client should re-login with it. `merged: true` means the backend detected an
+ * older customer with the same email and fused both accounts; the returned
+ * `user` will be the consolidated one.
  */
 export interface CreateProfileResponse {
   success: boolean;
   data: {
     token: string;
     expiresIn: number;
+    merged: boolean;
     user: UserProfile;
   };
   message: string;

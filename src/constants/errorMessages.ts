@@ -16,6 +16,11 @@ export const errorMessages = {
   AUTH_TOO_MANY_ATTEMPTS: 'Demasiados intentos. Intenta más tarde.',
   AUTH_SESSION_EXPIRED: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
 
+  // Registration / profile completion errors
+  REGISTRATION_EMAIL_INVALID: 'Email inválido.',
+  REGISTRATION_FAILED: 'No pudimos completar tu perfil. Revisa los datos e inténtalo de nuevo.',
+  REGISTRATION_MERGED: 'Hemos detectado una cuenta anterior con ese email y la hemos unido con este teléfono.',
+
   // Upload errors
   UPLOAD_FAILED: 'Error al subir la imagen. Verifica tu conexión.',
   INVALID_FILE_TYPE: 'Formato de archivo no válido. Usa JPG o PNG.',

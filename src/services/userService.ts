@@ -13,11 +13,27 @@ import type { UserProfile, CreateProfileRequest, CreateProfileResponse, UpdatePr
 
 /**
  * Get current user profile
+ *
+ * The backend wraps the payload in `{ success, data: {...} }`. The global axios
+ * response interceptor only unwraps the outer axios response (returns
+ * `response.data`), so here we still have to unwrap the Laravel envelope to
+ * return the raw `UserProfile`.
+ *
  * @returns Promise with user profile data
  */
 export const getProfile = async (): Promise<UserProfile> => {
-  const response = await apiClient.get(envConfig.endpoints.user.profile);
-  return response as unknown as UserProfile;
+  const response = (await apiClient.get(envConfig.endpoints.user.profile)) as unknown as
+    | UserProfile
+    | { success: boolean; data: UserProfile };
+
+  // Backend always returns the envelope; the fallback keeps us safe if it changes.
+  const raw = 'data' in response && response.data ? response.data : (response as UserProfile);
+
+  return {
+    ...raw,
+    id: String(raw.id ?? ''),
+    hasAvatar: raw.hasAvatar ?? false,
+  };
 };
 
 /**

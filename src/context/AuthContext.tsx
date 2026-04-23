@@ -167,10 +167,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log('[AuthContext] Validating stored token...');
             const validatedUser = await getProfile();
 
-            // Preserve local hasAvatar if it's true
-            // Backend may not have this flag correctly implemented yet
+            // Merge defensively: keep locally stored fields if the backend
+            // response omits them (e.g., older versions of /user/profile did
+            // not return name/email). Avoid overwriting with `undefined`.
             const mergedUser: UserProfile = {
+              ...storedUser,
               ...validatedUser,
+              name: validatedUser.name ?? storedUser.name,
+              email: validatedUser.email ?? storedUser.email,
+              phone: validatedUser.phone ?? storedUser.phone,
               // Keep local hasAvatar:true if exists, otherwise use backend value (default false)
               hasAvatar: storedUser.hasAvatar === true ? true : (validatedUser.hasAvatar || false),
             };
