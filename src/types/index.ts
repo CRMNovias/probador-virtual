@@ -11,3 +11,4 @@ export type * from './pose.js';
 export type * from './avatar.js';
 export type * from './tryOn.js';
 export type * from './appointment.js';
+export type * from './favorite.js';

@@ -9,7 +9,9 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
 import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
+import { FavoriteButton } from '../components/shared/FavoriteButton.js';
 import { getUserTryOns, deleteTryOn } from '../services/tryOnService.js';
+import { getFavoriteIds } from '../services/favoriteService.js';
 import { downloadImage, generateTryOnFilename } from '../utils/downloadImage.js';
 import type { TryOnCategory } from '../types/index.js';
 
@@ -73,10 +75,33 @@ export const GalleryPage: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedTryOnId, setSelectedTryOnId] = useState<string>('');
   const [selectedDressId, setSelectedDressId] = useState<string>('');
+  const [favoriteDressIds, setFavoriteDressIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    loadTryOns();
+    void loadTryOns();
+    void loadFavorites();
   }, []);
+
+  const loadFavorites = async () => {
+    try {
+      const ids = await getFavoriteIds();
+      setFavoriteDressIds(ids);
+    } catch (err) {
+      console.warn('[GalleryPage] No se pudieron cargar favoritos:', err);
+    }
+  };
+
+  const handleFavoriteChange = (dressId: string, favorited: boolean) => {
+    setFavoriteDressIds(prev => {
+      const next = new Set(prev);
+      if (favorited) {
+        next.add(dressId);
+      } else {
+        next.delete(dressId);
+      }
+      return next;
+    });
+  };
 
   const loadTryOns = async () => {
     try {
@@ -192,40 +217,50 @@ export const GalleryPage: React.FC = () => {
                     className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
                   >
                     {/* Accordion Header */}
-                    <button
-                      onClick={() => toggleExpand(category.dressId)}
-                      className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50 transition-colors gap-4"
-                    >
-                      <div className="flex items-center gap-4 flex-1">
-                        {/* Dress Preview Image */}
-                        {category.dressImageUrl && (
-                          <div className="flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden bg-gray-100">
-                            <img
-                              src={category.dressImageUrl}
-                              alt={category.dressName || 'Prenda'}
-                              className="w-full h-full object-cover"
-                            />
+                    <div className="flex items-center p-4 gap-3 hover:bg-gray-50 transition-colors">
+                      <button
+                        onClick={() => toggleExpand(category.dressId)}
+                        className="flex-1 flex justify-between items-center text-left gap-4"
+                      >
+                        <div className="flex items-center gap-4 flex-1">
+                          {/* Dress Preview Image */}
+                          {category.dressImageUrl && (
+                            <div className="flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden bg-gray-100">
+                              <img
+                                src={category.dressImageUrl}
+                                alt={category.dressName || 'Prenda'}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+
+                          {/* Text Info */}
+                          <div className="flex-1">
+                            <h2 className="text-xl font-serif text-[#000000]">
+                              {category.dressName || `Prenda ID: ${category.dressId}`}
+                            </h2>
+                            <p className="text-sm text-gray-500 font-light">
+                              {category.tryOns.length} prueba(s) generada(s)
+                            </p>
                           </div>
-                        )}
-
-                        {/* Text Info */}
-                        <div className="flex-1">
-                          <h2 className="text-xl font-serif text-[#000000]">
-                            {category.dressName || `Prenda ID: ${category.dressId}`}
-                          </h2>
-                          <p className="text-sm text-gray-500 font-light">
-                            {category.tryOns.length} prueba(s) generada(s)
-                          </p>
                         </div>
-                      </div>
 
-                      {/* Chevron Icon */}
-                      <ChevronDownIcon
-                        className={`flex-shrink-0 transform transition-transform duration-300 ${
-                          isExpanded ? 'rotate-180' : ''
-                        }`}
+                        {/* Chevron Icon */}
+                        <ChevronDownIcon
+                          className={`flex-shrink-0 transform transition-transform duration-300 ${
+                            isExpanded ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
+
+                      {/* Favorite toggle (separate from accordion button to avoid nested <button>) */}
+                      <FavoriteButton
+                        variant="icon"
+                        dressId={category.dressId}
+                        initialFavorited={favoriteDressIds.has(category.dressId)}
+                        onChange={(fav) => handleFavoriteChange(category.dressId, fav)}
                       />
-                    </button>
+                    </div>
 
                     {/* Accordion Content - Grid de Imágenes */}
                     {isExpanded && (

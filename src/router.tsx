@@ -26,6 +26,7 @@ import { AvatarCreationPage } from './pages/AvatarCreationPage.js';
 import { TryOnPage } from './pages/TryOnPage.js';
 import { GalleryPage } from './pages/GalleryPage.js';
 import { AppointmentsPage } from './pages/AppointmentsPage.js';
+import { FavoritesPage } from './pages/FavoritesPage.js';
 import { SharePage } from './pages/SharePage.js';
 
 /**
@@ -110,6 +111,15 @@ export const AppRouter: React.FC = () => {
         element={
           <ProtectedRoute requireAvatar>
             <AppointmentsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={routes.FAVORITES}
+        element={
+          <ProtectedRoute>
+            <FavoritesPage />
           </ProtectedRoute>
         }
       />

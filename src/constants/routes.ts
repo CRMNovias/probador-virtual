@@ -14,6 +14,7 @@ export const routes = {
   TRY_ON: '/try-on',
   GALLERY: '/gallery',
   APPOINTMENTS: '/appointments',
+  FAVORITES: '/favoritos',
   SHARE: '/share/:id',
 } as const;
 

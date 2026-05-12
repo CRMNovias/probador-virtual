@@ -41,6 +41,11 @@ export const envConfig = {
     appointment: {
       getUserAppointments: import.meta.env.VITE_ENDPOINT_APPOINTMENTS_GET_USER as string,
     },
+    favorites: {
+      list:   import.meta.env['VITE_ENDPOINT_FAVORITES_LIST']   as string,
+      toggle: import.meta.env['VITE_ENDPOINT_FAVORITES_TOGGLE'] as string,
+      delete: import.meta.env['VITE_ENDPOINT_FAVORITES_DELETE'] as string,
+    },
   },
 } as const;
 

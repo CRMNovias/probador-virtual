@@ -11,6 +11,7 @@ import { Header } from '../components/layout/Header.js';
 import { Loader } from '../components/shared/Loader.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
 import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
+import { FavoriteButton } from '../components/shared/FavoriteButton.js';
 import { useApp } from '../context/AppContext.js';
 import { getAvatar, deleteAvatar } from '../services/avatarService.js';
 import { generateTryOn, deleteTryOn } from '../services/tryOnService.js';
@@ -501,6 +502,11 @@ export const TryOnPage: React.FC = () => {
               <p className="text-lg text-[#1a1a1a] font-light text-center">
                 {dressName || `ID: ${dressId}`}
               </p>
+              {dressId && (
+                <div className="mt-4 flex justify-center">
+                  <FavoriteButton dressId={dressId} />
+                </div>
+              )}
             </div>
 
             {/* Card: Tu Avatar */}
