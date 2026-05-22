@@ -65,3 +65,38 @@ export interface AvailabilityResponse {
   date: string;
   slots: TimeSlot[];
 }
+
+// ============================================================
+// Booking — creación de cita desde el Probador
+// ============================================================
+
+/** Atelier ofrecido en el selector. */
+export interface BookingShop {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  phone: string;
+  email: string;
+}
+
+/** Servicio reservable desde el Probador. */
+export interface BookingService {
+  id: number;
+  name: string;
+  label: string;
+}
+
+/** Slot devuelto por `availability`. */
+export interface BookingSlot {
+  hour: string;        // "HH:MM"
+  available: boolean;
+}
+
+/** Payload de creación de cita aceptado por el backend. */
+export interface BookAppointmentPayload {
+  shopId: number;
+  serviceId: number;
+  date: string;        // YYYY-MM-DD
+  hour: string;        // HH:MM
+}

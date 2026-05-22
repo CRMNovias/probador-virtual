@@ -5,7 +5,26 @@
  */
 
 /**
- * User profile information (complete profile)
+ * Estilos de boda admitidos por el backend en `customer_date_events.style`.
+ * Mantener sincronizado con `ApiCustomerController::WEDDING_STYLES`.
+ */
+export type WeddingStyle =
+  | 'classic'
+  | 'boho_chic'
+  | 'rustic'
+  | 'vintage'
+  | 'industrial'
+  | 'romantic'
+  | 'minimalist'
+  | 'glamour'
+  | 'other';
+
+export type WeddingMoment = 'day' | 'night';
+
+/**
+ * Información completa del cliente del Probador Virtual. Los campos
+ * extendidos (postcode, shop, wedding) solo están presentes cuando la
+ * respuesta viene de `/user/profile`; en el JWT inicial vienen sin ellos.
  */
 export interface UserProfile {
   id: string;
@@ -14,6 +33,15 @@ export interface UserProfile {
   phone: string;
   createdAt: string;
   hasAvatar: boolean;
+  postcode?: string | null;
+  shopId?: number | null;
+  shopName?: string | null;
+  wedding?: {
+    date: string | null;
+    place: string | null;
+    style: WeddingStyle | null;
+    moment: WeddingMoment | null;
+  } | null;
 }
 
 /**
@@ -29,12 +57,31 @@ export interface AuthUser {
 }
 
 /**
- * Request to create a new user profile
+ * Atelier (tienda) público al que el cliente puede vincularse durante el
+ * registro. Lo devuelve `GET /shops`.
+ */
+export interface PublicShop {
+  id: number;
+  name: string;
+}
+
+/**
+ * Request to create a new user profile.
+ *
+ * Paso 1 — obligatorio: name, email, postcode, shopId.
+ * Paso 2 — opcional (saltable): weddingDate, weddingPlace, weddingStyle,
+ * weddingMoment. El backend ignora los nulos en lugar de fallar.
  */
 export interface CreateProfileRequest {
   phone: string;
   name: string;
   email: string;
+  postcode: string;
+  shopId: number;
+  weddingDate?: string | null;
+  weddingPlace?: string | null;
+  weddingStyle?: WeddingStyle | null;
+  weddingMoment?: WeddingMoment | null;
 }
 
 /**
@@ -57,11 +104,19 @@ export interface CreateProfileResponse {
 }
 
 /**
- * Request to update user profile
+ * Request to update user profile. Todos los campos opcionales — el cliente
+ * envía solo los que va a cambiar. Convención de la API en /user/update-profile.
  */
 export interface UpdateProfileRequest {
   name?: string;
   email?: string;
+  phone?: string;
+  postcode?: string;
+  shopId?: number;
+  weddingDate?: string | null;
+  weddingPlace?: string | null;
+  weddingStyle?: WeddingStyle | null;
+  weddingMoment?: WeddingMoment | null;
 }
 
 /**

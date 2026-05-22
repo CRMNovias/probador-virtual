@@ -5,18 +5,50 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header.js';
-import { getUserAppointments } from '../services/appointmentService.js';
+import { getUserAppointments, cancelAppointmentBooking } from '../services/appointmentService.js';
+import { routes } from '../constants/routes.js';
 import type { Appointment } from '../types/index.js';
 
 /**
  * AppointmentsPage Component
  */
 export const AppointmentsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [pastAppointments, setPastAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Estado del modal de confirmación de cancelación
+  const [cancelTarget, setCancelTarget] = useState<Appointment | null>(null);
+  const [cancelling, setCancelling] = useState<boolean>(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  const handleModify = (appt: Appointment): void => {
+    navigate(`${routes.APPOINTMENTS_NEW}?edit=${appt.id}`);
+  };
+
+  const handleCancelConfirm = async (): Promise<void> => {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      await cancelAppointmentBooking(cancelTarget.id);
+      setCancelTarget(null);
+      // Refrescar el listado para reflejar el cambio
+      await loadAppointments();
+    } catch (err: any) {
+      console.error('[AppointmentsPage] Error cancelando cita:', err);
+      setCancelError(
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        'No se pudo cancelar la cita. Inténtalo de nuevo.',
+      );
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     loadAppointments();
@@ -96,12 +128,11 @@ export const AppointmentsPage: React.FC = () => {
         <div className="w-full max-w-2xl mx-auto">
           <h1 className="text-4xl font-serif text-[#000000] mb-6 text-center">Mis Citas</h1>
 
-          {/* Book Appointment Button */}
+          {/* Book Appointment Button — flujo interno con cita real en CRM */}
           <div className="mb-8 flex justify-center">
-            <a
-              href="https://atelierdebodas.com/pide-cita/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => navigate(routes.APPOINTMENTS_NEW)}
               className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors shadow-md"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -116,7 +147,7 @@ export const AppointmentsPage: React.FC = () => {
                 <path d="M12 18h.01"></path>
               </svg>
               Agendar Nueva Cita
-            </a>
+            </button>
           </div>
 
           {/* Check if there are any appointments at all */}
@@ -135,6 +166,7 @@ export const AppointmentsPage: React.FC = () => {
                   <div className="space-y-3">
                     {todayAppointments.map(appt => {
                       const { dateStr, timeStr } = formatDateTime(appt.date);
+                      const isCancelled = appt.status.toLowerCase().includes('cancel');
                       return (
                         <div
                           key={appt.id}
@@ -167,6 +199,24 @@ export const AppointmentsPage: React.FC = () => {
                               {appt.location.phone}
                             </p>
                           </div>
+                          {!isCancelled && (
+                            <div className="mt-4 pt-3 border-t border-gray-200 flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleModify(appt)}
+                                className="flex-1 py-2 text-sm rounded-md border border-black text-black bg-white hover:bg-black hover:text-white transition-colors"
+                              >
+                                Modificar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setCancelTarget(appt)}
+                                className="flex-1 py-2 text-sm rounded-md border border-red-300 text-red-700 bg-white hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -183,6 +233,7 @@ export const AppointmentsPage: React.FC = () => {
                   <div className="space-y-3">
                     {upcomingAppointments.map(appt => {
                       const { dateStr, timeStr } = formatDateTime(appt.date);
+                      const isCancelled = appt.status.toLowerCase().includes('cancel');
                       return (
                         <div
                           key={appt.id}
@@ -215,6 +266,24 @@ export const AppointmentsPage: React.FC = () => {
                               {appt.location.phone}
                             </p>
                           </div>
+                          {!isCancelled && (
+                            <div className="mt-4 pt-3 border-t border-gray-200 flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleModify(appt)}
+                                className="flex-1 py-2 text-sm rounded-md border border-black text-black bg-white hover:bg-black hover:text-white transition-colors"
+                              >
+                                Modificar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setCancelTarget(appt)}
+                                className="flex-1 py-2 text-sm rounded-md border border-red-300 text-red-700 bg-white hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -273,6 +342,56 @@ export const AppointmentsPage: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Modal de confirmación de cancelación */}
+      {cancelTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !cancelling && setCancelTarget(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-semibold text-[#000000] mb-2">¿Cancelar cita?</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              {(() => {
+                const { dateStr, timeStr } = formatDateTime(cancelTarget.date);
+                return (
+                  <>
+                    Vas a cancelar tu cita del <strong>{dateStr}</strong> a las{' '}
+                    <strong>{timeStr}</strong> en <strong>{cancelTarget.location.name}</strong>.
+                    Esta acción no se puede deshacer.
+                  </>
+                );
+              })()}
+            </p>
+            {cancelError && (
+              <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700 text-center">
+                {cancelError}
+              </div>
+            )}
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setCancelTarget(null)}
+                disabled={cancelling}
+                className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                No, mantener cita
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelConfirm}
+                disabled={cancelling}
+                className="px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {cancelling ? 'Cancelando…' : 'Sí, cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

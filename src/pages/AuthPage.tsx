@@ -14,7 +14,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PhoneInput } from '../components/auth/PhoneInput.js';
 import { CodeVerification } from '../components/auth/CodeVerification.js';
 import { UserRegistration } from '../components/auth/UserRegistration.js';
@@ -29,10 +29,22 @@ type AuthStep = 'phone' | 'code' | 'registration';
  * AuthPage Component
  */
 export const AuthPage: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState<AuthStep>('phone');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const stepParam = searchParams.get('step');
   const { isAuthenticated, isLoading, user } = useAuth();
+
+  // Cuando se llega con ?step=registration y hay user autenticado (típicamente
+  // desde el botón "Atrás" de /avatar-creation), arrancamos directamente en el
+  // wizard usando el teléfono ya verificado en la sesión.
+  const directToRegistration = stepParam === 'registration' && !!user?.phone;
+
+  const [currentStep, setCurrentStep] = useState<AuthStep>(
+    directToRegistration ? 'registration' : 'phone',
+  );
+  const [phoneNumber, setPhoneNumber] = useState<string>(
+    directToRegistration ? (user?.phone ?? '') : '',
+  );
+  const navigate = useNavigate();
 
   /**
    * Redirect authenticated users
@@ -43,18 +55,23 @@ export const AuthPage: React.FC = () => {
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
       // If user has avatar, go to try-on page
-      // Otherwise, go to avatar creation
       if (user.hasAvatar) {
         console.log('[AuthPage] Redirecting to try-on (user has avatar)');
         navigate('/try-on', { replace: true });
-      } else if (currentStep !== 'registration') {
-        // Only auto-redirect to avatar creation if not in registration step
-        // Registration step will handle its own navigation
-        console.log('[AuthPage] Redirecting to avatar creation (user has no avatar)');
-        navigate('/avatar-creation', { replace: true });
+        return;
       }
+      // Sin avatar:
+      // - si estamos en el wizard (registration) NO redirigir, el usuario lo
+      //   está rellenando ahora (o volvió desde /avatar-creation).
+      // - si el query trae ?step=registration aún no se ha aplicado al state,
+      //   tampoco redirigir para no bloquear la apertura del wizard.
+      if (currentStep === 'registration' || stepParam === 'registration') {
+        return;
+      }
+      console.log('[AuthPage] Redirecting to avatar creation (user has no avatar)');
+      navigate('/avatar-creation', { replace: true });
     }
-  }, [isAuthenticated, isLoading, user, navigate, currentStep]);
+  }, [isAuthenticated, isLoading, user, navigate, currentStep, stepParam]);
 
   /**
    * Handle code sent successfully
@@ -112,6 +129,33 @@ export const AuthPage: React.FC = () => {
         <div className="absolute top-0 left-0 w-64 h-64 bg-[#e5e7eb] opacity-10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#000000] opacity-10 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2" />
       </div>
+
+      {/* Back to welcome — visible only on phone step */}
+      {currentStep === 'phone' && (
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          aria-label="Volver a la página de inicio"
+          className="absolute top-4 left-4 md:top-6 md:left-6 inline-flex items-center gap-1 text-sm text-[#4a4a4a] hover:text-[#1f1f1f] transition-colors px-3 py-2 rounded-md hover:bg-black/5 z-10"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+          <span>Volver</span>
+        </button>
+      )}
 
       {/* Content */}
       <div className="relative w-full max-w-md">

@@ -12,6 +12,7 @@ import { Loader } from '../components/shared/Loader.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
 import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
 import { FavoriteButton } from '../components/shared/FavoriteButton.js';
+import { CollapsibleCard } from '../components/shared/CollapsibleCard.js';
 import { useApp } from '../context/AppContext.js';
 import { getAvatar, deleteAvatar } from '../services/avatarService.js';
 import { generateTryOn, deleteTryOn } from '../services/tryOnService.js';
@@ -121,7 +122,7 @@ interface GeneratedTryOn {
  */
 export const TryOnPage: React.FC = () => {
   const navigate = useNavigate();
-  const { dressId, dressName } = useApp();
+  const { dressId, dressName, dressCategory } = useApp();
 
   const [avatar, setAvatar] = useState<Avatar | null>(null);
   const [selectedPoseId, setSelectedPoseId] = useState(POSES[0]?.id || 'pose1');
@@ -377,7 +378,10 @@ export const TryOnPage: React.FC = () => {
 
       <main className="flex-1 pb-24">
         <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 p-4 md:p-8 h-full">
-          {/* Columna Izquierda: Canvas - order-3 en móvil, order-1 en desktop */}
+          {/* Columna Izquierda: Canvas - order-3 en móvil (debajo del CTA),
+              order-1 en desktop. El CTA "Pide cita" se renderiza con
+              order-2 en móvil para aparecer encima de la imagen y captar
+              la atención inmediatamente tras los controles. */}
           <div className="relative w-full h-[60vh] lg:h-full bg-white rounded-2xl shadow-xl flex items-center justify-center overflow-hidden border border-white/40 backdrop-blur-sm order-3 lg:order-1">
             {isLoading && <Loader text={loadingMessage} />}
 
@@ -480,6 +484,38 @@ export const TryOnPage: React.FC = () => {
             )}
           </div>
 
+          {/* CTA "Pide cita" — versión mobile, encima de la imagen (order-2:
+              después de los controles, antes del canvas). En desktop esta
+              versión queda oculta porque ya hay otra en la columna derecha
+              al lado de la imagen. */}
+          {generatedTryOn && (
+            <div className="order-2 lg:hidden">
+              {(() => {
+                const garmentNoun = dressCategory === 'groom' ? 'traje' : 'vestido';
+                return (
+                  <div className="bg-[#1f1f1f] text-white p-5 rounded-2xl shadow-xl ring-2 ring-black/10">
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-white/60 mb-1">
+                      Tu próximo paso
+                    </p>
+                    <h2 className="text-lg md:text-xl font-serif leading-snug mb-2">
+                      Este es el primer paso para encontrar tu {garmentNoun}
+                    </h2>
+                    <p className="text-xs text-white/75 leading-relaxed mb-4">
+                      Ahora, ¡ven a probártelo a tu Atelier más cercano!
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate(routes.APPOINTMENTS_NEW)}
+                      className="w-full bg-white text-[#1f1f1f] font-medium tracking-widest text-sm py-3 rounded-md hover:bg-gray-100 transition-colors"
+                    >
+                      PIDE CITA
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           {/* Columna Derecha: Controles - order-1 en móvil (arriba), order-2 en desktop */}
           <div className="flex flex-col gap-6 order-1 lg:order-2">
             {/* Error Display */}
@@ -496,27 +532,50 @@ export const TryOnPage: React.FC = () => {
               </div>
             )}
 
-            {/* Card: Prenda Seleccionada */}
-            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/40">
-              <h2 className="text-2xl font-serif text-[#000000] mb-3">Prenda Seleccionada</h2>
-              <p className="text-lg text-[#1a1a1a] font-light text-center">
-                {dressName || `ID: ${dressId}`}
-              </p>
-              {dressId && (
-                <div className="mt-4 flex justify-center">
-                  <FavoriteButton dressId={dressId} />
+            {/* Card: CTA Pide cita — visible en desktop. En móvil se renderiza
+                 fuera de esta columna, justo debajo de la imagen generada. */}
+            {generatedTryOn && (() => {
+              const garmentNoun = dressCategory === 'groom' ? 'traje' : 'vestido';
+              return (
+                <div className="hidden lg:block bg-[#1f1f1f] text-white p-5 rounded-2xl shadow-xl ring-2 ring-black/10">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-white/60 mb-1">
+                    Tu próximo paso
+                  </p>
+                  <h2 className="text-lg md:text-xl font-serif leading-snug mb-2">
+                    Este es el primer paso para encontrar tu {garmentNoun}
+                  </h2>
+                  <p className="text-xs text-white/75 leading-relaxed mb-4">
+                    Ahora, ¡ven a probártelo a tu Atelier más cercano!
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate(routes.APPOINTMENTS_NEW)}
+                    className="w-full bg-white text-[#1f1f1f] font-medium tracking-widest text-sm py-3 rounded-md hover:bg-gray-100 transition-colors"
+                  >
+                    PIDE CITA
+                  </button>
                 </div>
-              )}
+              );
+            })()}
+
+            {/* Card: Prenda Seleccionada — compactada para no opacar el CTA */}
+            <div className="bg-white/60 backdrop-blur-sm px-5 py-4 rounded-2xl shadow-sm border border-white/40">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-1">Prenda seleccionada</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-base text-[#1a1a1a] font-medium truncate">
+                  {dressName || `ID: ${dressId}`}
+                </p>
+                {dressId && <FavoriteButton dressId={dressId} />}
+              </div>
             </div>
 
-            {/* Card: Tu Avatar */}
-            <div className="bg-white/60 backdrop-blur-sm p-5 rounded-2xl shadow-lg border border-white/40">
-              <h3 className="text-lg font-serif text-[#000000] mb-3">Tu Avatar</h3>
-              <div className="flex gap-2 flex-wrap">
+            {/* Card: Tu Avatar — colapsable (cerrada por defecto). */}
+            <CollapsibleCard label="Tu avatar">
+              <div className="grid grid-cols-2 gap-2 pt-2">
                 {generatedTryOn && (
                   <button
                     onClick={handleViewAvatar}
-                    className="flex-1 text-sm flex items-center justify-center gap-2 bg-white/80 text-[#000000] py-2.5 px-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 border border-[#000000]/20"
+                    className="text-xs flex items-center justify-center gap-1.5 bg-white/80 text-[#000000] py-2 px-2 rounded-lg hover:bg-white hover:shadow transition-all duration-200 border border-[#000000]/15"
                     title="Ver Avatar"
                   >
                     <EyeIcon /> Ver Avatar
@@ -524,30 +583,31 @@ export const TryOnPage: React.FC = () => {
                 )}
                 <button
                   onClick={handleRegenerateAvatar}
-                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-[#333333] text-white py-2.5 px-3 rounded-xl hover:shadow-lg hover:bg-[#1a1a1a] transition-all duration-200"
+                  className="text-xs flex items-center justify-center gap-1.5 bg-[#333333] text-white py-2 px-2 rounded-lg hover:shadow hover:bg-[#1a1a1a] transition-all duration-200"
                 >
                   <SparklesIcon className="w-4 h-4" /> Regenerar
                 </button>
                 <button
                   onClick={handleChangePhoto}
-                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-white/80 text-[#000000] py-2.5 px-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 border border-[#000000]/20"
+                  className="text-xs flex items-center justify-center gap-1.5 bg-white/80 text-[#000000] py-2 px-2 rounded-lg hover:bg-white hover:shadow transition-all duration-200 border border-[#000000]/15"
                 >
                   <UploadIcon className="w-4 h-4" /> Cambiar Foto
                 </button>
                 <button
                   onClick={handleDeleteAvatarClick}
-                  className="flex-1 text-sm flex items-center justify-center gap-2 bg-red-600 text-white py-2.5 px-3 rounded-xl hover:bg-red-700 hover:shadow-lg transition-all duration-200"
+                  className="text-xs flex items-center justify-center gap-1.5 bg-red-600 text-white py-2 px-2 rounded-lg hover:bg-red-700 hover:shadow transition-all duration-200"
                   title="Eliminar avatar"
                 >
                   <TrashIcon /> Eliminar
                 </button>
               </div>
-            </div>
+            </CollapsibleCard>
 
-            {/* Card: Elige una pose */}
-            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/40">
-              <h3 className="text-xl font-serif text-[#000000] mb-4">Elige una pose</h3>
-              <div className="flex justify-center md:justify-start gap-4">
+            {/* Card: Elige una pose — colapsable; abierta por defecto solo
+                 cuando aún no hay try-on para no estorbar tras la primera
+                 generación. */}
+            <CollapsibleCard label="Elige una pose" defaultOpen={!generatedTryOn}>
+              <div className="flex justify-center md:justify-start gap-4 pt-2">
                 {POSES.map(pose => (
                   <button
                     key={pose.id}
@@ -580,7 +640,7 @@ export const TryOnPage: React.FC = () => {
                   </button>
                 ))}
               </div>
-            </div>
+            </CollapsibleCard>
 
             {/* Generar Button */}
             <button

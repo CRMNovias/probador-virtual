@@ -11,9 +11,13 @@ export const routes = {
   HOME: '/',
   AUTH: '/auth',
   AVATAR_CREATION: '/avatar-creation',
+  PROFILE: '/perfil',
   TRY_ON: '/try-on',
   GALLERY: '/gallery',
   APPOINTMENTS: '/appointments',
+  APPOINTMENTS_NEW: '/citas/nueva',
+  COLLECTIONS_BRIDE: '/colecciones/novia',
+  COLLECTIONS_GROOM: '/colecciones/novio',
   FAVORITES: '/favoritos',
   SHARE: '/share/:id',
 } as const;

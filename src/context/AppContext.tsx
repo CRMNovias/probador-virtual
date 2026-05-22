@@ -41,6 +41,13 @@ export interface AppContextState {
   dressName: string | null;
 
   /**
+   * Categoría del producto seleccionado: 'bride' para vestidos de novia,
+   * 'groom' para trajes de novio. Se llena al navegar desde las páginas
+   * de Colección (?category=). Null cuando no se conoce.
+   */
+  dressCategory: 'bride' | 'groom' | null;
+
+  /**
    * Whether dressId is missing (error state)
    */
   isDressIdMissing: boolean;
@@ -79,6 +86,7 @@ const STORAGE_KEYS = {
   AVATAR_INFO: 'avatar_info',
   DRESS_ID: 'dress_id',
   DRESS_NAME: 'dress_name',
+  DRESS_CATEGORY: 'dress_category',
 } as const;
 
 /**
@@ -111,6 +119,19 @@ const getInitialDressName = (): string | null => {
 };
 
 /**
+ * Helper to read the persisted dress category. Solo acepta 'bride' o 'groom';
+ * cualquier otro valor se descarta para no contaminar el contexto con basura.
+ */
+const getInitialDressCategory = (): 'bride' | 'groom' | null => {
+  try {
+    const v = localStorage.getItem(STORAGE_KEYS.DRESS_CATEGORY);
+    return v === 'bride' || v === 'groom' ? v : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
  * AppProvider Component
  *
  * Provides global app state to all components
@@ -120,6 +141,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   // Initialize dressId and dressName synchronously from localStorage to avoid race condition
   const [dressId, setDressId] = useState<string | null>(getInitialDressId());
   const [dressName, setDressName] = useState<string | null>(getInitialDressName());
+  const [dressCategory, setDressCategory] = useState<'bride' | 'groom' | null>(getInitialDressCategory());
   const [isDressIdMissing, setIsDressIdMissing] = useState<boolean>(!getInitialDressId());
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [avatar, setAvatarState] = useState<AvatarInfo | null>(null);
@@ -167,6 +189,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       setDressName(storedDressName);
     } else {
       setDressName(null);
+    }
+
+    // Handle category parameter (bride|groom) — persistido junto a dressId
+    // para que la pantalla try-on pueda mostrar copy contextualizado y el
+    // CTA "Pide cita" lo arrastre cuando aplique.
+    const categoryParam = searchParams.get('category');
+    if (categoryParam === 'bride' || categoryParam === 'groom') {
+      setDressCategory(categoryParam);
+      localStorage.setItem(STORAGE_KEYS.DRESS_CATEGORY, categoryParam);
+    } else {
+      const stored = localStorage.getItem(STORAGE_KEYS.DRESS_CATEGORY);
+      if (stored === 'bride' || stored === 'groom') {
+        setDressCategory(stored);
+      } else {
+        setDressCategory(null);
+      }
     }
 
     // Mark as initialized after processing URL params
@@ -220,6 +258,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const value: AppContextState = {
     dressId,
     dressName,
+    dressCategory,
     isDressIdMissing,
     isInitialized,
     avatar,
