@@ -30,6 +30,7 @@ export default {
       },
       fontFamily: {
         sans: [
+          'Montserrat',
           'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',
@@ -39,7 +40,22 @@ export default {
           'Arial',
           'sans-serif',
         ],
-        serif: ['Georgia', 'serif'],
+        // El alias "serif" antes apuntaba a Playfair Display, pero el branding
+        // unifica toda la tipografía en Montserrat. Mantenemos la clave por
+        // compatibilidad con los componentes que usan `font-serif`, pero la
+        // fuente real es Montserrat. Si en el futuro volvemos a una serif,
+        // restauramos aquí Playfair Display.
+        serif: [
+          'Montserrat',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          '"Helvetica Neue"',
+          'Arial',
+          'sans-serif',
+        ],
       },
       spacing: {
         '128': '32rem',

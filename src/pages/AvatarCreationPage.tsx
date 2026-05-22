@@ -303,6 +303,43 @@ export const AvatarCreationPage: React.FC = () => {
           {/* Left side - Content */}
           <div className="space-y-8 text-left">
             <div>
+              {/* Paso 3 del registro — visible solo cuando aún no hay avatar */}
+              {!user?.hasAvatar && (
+                <div className="mb-5">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/auth?step=registration')}
+                    disabled={isLoading}
+                    aria-label="Volver al paso anterior del registro"
+                    className="inline-flex items-center gap-1 text-sm text-[#4a4a4a] hover:text-[#1f1f1f] transition-colors px-2 py-1 -ml-2 rounded-md hover:bg-black/5 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M19 12H5" />
+                      <path d="M12 19l-7-7 7-7" />
+                    </svg>
+                    <span>Atrás</span>
+                  </button>
+                  <div className="flex items-center gap-2 mb-2" aria-label="Paso 3 de 3 del registro">
+                    <span className="h-1.5 w-8 rounded-full bg-black/30" />
+                    <span className="h-1.5 w-8 rounded-full bg-black/30" />
+                    <span className="h-1.5 w-8 rounded-full bg-black" />
+                  </div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
+                    Paso 3 de 3 · Crea tu avatar
+                  </p>
+                </div>
+              )}
               <h1 className="text-5xl md:text-6xl font-serif text-[#000000] leading-tight mb-4">
                 Crea tu Modelo para Cualquier Look.
               </h1>

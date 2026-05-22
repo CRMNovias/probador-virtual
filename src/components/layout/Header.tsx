@@ -94,6 +94,16 @@ const navTabs: NavTab[] = [
     ),
   },
   {
+    label: 'Colección Novia',
+    path: routes.COLLECTIONS_BRIDE,
+    icon: () => null,
+  },
+  {
+    label: 'Colección Novio',
+    path: routes.COLLECTIONS_GROOM,
+    icon: () => null,
+  },
+  {
     label: 'Citas',
     path: routes.APPOINTMENTS,
     icon: (isActive: boolean) => (
@@ -124,6 +134,7 @@ export const Header: React.FC = () => {
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
+  const [showMobileNav, setShowMobileNav] = useState<boolean>(false);
 
   /**
    * Build navigation path with dressId if available
@@ -160,9 +171,33 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Navigation Menu - Always visible */}
-        <nav className="flex items-center gap-1">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-3">
+        {/* Mobile hamburger toggle */}
+        <button
+          type="button"
+          onClick={() => setShowMobileNav((o) => !o)}
+          aria-label="Abrir menú"
+          aria-expanded={showMobileNav}
+          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {showMobileNav ? (
+              <>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </>
+            ) : (
+              <>
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </>
+            )}
+          </svg>
+        </button>
+
+        {/* Desktop navigation menu — solo en md+ */}
+        <nav className="hidden md:flex items-center gap-1">
           {navTabs.map((tab) => {
             const isActive = location.pathname === tab.path;
 
@@ -171,8 +206,8 @@ export const Header: React.FC = () => {
                 key={tab.path}
                 href={buildNavPath(tab.path)}
                 className={`
-                  flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg
-                  transition-colors font-medium text-sm
+                  px-3 lg:px-4 py-2 rounded-lg
+                  transition-colors font-medium text-sm whitespace-nowrap
                   ${
                     isActive
                       ? 'text-black bg-gray-100'
@@ -180,18 +215,7 @@ export const Header: React.FC = () => {
                   }
                 `}
               >
-                {/* Icon */}
-                {tab.icon(isActive)}
-
-                {/* Label - hidden on mobile for active tab, always hidden for inactive on mobile */}
-                <span className="hidden sm:inline">
-                  {tab.label}
-                </span>
-
-                {/* Mobile: Show label only for active tab */}
-                <span className="sm:hidden">
-                  {isActive ? tab.label : ''}
-                </span>
+                {tab.label}
               </a>
             );
           })}
@@ -252,7 +276,7 @@ export const Header: React.FC = () => {
 
             {/* Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-40">
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-40">
                 {/* User Info */}
                 <div className="px-4 py-2 border-b border-gray-200">
                   <p className="text-xs text-gray-500">Teléfono</p>
@@ -265,15 +289,47 @@ export const Header: React.FC = () => {
                   )}
                 </div>
 
+                {/* Mi perfil — datos personales + boda */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    navigate(routes.PROFILE);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  Mi perfil
+                </button>
+
+                {/* Regenerar avatar — atajo directo al flujo de generación */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    navigate(`${routes.AVATAR_CREATION}?regenerate=true`);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                    <path d="M3 21v-5h5" />
+                  </svg>
+                  Regenerar avatar
+                </button>
+
+                <div className="my-1 border-t border-gray-200" />
+
                 {/* Logout Button */}
                 <button
                   type="button"
                   onClick={handleLogoutClick}
-                  className="
-                    w-full text-left px-4 py-2
-                    text-sm text-gray-700 hover:bg-gray-100
-                    transition-colors flex items-center gap-2
-                  "
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -337,6 +393,41 @@ export const Header: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Mobile nav drawer — se despliega debajo de la barra del header */}
+      {showMobileNav && (
+        <>
+          {/* Overlay para cerrar al click fuera */}
+          <button
+            type="button"
+            aria-label="Cerrar menú"
+            onClick={() => setShowMobileNav(false)}
+            className="md:hidden fixed inset-0 top-16 bg-black/20 z-30"
+          />
+          <nav className="md:hidden absolute left-0 right-0 bg-white border-b border-gray-200 shadow-md z-40">
+            <ul className="py-2">
+              {navTabs.map((tab) => {
+                const isActive = location.pathname === tab.path;
+                return (
+                  <li key={tab.path}>
+                    <a
+                      href={buildNavPath(tab.path)}
+                      onClick={() => setShowMobileNav(false)}
+                      className={`block px-5 py-3 text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'text-black bg-gray-100'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {tab.label}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </>
+      )}
     </header>
   );
 };

@@ -9,7 +9,7 @@
 
 import { apiClient } from './apiClient.js';
 import { envConfig } from '../config/envConfig.js';
-import type { UserProfile, CreateProfileRequest, CreateProfileResponse, UpdateProfileRequest, UploadPhotoResponse } from '../types/index.js';
+import type { UserProfile, CreateProfileRequest, CreateProfileResponse, UpdateProfileRequest, UploadPhotoResponse, PublicShop } from '../types/index.js';
 
 /**
  * Get current user profile
@@ -47,13 +47,43 @@ export const createProfile = async (data: CreateProfileRequest): Promise<CreateP
 };
 
 /**
- * Update user profile
- * NOTE: Not available in Phase 1 - will be added in Phase 2
- * @param data - Profile update data
- * @returns Promise with updated user profile
+ * Update user profile.
+ *
+ * Solo envía campos no-undefined para no pisar columnas que el cliente no
+ * quiere modificar. El backend acepta cualquier subconjunto de los campos
+ * de UpdateProfileRequest.
  */
-export const updateProfile = async (_data: UpdateProfileRequest): Promise<UserProfile> => {
-  throw new Error('updateProfile is not available in Phase 1');
+export const updateProfile = async (data: UpdateProfileRequest): Promise<UserProfile> => {
+  // Filtra undefined manteniendo null (null = "borrar valor" en algunos casos)
+  const payload: Record<string, unknown> = {};
+  (Object.keys(data) as Array<keyof UpdateProfileRequest>).forEach((k) => {
+    const v = data[k];
+    if (v !== undefined) payload[k] = v;
+  });
+
+  const response = (await apiClient.post(envConfig.endpoints.user.update, payload)) as unknown as
+    | { success: boolean; data: UserProfile }
+    | UserProfile;
+
+  const raw = 'data' in response && response.data ? response.data : (response as UserProfile);
+  return {
+    ...raw,
+    id: String(raw.id ?? ''),
+    hasAvatar: raw.hasAvatar ?? false,
+  };
+};
+
+/**
+ * Lista pública de ateliers que el cliente puede elegir como tienda más
+ * cercana durante el wizard de registro. Sin requerir token JWT.
+ */
+export const listPublicShops = async (): Promise<PublicShop[]> => {
+  const response = (await apiClient.get(envConfig.endpoints.shops.list)) as unknown as
+    | { success: boolean; data: PublicShop[] }
+    | PublicShop[];
+
+  if (Array.isArray(response)) return response;
+  return response.data ?? [];
 };
 
 /**

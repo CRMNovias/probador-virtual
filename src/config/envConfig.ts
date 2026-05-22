@@ -28,6 +28,7 @@ export const envConfig = {
       profile: import.meta.env.VITE_ENDPOINT_USER_PROFILE as string,
       create: import.meta.env['VITE_ENDPOINT_USER_CREATE'] as string,
       upload: import.meta.env['VITE_ENDPOINT_USER_UPLOAD'] as string,
+      update: (import.meta.env['VITE_ENDPOINT_USER_UPDATE'] as string) || '/user/update-profile',
     },
     avatar: {
       get: import.meta.env.VITE_ENDPOINT_AVATAR_GET as string,
@@ -45,6 +46,9 @@ export const envConfig = {
       list:   import.meta.env['VITE_ENDPOINT_FAVORITES_LIST']   as string,
       toggle: import.meta.env['VITE_ENDPOINT_FAVORITES_TOGGLE'] as string,
       delete: import.meta.env['VITE_ENDPOINT_FAVORITES_DELETE'] as string,
+    },
+    shops: {
+      list: (import.meta.env['VITE_ENDPOINT_SHOPS_LIST'] as string) || '/shops',
     },
   },
 } as const;

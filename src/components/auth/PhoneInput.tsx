@@ -16,6 +16,7 @@ import React, { useState } from 'react';
 import { Button } from '../shared/Button.js';
 import { Input } from '../shared/Input.js';
 import { useAuthFlow } from '../../hooks/useAuthFlow.js';
+import logo from '../../assets/images/logo/logo-atelier-de-bodas.webp';
 
 export interface PhoneInputProps {
   /**
@@ -122,9 +123,14 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({ onCodeSent }) => {
     <div className="w-full max-w-md mx-auto p-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-serif text-[#000000] mb-2">
-          Atelier de Bodas
-        </h1>
+        <img
+          src={logo}
+          alt="Atelier de Bodas"
+          width={576}
+          height={120}
+          className="h-12 md:h-14 w-auto object-contain mx-auto mb-3"
+          style={{ width: 'auto' }}
+        />
         <p className="text-gray-600">
           Ingresa tu número de teléfono para continuar
         </p>

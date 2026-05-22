@@ -22,7 +22,12 @@ import { routes } from './constants/routes.js';
 
 // Page imports
 import { AuthPage } from './pages/AuthPage.js';
+import { WelcomePage } from './pages/WelcomePage.js';
 import { AvatarCreationPage } from './pages/AvatarCreationPage.js';
+import { ProfilePage } from './pages/ProfilePage.js';
+import { BookAppointmentPage } from './pages/BookAppointmentPage.js';
+import { BrideCollectionPage } from './pages/BrideCollectionPage.js';
+import { GroomCollectionPage } from './pages/GroomCollectionPage.js';
 import { TryOnPage } from './pages/TryOnPage.js';
 import { GalleryPage } from './pages/GalleryPage.js';
 import { AppointmentsPage } from './pages/AppointmentsPage.js';
@@ -58,8 +63,8 @@ const HomeRoute: React.FC = () => {
     return <Navigate to={routes.AVATAR_CREATION} replace />;
   }
 
-  // Not authenticated, go to auth
-  return <Navigate to={routes.AUTH} replace />;
+  // Not authenticated, show welcome landing
+  return <WelcomePage />;
 };
 
 /**
@@ -83,6 +88,15 @@ export const AppRouter: React.FC = () => {
         element={
           <ProtectedRoute>
             <AvatarCreationPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={routes.PROFILE}
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />
@@ -111,6 +125,33 @@ export const AppRouter: React.FC = () => {
         element={
           <ProtectedRoute requireAvatar>
             <AppointmentsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={routes.APPOINTMENTS_NEW}
+        element={
+          <ProtectedRoute requireAvatar>
+            <BookAppointmentPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={routes.COLLECTIONS_BRIDE}
+        element={
+          <ProtectedRoute requireAvatar>
+            <BrideCollectionPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={routes.COLLECTIONS_GROOM}
+        element={
+          <ProtectedRoute requireAvatar>
+            <GroomCollectionPage />
           </ProtectedRoute>
         }
       />
