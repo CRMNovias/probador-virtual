@@ -156,25 +156,37 @@ export const TryOnPage: React.FC = () => {
     loadAvatar();
   }, []);
 
-  // Check dressId
+  // Sin dressId no podemos probar nada — en lugar de un error, ofrecemos
+  // entrar al catálogo de Colección Novia / Colección Novio.
   if (!dressId) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
         <Header />
         <main className="flex-1 flex items-center justify-center p-4">
-          <div className="bg-white/80 backdrop-blur-sm border-2 border-[#D4C8BE] rounded-2xl p-8 max-w-md text-center shadow-xl">
-            <div className="w-16 h-16 bg-[#F5F3EF] rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-8 h-8 text-[#8C6F5A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+          <div className="bg-white/80 backdrop-blur-sm border border-[#D4C8BE] rounded-2xl p-8 max-w-md text-center shadow-xl">
+            <h2 className="text-2xl font-serif text-[#1a1a1a] mb-3">
+              Elige una prenda para empezar
+            </h2>
+            <p className="text-sm text-[#4a4a4a] leading-relaxed mb-6">
+              Explora nuestras colecciones y prueba virtualmente cualquier
+              vestido de novia o traje de novio.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => navigate(routes.COLLECTIONS_BRIDE)}
+                className="px-5 py-3 rounded-md bg-black text-white text-sm tracking-widest hover:bg-[#1a1a1a] transition-colors"
+              >
+                COLECCIÓN NOVIA
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(routes.COLLECTIONS_GROOM)}
+                className="px-5 py-3 rounded-md bg-white text-black text-sm tracking-widest border border-black hover:bg-black hover:text-white transition-colors"
+              >
+                COLECCIÓN NOVIO
+              </button>
             </div>
-            <h2 className="text-2xl font-serif font-bold text-[#4a3f35] mb-4">Error al cargar la prenda</h2>
-            <p className="text-[#1a1a1a] leading-relaxed mb-2">
-              No se pudo cargar la información del vestido seleccionado.
-            </p>
-            <p className="text-[#666666] text-sm leading-relaxed">
-              Por favor, cierra la aplicación y vuelve a abrirla desde el catálogo.
-            </p>
           </div>
         </main>
       </div>
