@@ -48,6 +48,7 @@ interface Step1Data {
   email: string;
   postcode: string;
   shopId: number | null;
+  sendPhotosWhatsApp: boolean;
 }
 
 interface Step1Errors {
@@ -115,6 +116,8 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
     email: currentUser?.email ?? '',
     postcode: '',
     shopId: null,
+    // Opt-in WhatsApp marcado por defecto (alineado con DB default).
+    sendPhotosWhatsApp: true,
   });
   const [step1Errors, setStep1Errors] = useState<Step1Errors>({});
 
@@ -170,6 +173,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
       email: step1.email.trim().toLowerCase(),
       postcode: step1.postcode.trim(),
       shopId: step1.shopId as number,
+      sendPhotosWhatsApp: step1.sendPhotosWhatsApp,
     };
 
     if (!includeStep2) return base;
@@ -381,6 +385,24 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
               <p className="mt-1 text-sm text-red-600">{shopsError}</p>
             )}
           </div>
+
+          {/* Opt-in para envío de pruebas por WhatsApp */}
+          <label
+            htmlFor="sendPhotosWhatsApp"
+            className="flex items-start gap-3 cursor-pointer select-none"
+          >
+            <input
+              id="sendPhotosWhatsApp"
+              type="checkbox"
+              checked={step1.sendPhotosWhatsApp}
+              onChange={(e) => setStep1((s) => ({ ...s, sendPhotosWhatsApp: e.target.checked }))}
+              disabled={isSubmitting}
+              className="mt-0.5 h-4 w-4 rounded border-black accent-black"
+            />
+            <span className="text-sm text-[#4a4a4a] leading-snug">
+              Quiero recibir mis pruebas virtuales por WhatsApp
+            </span>
+          </label>
 
           {generalError && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">

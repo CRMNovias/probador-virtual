@@ -23,8 +23,9 @@ export type WeddingMoment = 'day' | 'night';
 
 /**
  * Información completa del cliente del Probador Virtual. Los campos
- * extendidos (postcode, shop, wedding) solo están presentes cuando la
- * respuesta viene de `/user/profile`; en el JWT inicial vienen sin ellos.
+ * extendidos (postcode, shop, wedding, sendPhotosWhatsApp) solo están
+ * presentes cuando la respuesta viene de `/user/profile`; en el JWT
+ * inicial vienen sin ellos.
  */
 export interface UserProfile {
   id: string;
@@ -36,6 +37,8 @@ export interface UserProfile {
   postcode?: string | null;
   shopId?: number | null;
   shopName?: string | null;
+  /** Opt-in para recibir las fotos generadas por WhatsApp. Default true. */
+  sendPhotosWhatsApp?: boolean;
   wedding?: {
     date: string | null;
     place: string | null;
@@ -78,6 +81,7 @@ export interface CreateProfileRequest {
   email: string;
   postcode: string;
   shopId: number;
+  sendPhotosWhatsApp?: boolean;
   weddingDate?: string | null;
   weddingPlace?: string | null;
   weddingStyle?: WeddingStyle | null;
@@ -113,6 +117,7 @@ export interface UpdateProfileRequest {
   phone?: string;
   postcode?: string;
   shopId?: number;
+  sendPhotosWhatsApp?: boolean;
   weddingDate?: string | null;
   weddingPlace?: string | null;
   weddingStyle?: WeddingStyle | null;

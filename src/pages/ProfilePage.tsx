@@ -63,6 +63,7 @@ export const ProfilePage: React.FC = () => {
     email: '',
     postcode: '',
     shopId: null as number | null,
+    sendPhotosWhatsApp: true,
   });
   const [personalStatus, setPersonalStatus] = useState<SectionStatus>({ kind: 'idle' });
 
@@ -106,6 +107,9 @@ export const ProfilePage: React.FC = () => {
       email: profile.email ?? '',
       postcode: profile.postcode ?? '',
       shopId: profile.shopId ?? null,
+      // Si el backend no devuelve el flag (perfiles antiguos), default true
+      // por consistencia con la columna BD.
+      sendPhotosWhatsApp: profile.sendPhotosWhatsApp ?? true,
     });
     setWedding({
       date: profile.wedding?.date ?? '',
@@ -134,6 +138,7 @@ export const ProfilePage: React.FC = () => {
         email: personal.email.trim().toLowerCase(),
         postcode: personal.postcode.trim(),
         shopId: personal.shopId as number,
+        sendPhotosWhatsApp: personal.sendPhotosWhatsApp,
       });
       // Sincronizar el contexto auth (Header verá el nombre nuevo)
       if (user) {
@@ -259,6 +264,25 @@ export const ProfilePage: React.FC = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Opt-in WhatsApp — toggle desmarcable desde aquí */}
+              <label
+                htmlFor="profile-sendPhotosWhatsApp"
+                className="flex items-start gap-3 cursor-pointer select-none pt-1"
+              >
+                <input
+                  id="profile-sendPhotosWhatsApp"
+                  type="checkbox"
+                  checked={personal.sendPhotosWhatsApp}
+                  onChange={(e) =>
+                    setPersonal((s) => ({ ...s, sendPhotosWhatsApp: e.target.checked }))
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-black accent-black"
+                />
+                <span className="text-sm text-[#4a4a4a] leading-snug">
+                  Quiero recibir mis pruebas virtuales por WhatsApp
+                </span>
+              </label>
 
               {personalStatus.kind === 'success' && (
                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
