@@ -72,8 +72,21 @@ const apiClient: AxiosInstance = axios.create({
  * Request interceptor
  * Adds authentication token to requests if available
  */
+/**
+ * Endpoints servidos por el auth-mini de la marca (si está configurado).
+ * El resto va al CRM (`apiConfig.baseUrl`).
+ */
+const AUTH_MINI_PATHS = ['/auth/send-code', '/auth/verify-code'];
+
 apiClient.interceptors.request.use(
   (config) => {
+    // Si el path es del flujo OTP, lo redirigimos al auth-mini de la marca.
+    // En entornos sin auth-mini desplegado (VITE_AUTH_BASE_URL vacío),
+    // `envConfig.authBaseUrl` cae al CRM y todo sigue funcionando como antes.
+    if (config.url && AUTH_MINI_PATHS.some((p) => config.url!.startsWith(p))) {
+      config.baseURL = envConfig.authBaseUrl;
+    }
+
     // Add authentication token
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     if (token) {
