@@ -50,5 +50,4 @@ Thumbs.db
 
 .env.development
 .env.example
-.env.production
 .env
