@@ -14,12 +14,6 @@
 export const envConfig = {
   // Base configuration
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL as string,
-  // Auth-mini base URL. Si está vacío, /auth/send-code y /auth/verify-code
-  // van al CRM como antes (modo legacy). Cuando se despliega el auth-mini
-  // de la marca (auth-{atelier|outlet|sedka}.crmnovias.com), apuntar aquí
-  // para que el login OTP se sirva desde ahí y el resto de la API siga
-  // contra el CRM.
-  authBaseUrl: (import.meta.env['VITE_AUTH_BASE_URL'] as string) || (import.meta.env.VITE_API_BASE_URL as string),
   apiTimeout: parseInt(import.meta.env.VITE_API_TIMEOUT as string, 10),
   maxUploadSizeMB: parseInt(import.meta.env.VITE_MAX_UPLOAD_SIZE_MB as string, 10),
   enableLogs: import.meta.env.VITE_ENABLE_LOGS === 'true',
