@@ -226,11 +226,32 @@ export const BookAppointmentPage: React.FC = () => {
     return d;
   }, []);
 
+  // Ventana de reserva: mínimo 1 día de antelación, máximo 30.
+  const minBookableDate = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + 1);
+    return d;
+  }, [today]);
+  const maxBookableDate = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + 30);
+    return d;
+  }, [today]);
+
   // Mes mostrado en el calendario (mes "actual" del navegador)
   const [calendarMonth, setCalendarMonth] = useState<{ year: number; month: number }>(() => {
     const d = new Date();
     return { year: d.getFullYear(), month: d.getMonth() };
   });
+
+  const prevMonthDisabled =
+    calendarMonth.year < minBookableDate.getFullYear() ||
+    (calendarMonth.year === minBookableDate.getFullYear() &&
+      calendarMonth.month <= minBookableDate.getMonth());
+  const nextMonthDisabled =
+    calendarMonth.year > maxBookableDate.getFullYear() ||
+    (calendarMonth.year === maxBookableDate.getFullYear() &&
+      calendarMonth.month >= maxBookableDate.getMonth());
 
   const monthMatrix = useMemo(
     () => buildMonthMatrix(calendarMonth.year, calendarMonth.month),
@@ -428,13 +449,14 @@ export const BookAppointmentPage: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <button
                       type="button"
+                      disabled={prevMonthDisabled}
                       onClick={() =>
                         setCalendarMonth((m) => {
                           const date = new Date(m.year, m.month - 1, 1);
                           return { year: date.getFullYear(), month: date.getMonth() };
                         })
                       }
-                      className="px-3 py-1 rounded-md text-sm hover:bg-black/5"
+                      className="px-3 py-1 rounded-md text-sm hover:bg-black/5 disabled:text-gray-300 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     >
                       ‹ Anterior
                     </button>
@@ -443,13 +465,14 @@ export const BookAppointmentPage: React.FC = () => {
                     </p>
                     <button
                       type="button"
+                      disabled={nextMonthDisabled}
                       onClick={() =>
                         setCalendarMonth((m) => {
                           const date = new Date(m.year, m.month + 1, 1);
                           return { year: date.getFullYear(), month: date.getMonth() };
                         })
                       }
-                      className="px-3 py-1 rounded-md text-sm hover:bg-black/5"
+                      className="px-3 py-1 rounded-md text-sm hover:bg-black/5 disabled:text-gray-300 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     >
                       Siguiente ›
                     </button>
@@ -469,9 +492,10 @@ export const BookAppointmentPage: React.FC = () => {
                     {monthMatrix.flat().map((d, i) => {
                       if (!d) return <div key={i} className="h-10" />;
                       const key = toDateKey(d);
-                      const isPast = d < today;
+                      const beforeMin = d < minBookableDate;
+                      const afterMax = d > maxBookableDate;
                       const isClosed = closedDays.has(key);
-                      const disabled = isPast || isClosed;
+                      const disabled = beforeMin || afterMax || isClosed;
                       const selected = selectedDate === key;
                       return (
                         <button
