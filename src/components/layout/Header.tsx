@@ -114,9 +114,19 @@ export const Header: React.FC = () => {
     setShowLogoutConfirm(false);
   };
 
+  const embeddedFrame = (() => {
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
+  })();
+
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <div className={`container mx-auto h-16 flex items-center justify-between gap-3 ${
+        embeddedFrame ? 'pl-4 pr-44' : 'px-4'
+      }`}>
         <button type="button" onClick={() => go(routes.COLLECTIONS_BRIDE)} className="shrink-0" aria-label="Colección">
           <img src={logo} alt="Atelier de Bodas" className="h-8 w-auto object-contain" />
         </button>
@@ -312,7 +322,7 @@ export const Header: React.FC = () => {
         )}
       </div>
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 pb-[env(safe-area-inset-bottom)]">
         <div className="flex h-16">
           {navTabs.map((tab) => {
             const isActive = isTabActive(tab.path);

@@ -35,6 +35,13 @@ export const GroomCollectionPage: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [nameQuery, setNameQuery] = useState('');
+  const [nameSearch, setNameSearch] = useState('');
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setNameSearch(nameQuery.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [nameQuery]);
 
   // Catálogos (colores + tipos de traje) — una sola vez
   useEffect(() => {
@@ -65,6 +72,7 @@ export const GroomCollectionPage: React.FC = () => {
   const buildFilters = () => ({
     ...(selectedColor ? { color: selectedColor } : {}),
     ...(selectedSuitType ? { suitType: selectedSuitType } : {}),
+    ...(nameSearch ? { q: nameSearch } : {}),
   });
 
   // Lista (se recarga al cambiar cualquier filtro)
@@ -91,7 +99,7 @@ export const GroomCollectionPage: React.FC = () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedColor, selectedSuitType]);
+  }, [selectedColor, selectedSuitType, nameSearch]);
 
   const handleLoadMore = async (): Promise<void> => {
     if (loadingMore || !hasMore) return;
@@ -123,7 +131,7 @@ export const GroomCollectionPage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
-      <main className="flex-1 px-4 py-8 md:py-12">
+      <main className="flex-1 px-4 pt-8 pb-28 md:pt-12 md:pb-12">
         <div className="max-w-7xl mx-auto">
           <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex flex-col gap-3">
@@ -136,6 +144,14 @@ export const GroomCollectionPage: React.FC = () => {
               {loading ? 'Cargando…' : `${total} ${total === 1 ? 'traje' : 'trajes'}`}
             </p>
           </div>
+
+          <input
+            type="search"
+            value={nameQuery}
+            onChange={(event) => setNameQuery(event.target.value)}
+            placeholder="Buscar por nombre"
+            className="w-full border border-black/20 rounded-xl px-3 py-2.5 text-sm mb-4"
+          />
 
           {/* Filtros (dropdowns) */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -153,12 +169,13 @@ export const GroomCollectionPage: React.FC = () => {
               value={selectedColor}
               onChange={setSelectedColor}
             />
-            {(selectedColor || selectedSuitType) && (
+            {(selectedColor || selectedSuitType || nameQuery) && (
               <button
                 type="button"
                 onClick={() => {
                   setSelectedColor(null);
                   setSelectedSuitType(null);
+                  setNameQuery('');
                 }}
                 className="text-xs text-gray-500 hover:text-black underline underline-offset-2"
               >
@@ -179,7 +196,7 @@ export const GroomCollectionPage: React.FC = () => {
             </div>
           ) : items.length === 0 ? (
             <p className="text-center text-gray-500 py-16">
-              No hay trajes disponibles con este filtro.
+              {nameSearch ? 'Ningún traje con ese nombre.' : 'No hay trajes disponibles con este filtro.'}
             </p>
           ) : (
             <>

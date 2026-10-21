@@ -495,15 +495,6 @@ export const TryOnPage: React.FC = () => {
               </button>
             )}
 
-            <div className="bg-white/60 backdrop-blur-sm px-5 py-4 rounded-2xl shadow-sm border border-white/40">
-              <BackgroundPicker
-                value={backgroundId}
-                custom={customBackground}
-                onChange={setBackgroundId}
-                onCustom={setCustomBackground}
-              />
-            </div>
-
             {generatedTryOn && (() => {
               const garmentNoun = dressCategory === 'groom' ? 'traje' : 'vestido';
               return (
@@ -532,7 +523,6 @@ export const TryOnPage: React.FC = () => {
               );
             })()}
 
-            {/* Card: Prenda Seleccionada — compactada para no opacar el CTA */}
             <div className="bg-white/60 backdrop-blur-sm px-5 py-4 rounded-2xl shadow-sm border border-white/40">
               <p className="text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-1">Prenda seleccionada</p>
               <div className="flex items-center justify-between gap-3">
@@ -543,92 +533,103 @@ export const TryOnPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card: Tu Avatar — colapsable (cerrada por defecto). */}
-            <CollapsibleCard label="Tu avatar">
-              <div className="grid grid-cols-2 gap-2 pt-2">
+            {!generatedTryOn && (
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-[#333333] text-white hover:bg-[#1a1a1a] shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <SparklesIcon className="w-6 h-6" />
+                <span className="font-serif">Ver cómo me queda</span>
+              </button>
+            )}
+
+            <CollapsibleCard label="Ajustar">
+              <div className="pt-2 flex flex-col gap-5">
+                <BackgroundPicker
+                  value={backgroundId}
+                  custom={customBackground}
+                  onChange={setBackgroundId}
+                  onCustom={setCustomBackground}
+                />
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-2">Pose</p>
+                  <div className="flex justify-center md:justify-start gap-4">
+                    {POSES.map(pose => (
+                      <button
+                        key={pose.id}
+                        type="button"
+                        onClick={() => setSelectedPoseId(pose.id)}
+                        className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-200 ${
+                          selectedPoseId === pose.id
+                            ? 'border-[#000000] ring-2 ring-[#000000]/20 bg-white shadow-md'
+                            : 'border-white/40 hover:border-[#000000]/40 bg-white/40 hover:bg-white/60'
+                        }`}
+                      >
+                        <div className={`w-20 h-28 rounded-lg mb-2 overflow-hidden relative ${
+                          selectedPoseId === pose.id ? 'ring-2 ring-[#000000]' : ''
+                        }`}>
+                          {pose.image ? (
+                            <img src={pose.image} alt={pose.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="flex items-center justify-center h-full text-xs text-[#1a1a1a] p-2 text-center font-medium bg-gradient-to-br from-[#D4C8BE] to-[#B8ACA0]">
+                              {pose.name}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-xs text-[#000000] font-medium">{pose.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-2">Tu foto</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {generatedTryOn && (
+                      <button
+                        type="button"
+                        onClick={handleViewAvatar}
+                        className="text-xs flex items-center justify-center gap-1.5 bg-white/80 text-[#000000] py-2 px-2 rounded-lg hover:bg-white hover:shadow transition-all duration-200 border border-[#000000]/15"
+                      >
+                        <EyeIcon /> Ver foto
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleRegenerateAvatar}
+                      className="text-xs flex items-center justify-center gap-1.5 bg-[#333333] text-white py-2 px-2 rounded-lg hover:shadow hover:bg-[#1a1a1a] transition-all duration-200"
+                    >
+                      <SparklesIcon className="w-4 h-4" /> Regenerar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleChangePhoto}
+                      className="text-xs flex items-center justify-center gap-1.5 bg-white/80 text-[#000000] py-2 px-2 rounded-lg hover:bg-white hover:shadow transition-all duration-200 border border-[#000000]/15"
+                    >
+                      <UploadIcon className="w-4 h-4" /> Cambiar foto
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeleteAvatarClick}
+                      className="text-xs flex items-center justify-center gap-1.5 bg-red-600 text-white py-2 px-2 rounded-lg hover:bg-red-700 hover:shadow transition-all duration-200"
+                    >
+                      <TrashIcon /> Eliminar
+                    </button>
+                  </div>
+                </div>
                 {generatedTryOn && (
                   <button
-                    onClick={handleViewAvatar}
-                    className="text-xs flex items-center justify-center gap-1.5 bg-white/80 text-[#000000] py-2 px-2 rounded-lg hover:bg-white hover:shadow transition-all duration-200 border border-[#000000]/15"
-                    title="Ver Avatar"
+                    type="button"
+                    onClick={handleRegenerateTryOn}
+                    disabled={isLoading}
+                    className="w-full py-3 rounded-xl border border-black text-sm disabled:opacity-50"
                   >
-                    <EyeIcon /> Ver Avatar
+                    Volver a generar
                   </button>
                 )}
-                <button
-                  onClick={handleRegenerateAvatar}
-                  className="text-xs flex items-center justify-center gap-1.5 bg-[#333333] text-white py-2 px-2 rounded-lg hover:shadow hover:bg-[#1a1a1a] transition-all duration-200"
-                >
-                  <SparklesIcon className="w-4 h-4" /> Regenerar
-                </button>
-                <button
-                  onClick={handleChangePhoto}
-                  className="text-xs flex items-center justify-center gap-1.5 bg-white/80 text-[#000000] py-2 px-2 rounded-lg hover:bg-white hover:shadow transition-all duration-200 border border-[#000000]/15"
-                >
-                  <UploadIcon className="w-4 h-4" /> Cambiar Foto
-                </button>
-                <button
-                  onClick={handleDeleteAvatarClick}
-                  className="text-xs flex items-center justify-center gap-1.5 bg-red-600 text-white py-2 px-2 rounded-lg hover:bg-red-700 hover:shadow transition-all duration-200"
-                  title="Eliminar avatar"
-                >
-                  <TrashIcon /> Eliminar
-                </button>
               </div>
             </CollapsibleCard>
-
-            {/* Card: Elige una pose — colapsable; abierta por defecto solo
-                 cuando aún no hay try-on para no estorbar tras la primera
-                 generación. */}
-            <CollapsibleCard label="Elige una pose" defaultOpen={false}>
-              <div className="flex justify-center md:justify-start gap-4 pt-2">
-                {POSES.map(pose => (
-                  <button
-                    key={pose.id}
-                    onClick={() => setSelectedPoseId(pose.id)}
-                    className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-200 ${
-                      selectedPoseId === pose.id
-                        ? 'border-[#000000] ring-2 ring-[#000000]/20 bg-white shadow-md scale-105'
-                        : 'border-white/40 hover:border-[#000000]/40 bg-white/40 hover:bg-white/60'
-                    }`}
-                  >
-                    {/* Pose Image Container */}
-                    <div className={`w-20 h-28 rounded-lg mb-2 overflow-hidden relative transition-colors ${
-                      selectedPoseId === pose.id
-                        ? 'ring-2 ring-[#000000]'
-                        : ''
-                    }`}>
-                      {pose.image ? (
-                        <img
-                          src={pose.image}
-                          alt={pose.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-xs text-[#1a1a1a] p-2 text-center font-medium bg-gradient-to-br from-[#D4C8BE] to-[#B8ACA0]">
-                          {pose.name}
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-xs text-[#000000] font-medium">{pose.name}</span>
-                  </button>
-                ))}
-              </div>
-            </CollapsibleCard>
-
-            {/* Generar Button */}
-            <button
-              onClick={generatedTryOn ? handleRegenerateTryOn : handleGenerate}
-              disabled={isLoading}
-              className={`w-full flex items-center justify-center gap-3 py-5 rounded-2xl transition-all duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                generatedTryOn
-                  ? 'bg-white text-black border border-black'
-                  : 'bg-[#333333] text-white hover:bg-[#1a1a1a] shadow-xl'
-              }`}
-            >
-              <SparklesIcon className="w-6 h-6" />
-              <span className="font-serif">{generatedTryOn ? 'Reintentar' : 'Generar Prueba Virtual'}</span>
-            </button>
           </div>
         </div>
       </main>
