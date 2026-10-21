@@ -8,6 +8,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../components/layout/Header.js';
+import { PhotoReviewCard } from '../components/avatar/PhotoReviewCard.js';
+import { reviewPhoto } from '../utils/photoQuality.js';
+import type { PhotoReview } from '../utils/photoQuality.js';
 import { Loader } from '../components/shared/Loader.js';
 import { AvatarComparison } from '../components/avatar/AvatarComparison.js';
 import { ExampleComparison } from '../components/avatar/ExampleComparison.js';
@@ -28,8 +31,14 @@ export const AvatarCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dressId = searchParams.get('dressId');
-  const regenerate = searchParams.get('regenerate'); // New param to indicate regeneration mode
+  const dressName = searchParams.get('dressName');
+  const dressImage = searchParams.get('imageUrl');
+  const category = searchParams.get('category');
+  const regenerate = searchParams.get('regenerate');
   const { user, updateUser } = useAuth();
+  const showAppChrome = regenerate === 'true' || Boolean(user?.hasAvatar);
+  const [pendingReview, setPendingReview] = useState<PhotoReview | null>(null);
+  const [pendingPreview, setPendingPreview] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -138,8 +147,20 @@ export const AvatarCreationPage: React.FC = () => {
     }
 
     setError(null);
-    setUploadedFile(file);
-    await processAvatarGeneration(file);
+    try {
+      const result = await reviewPhoto(file);
+      setUploadedFile(file);
+      setPendingPreview(URL.createObjectURL(file));
+      setPendingReview(result);
+    } catch {
+      setError('No se pudo leer la foto. Prueba con otra.');
+    }
+  };
+
+  const handleUseReviewedPhoto = async (): Promise<void> => {
+    if (!uploadedFile) return;
+    setPendingReview(null);
+    await processAvatarGeneration(uploadedFile);
   };
 
   /**
@@ -267,7 +288,7 @@ export const AvatarCreationPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
-        <Header />
+        {showAppChrome ? <Header /> : null}
         <main className="flex-1 flex items-center justify-center">
           <Loader text={loadingMessage} />
         </main>
@@ -279,7 +300,7 @@ export const AvatarCreationPage: React.FC = () => {
   if (showComparison && uploadedPhotoUrl && generatedAvatarUrl) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
-        <Header />
+        {showAppChrome ? <Header /> : null}
         <main className="flex-1 flex items-center justify-center p-4">
           <AvatarComparison
             uploadedPhotoUrl={uploadedPhotoUrl}
@@ -296,7 +317,7 @@ export const AvatarCreationPage: React.FC = () => {
   // Upload view
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
+      {showAppChrome ? <Header /> : null}
 
       <main className="flex-1 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
@@ -308,9 +329,11 @@ export const AvatarCreationPage: React.FC = () => {
                 <div className="mb-5">
                   <button
                     type="button"
-                    onClick={() => navigate('/auth?step=registration')}
+                    onClick={() =>
+                      navigate(category === 'groom' ? routes.COLLECTIONS_GROOM : routes.COLLECTIONS_BRIDE)
+                    }
                     disabled={isLoading}
-                    aria-label="Volver al paso anterior del registro"
+                    aria-label="Volver a la colección"
                     className="inline-flex items-center gap-1 text-sm text-[#4a4a4a] hover:text-[#1f1f1f] transition-colors px-2 py-1 -ml-2 rounded-md hover:bg-black/5 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
                   >
                     <svg
@@ -330,14 +353,15 @@ export const AvatarCreationPage: React.FC = () => {
                     </svg>
                     <span>Atrás</span>
                   </button>
-                  <div className="flex items-center gap-2 mb-2" aria-label="Paso 3 de 3 del registro">
-                    <span className="h-1.5 w-8 rounded-full bg-black/30" />
-                    <span className="h-1.5 w-8 rounded-full bg-black/30" />
-                    <span className="h-1.5 w-8 rounded-full bg-black" />
-                  </div>
                   <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
-                    Paso 3 de 3 · Crea tu avatar
+                    Tu foto para el probador
                   </p>
+                  {dressImage && (
+                    <div className="mt-4 flex items-center gap-3">
+                      <img src={dressImage} alt={dressName || 'Prenda'} className="w-14 h-20 object-cover rounded-lg" />
+                      <p className="text-sm text-[#333]">{dressName || 'La prenda que vas a probarte'}</p>
+                    </div>
+                  )}
                 </div>
               )}
               <h1 className="text-5xl md:text-6xl font-serif text-[#000000] leading-tight mb-4">
@@ -359,6 +383,21 @@ export const AvatarCreationPage: React.FC = () => {
 
             {/* Upload Button */}
             <div className="space-y-6">
+              {pendingReview && pendingPreview ? (
+                <PhotoReviewCard
+                  previewUrl={pendingPreview}
+                  review={pendingReview}
+                  busy={isLoading}
+                  onRetake={() => {
+                    setPendingReview(null);
+                    setPendingPreview('');
+                    setUploadedFile(null);
+                  }}
+                  onUse={() => {
+                    void handleUseReviewedPhoto();
+                  }}
+                />
+              ) : (
               <label
                 htmlFor="photo-upload"
                 className="block w-full cursor-pointer group"
@@ -394,6 +433,7 @@ export const AvatarCreationPage: React.FC = () => {
                   onChange={handleFileChange}
                 />
               </label>
+              )}
 
               {/* Tips Section */}
               <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 shadow-md border border-white/40">

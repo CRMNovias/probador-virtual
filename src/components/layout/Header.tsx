@@ -17,6 +17,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.js';
 import { useApp } from '../../context/AppContext.js';
 import { routes } from '../../constants/routes.js';
+import logo from '../../assets/images/logo/logo-atelier-de-bodas.webp';
 
 /**
  * Format phone for display (e.g., +34 6** *** 123)
@@ -55,73 +56,10 @@ interface NavTab {
  * Navigation tabs configuration
  */
 const navTabs: NavTab[] = [
-  {
-    label: 'Probador',
-    path: routes.TRY_ON,
-    icon: (isActive: boolean) => (
-      <svg
-        className="w-5 h-5"
-        fill={isActive ? 'currentColor' : 'none'}
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-        />
-      </svg>
-    ),
-  },
-  {
-    label: 'Galería',
-    path: routes.GALLERY,
-    icon: (isActive: boolean) => (
-      <svg
-        className="w-5 h-5"
-        fill={isActive ? 'currentColor' : 'none'}
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-        />
-      </svg>
-    ),
-  },
-  {
-    label: 'Colección Novia',
-    path: routes.COLLECTIONS_BRIDE,
-    icon: () => null,
-  },
-  {
-    label: 'Colección Novio',
-    path: routes.COLLECTIONS_GROOM,
-    icon: () => null,
-  },
-  {
-    label: 'Citas',
-    path: routes.APPOINTMENTS,
-    icon: (isActive: boolean) => (
-      <svg
-        className="w-5 h-5"
-        fill={isActive ? 'currentColor' : 'none'}
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-        />
-      </svg>
-    ),
-  },
+  { label: 'Colección', path: routes.COLLECTIONS_BRIDE, icon: () => null },
+  { label: 'Favoritos', path: routes.FAVORITES, icon: () => null },
+  { label: 'Mis pruebas', path: routes.GALLERY, icon: () => null },
+  { label: 'Cita', path: routes.APPOINTMENTS, icon: () => null },
 ];
 
 /**
@@ -129,19 +67,26 @@ const navTabs: NavTab[] = [
  */
 export const Header: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
-  const { clearAppState, dressId } = useApp();
+  const { clearAppState } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
-  const [showMobileNav, setShowMobileNav] = useState<boolean>(false);
 
   /**
    * Build navigation path with dressId if available
    */
-  const buildNavPath = (path: string): string => {
-    if (!dressId) return path;
-    return `${path}?dressId=${dressId}`;
+  const isTabActive = (path: string): boolean => {
+    if (path === routes.COLLECTIONS_BRIDE) return location.pathname.startsWith('/colecciones');
+    if (path === routes.APPOINTMENTS) {
+      return location.pathname.startsWith('/appointments') || location.pathname.startsWith('/citas');
+    }
+    if (path === routes.GALLERY) return location.pathname === routes.GALLERY;
+    return location.pathname === path;
+  };
+
+  const go = (path: string): void => {
+    navigate(path);
   };
 
   /**
@@ -159,7 +104,7 @@ export const Header: React.FC = () => {
     logout();
     clearAppState();
     setShowLogoutConfirm(false);
-    navigate(routes.AUTH);
+    navigate(routes.HOME);
   };
 
   /**
@@ -172,51 +117,24 @@ export const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-3">
-        {/* Mobile hamburger toggle */}
-        <button
-          type="button"
-          onClick={() => setShowMobileNav((o) => !o)}
-          aria-label="Abrir menú"
-          aria-expanded={showMobileNav}
-          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {showMobileNav ? (
-              <>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </>
-            ) : (
-              <>
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </>
-            )}
-          </svg>
+        <button type="button" onClick={() => go(routes.COLLECTIONS_BRIDE)} className="shrink-0" aria-label="Colección">
+          <img src={logo} alt="Atelier de Bodas" className="h-8 w-auto object-contain" />
         </button>
 
-        {/* Desktop navigation menu — solo en md+ */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
           {navTabs.map((tab) => {
-            const isActive = location.pathname === tab.path;
-
+            const isActive = isTabActive(tab.path);
             return (
-              <a
+              <button
                 key={tab.path}
-                href={buildNavPath(tab.path)}
-                className={`
-                  px-3 lg:px-4 py-2 rounded-lg
-                  transition-colors font-medium text-sm whitespace-nowrap
-                  ${
-                    isActive
-                      ? 'text-black bg-gray-100'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }
-                `}
+                type="button"
+                onClick={() => go(tab.path)}
+                className={`px-3 lg:px-4 py-2 rounded-lg transition-colors font-medium text-sm whitespace-nowrap ${
+                  isActive ? 'text-black bg-gray-100' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
               >
                 {tab.label}
-              </a>
+              </button>
             );
           })}
         </nav>
@@ -394,40 +312,23 @@ export const Header: React.FC = () => {
         )}
       </div>
 
-      {/* Mobile nav drawer — se despliega debajo de la barra del header */}
-      {showMobileNav && (
-        <>
-          {/* Overlay para cerrar al click fuera */}
-          <button
-            type="button"
-            aria-label="Cerrar menú"
-            onClick={() => setShowMobileNav(false)}
-            className="md:hidden fixed inset-0 top-16 bg-black/20 z-30"
-          />
-          <nav className="md:hidden absolute left-0 right-0 bg-white border-b border-gray-200 shadow-md z-40">
-            <ul className="py-2">
-              {navTabs.map((tab) => {
-                const isActive = location.pathname === tab.path;
-                return (
-                  <li key={tab.path}>
-                    <a
-                      href={buildNavPath(tab.path)}
-                      onClick={() => setShowMobileNav(false)}
-                      className={`block px-5 py-3 text-sm font-medium transition-colors ${
-                        isActive
-                          ? 'text-black bg-gray-100'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      {tab.label}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </>
-      )}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200">
+        <div className="flex h-16">
+          {navTabs.map((tab) => {
+            const isActive = isTabActive(tab.path);
+            return (
+              <button
+                key={tab.path}
+                type="button"
+                onClick={() => go(tab.path)}
+                className={`flex-1 text-[11px] font-medium ${isActive ? 'text-black' : 'text-gray-500'}`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </header>
   );
 };

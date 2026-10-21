@@ -36,7 +36,5 @@ export const generateTryOnPromptSimple = (poseId: keyof typeof POSE_PROMPTS_SIMP
 
   const completePrompt = `${BASE_TRYON_PROMPT_SIMPLE} ${poseConfig.prompt}`;
 
-  console.log(`[promptTemplates] Generated SIMPLE prompt for ${poseId}:`, completePrompt);
-
   return completePrompt;
 };

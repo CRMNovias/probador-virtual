@@ -19,11 +19,8 @@ import { useAuthFlow } from '../../hooks/useAuthFlow.js';
 import logo from '../../assets/images/logo/logo-atelier-de-bodas.webp';
 
 export interface PhoneInputProps {
-  /**
-   * Callback when code is successfully sent
-   * Receives the phone number that was verified
-   */
   onCodeSent: (phone: string) => void;
+  mode?: 'login' | 'register';
 }
 
 /**
@@ -73,7 +70,7 @@ const formatPhoneNumber = (value: string): string => {
 /**
  * PhoneInput Component
  */
-export const PhoneInput: React.FC<PhoneInputProps> = ({ onCodeSent }) => {
+export const PhoneInput: React.FC<PhoneInputProps> = ({ onCodeSent, mode = 'register' }) => {
   const [phone, setPhone] = useState<string>('+34');
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const { sendCodeHandler, isLoading, error, clearError } = useAuthFlow();
@@ -132,7 +129,9 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({ onCodeSent }) => {
           style={{ width: 'auto' }}
         />
         <p className="text-gray-600">
-          Ingresa tu número de teléfono para continuar
+          {mode === 'login'
+            ? 'Entra con tu teléfono. Te enviamos el código por WhatsApp.'
+            : 'Para crear la cuenta necesitamos tu teléfono. El código llega por WhatsApp.'}
         </p>
       </div>
 
@@ -157,7 +156,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({ onCodeSent }) => {
           loading={isLoading}
           disabled={isButtonDisabled}
         >
-          {isLoading ? 'Enviando...' : 'Enviar Código'}
+          {isLoading ? 'Enviando...' : 'Recibir código por WhatsApp'}
         </Button>
 
         {/* Success Message */}
@@ -171,7 +170,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({ onCodeSent }) => {
 
         {/* Help Text */}
         <p className="text-xs text-gray-500 text-center mt-4">
-          Recibirás un código de verificación por SMS en el número proporcionado.
+          El código llega por WhatsApp, no por SMS.
         </p>
       </form>
     </div>

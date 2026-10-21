@@ -13,6 +13,7 @@ export const routes = {
   AVATAR_CREATION: '/avatar-creation',
   PROFILE: '/perfil',
   TRY_ON: '/try-on',
+  COUPLE: '/pareja',
   GALLERY: '/gallery',
   APPOINTMENTS: '/appointments',
   APPOINTMENTS_NEW: '/citas/nueva',

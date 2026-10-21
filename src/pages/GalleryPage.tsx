@@ -201,7 +201,7 @@ export const GalleryPage: React.FC = () => {
 
       <main className="flex-1 pb-24 p-4 md:p-8">
         <div className="w-full max-w-5xl mx-auto">
-          <h1 className="text-4xl font-serif text-[#000000] mb-8 text-center">Mi Galería</h1>
+          <h1 className="text-4xl font-serif text-[#000000] mb-8 text-center">Mis pruebas</h1>
 
           {tryOnsByDress.length === 0 ? (
             <p className="text-center text-gray-500 font-light mt-12">

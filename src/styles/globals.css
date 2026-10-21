@@ -35,6 +35,12 @@ body {
   background-color: #faf9f7;
 }
 
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 4.5rem;
+  }
+}
+
 /* Custom animations */
 @layer utilities {
   /* Fade in animation */

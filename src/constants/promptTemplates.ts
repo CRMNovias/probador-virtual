@@ -61,8 +61,6 @@ export const generateTryOnPrompt = (poseId: keyof typeof POSE_PROMPTS, dressId: 
 **Pose Specification:**
 ${poseConfig.prompt}`;
 
-  console.log(`[promptTemplates] Generated prompt for ${poseId}:`, completePrompt);
-
   return completePrompt;
 };
 

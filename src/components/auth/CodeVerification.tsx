@@ -243,7 +243,7 @@ export const CodeVerification: React.FC<CodeVerificationProps> = ({
           Verificación de Código
         </h1>
         <p className="text-gray-600">
-          Hemos enviado un código de 6 dígitos a
+          Te hemos enviado un código de 6 dígitos por WhatsApp a
         </p>
         <p className="text-gray-900 font-medium mt-1">{formattedPhone}</p>
       </div>
@@ -339,8 +339,7 @@ export const CodeVerification: React.FC<CodeVerificationProps> = ({
 
       {/* Help Text */}
       <p className="text-xs text-gray-500 text-center mt-6">
-        Si no has recibido el código, revisa tu bandeja de mensajes SMS o
-        solicita uno nuevo.
+        Si no llega, mira WhatsApp y pide otro código.
       </p>
     </div>
   );

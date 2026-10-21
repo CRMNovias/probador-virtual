@@ -44,6 +44,13 @@ const getRetryDelay = (retryCount: number): number => {
  * @returns True if should retry
  */
 const isRetryableError = (error: AxiosError): boolean => {
+  // Generar avatar o prueba no es idempotente: reintentar crea otra imagen
+  // y otro WhatsApp mientras el probador sigue esperando la primera.
+  const url = error.config?.url ?? '';
+  if (url.includes('/tryons/generate') || url.includes('/avatar/generate')) {
+    return false;
+  }
+
   // Network errors (no response from server)
   if (!error.response) {
     return true;

@@ -61,6 +61,12 @@ export interface UploadTryOnResponse {
  */
 export interface GenerateTryOnRequest {
   dressId: string;
-  prompt: string; // AI generation prompt (comprehensive prompt with pose and quality specifications)
-  poseId?: string; // Optional - for tracking/logging purposes
+  prompt: string;
+  poseId?: string;
+  /** Sustituye el fondo de marca cuando la persona indica una escena. */
+  backgroundNote?: string;
+  partnerDressId?: string;
+  partnerPhone?: string;
+  /** Data URL o base64 de la foto de la pareja. */
+  partnerImage?: string;
 }

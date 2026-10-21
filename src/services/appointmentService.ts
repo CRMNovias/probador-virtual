@@ -3,6 +3,8 @@
  *
  * Handles appointment operations:
  * - Get user appointments
+ * - Booking (mismo flujo que el plugin web Outlet: servicios por tienda in_web,
+ *   closed-days + opening-date + availability por shop/service)
  */
 
 import { apiClient } from './apiClient.js';
@@ -42,25 +44,50 @@ export const listBookingShops = async (): Promise<BookingShop[]> => {
   return unwrap<BookingShop[]>(res) ?? [];
 };
 
-/** GET /probador/booking/services */
-export const listBookingServices = async (): Promise<BookingService[]> => {
-  const res = await apiClient.get('/probador/booking/services');
+/**
+ * GET /probador/booking/services?shopId=
+ * Igual que el plugin: catálogo online de ESA tienda (Córdoba ≠ Madrid).
+ */
+export const listBookingServices = async (shopId: number): Promise<BookingService[]> => {
+  const res = await apiClient.get('/probador/booking/services', {
+    params: { shopId },
+  });
   return unwrap<BookingService[]>(res) ?? [];
 };
 
+export interface BookingOpeningDate {
+  openingDate: string | null;
+  suggestedStartDate: string | null;
+}
+
+/** POST /probador/booking/opening-date — como key-shop-oppening-date del plugin. */
+export const getBookingOpeningDate = async (shopId: number): Promise<BookingOpeningDate> => {
+  const res = (await apiClient.post('/probador/booking/opening-date', { shopId })) as unknown as {
+    opening_date?: string;
+    suggested_calendar_start_date?: string;
+  };
+
+  return {
+    openingDate: res?.opening_date ?? null,
+    suggestedStartDate: res?.suggested_calendar_start_date ?? res?.opening_date ?? null,
+  };
+};
+
 /**
- * Días cerrados del atelier. El backend legacy devuelve formato variado;
- * normalizamos a array de strings YYYY-MM-DD para el frontend.
+ * Días cerrados del atelier (+ días sin horas bookables).
+ * El plugin pasa también service_id.
  */
-export const listClosedDays = async (shopId: number): Promise<string[]> => {
-  const res = (await apiClient.post('/probador/booking/closed-days', { shopId })) as unknown as {
+export const listClosedDays = async (shopId: number, serviceId?: number): Promise<string[]> => {
+  const body: { shopId: number; serviceId?: number } = { shopId };
+  if (serviceId) {
+    body.serviceId = serviceId;
+  }
+
+  const res = (await apiClient.post('/probador/booking/closed-days', body)) as unknown as {
     closed_days?: Array<string | { year?: number; month?: number; day?: number }>;
     datestring?: string[];
   };
 
-  // Preferimos `datestring` si existe (es formato "Y-m-d" directo); si no,
-  // intentamos convertir el array "closed_days" (formato "Y,m,d" según el
-  // controller legacy).
   if (Array.isArray(res?.datestring) && res.datestring.length > 0) {
     return res.datestring as string[];
   }
@@ -69,7 +96,6 @@ export const listClosedDays = async (shopId: number): Promise<string[]> => {
   return closed
     .map((d) => {
       if (typeof d === 'string') {
-        // viene como "Y,m,d" → "Y-m-d"
         const parts = d.split(',');
         if (parts.length === 3) {
           const [y, m, day] = parts;
@@ -84,12 +110,6 @@ export const listClosedDays = async (shopId: number): Promise<string[]> => {
 
 /**
  * Slots disponibles para un (shop, service, fecha).
- *
- * `findAppointments` legacy devuelve `available_hours` como un OBJETO con
- * shape `{ "HH:MM": <plazas-libres> }` donde plazas-libres puede ser
- * string o number. También expone el mismo objeto en
- * `success[serviceId].available_hours`. `closed` viene como string
- * "true"/"false". Aquí normalizamos a un array ordenado de {hour, available}.
  */
 export const listAvailability = async (params: {
   shopId: number;
@@ -107,8 +127,6 @@ export const listAvailability = async (params: {
     return { closed: true, slots: [] };
   }
 
-  // Preferimos el available_hours del service específico; el top-level es
-  // un fallback porque para 1 sólo servicio coincide.
   const serviceHours =
     res?.success?.[String(params.serviceId)]?.available_hours ??
     (res?.available_hours as Record<string, string | number> | undefined);
@@ -122,7 +140,6 @@ export const listAvailability = async (params: {
       const free = typeof raw === 'string' ? parseInt(raw, 10) : raw;
       return { hour, available: !Number.isNaN(free) && (free as number) > 0 };
     })
-    // Solo mostramos slots con plazas; ordenadas por hora.
     .filter((s) => s.available)
     .sort((a, b) => a.hour.localeCompare(b.hour));
 
@@ -134,20 +151,12 @@ export const bookAppointment = async (payload: BookAppointmentPayload): Promise<
   return apiClient.post('/probador/booking/book', payload);
 };
 
-/**
- * POST /probador/booking/update — modifica fecha/hora/shop/servicio de una
- * cita existente. El backend valida que la cita pertenezca al cliente del JWT.
- */
 export const updateAppointmentBooking = async (
   payload: BookAppointmentPayload & { appointmentId: number },
 ): Promise<unknown> => {
   return apiClient.post('/probador/booking/update', payload);
 };
 
-/**
- * POST /probador/booking/cancel — cancela una cita propia. Marca el state
- * custom 149 ("Cancelado") en el CRM sin borrar la fila.
- */
 export const cancelAppointmentBooking = async (appointmentId: number): Promise<unknown> => {
   return apiClient.post('/probador/booking/cancel', { appointmentId });
 };

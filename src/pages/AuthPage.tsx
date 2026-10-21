@@ -19,6 +19,7 @@ import { PhoneInput } from '../components/auth/PhoneInput.js';
 import { CodeVerification } from '../components/auth/CodeVerification.js';
 import { UserRegistration } from '../components/auth/UserRegistration.js';
 import { useAuth } from '../context/AuthContext.js';
+import { routes } from '../constants/routes.js';
 
 /**
  * Auth steps
@@ -31,6 +32,7 @@ type AuthStep = 'phone' | 'code' | 'registration';
 export const AuthPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const stepParam = searchParams.get('step');
+  const authMode = searchParams.get('mode') === 'login' ? 'login' : 'register';
   const { isAuthenticated, isLoading, user } = useAuth();
 
   // Cuando se llega con ?step=registration y hay user autenticado (típicamente
@@ -55,21 +57,14 @@ export const AuthPage: React.FC = () => {
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
       // If user has avatar, go to try-on page
-      if (user.hasAvatar) {
-        console.log('[AuthPage] Redirecting to try-on (user has avatar)');
-        navigate('/try-on', { replace: true });
-        return;
-      }
-      // Sin avatar:
-      // - si estamos en el wizard (registration) NO redirigir, el usuario lo
-      //   está rellenando ahora (o volvió desde /avatar-creation).
-      // - si el query trae ?step=registration aún no se ha aplicado al state,
-      //   tampoco redirigir para no bloquear la apertura del wizard.
       if (currentStep === 'registration' || stepParam === 'registration') {
+        if (!user.name) return;
+      }
+      if (!user.name) {
+        setCurrentStep('registration');
         return;
       }
-      console.log('[AuthPage] Redirecting to avatar creation (user has no avatar)');
-      navigate('/avatar-creation', { replace: true });
+      navigate(routes.COLLECTIONS_BRIDE, { replace: true });
     }
   }, [isAuthenticated, isLoading, user, navigate, currentStep, stepParam]);
 
@@ -102,7 +97,7 @@ export const AuthPage: React.FC = () => {
    * Navigate to avatar creation
    */
   const handleRegistrationCompleted = (): void => {
-    navigate('/avatar-creation', { replace: true });
+    navigate(routes.COLLECTIONS_BRIDE, { replace: true });
   };
 
   /**
@@ -162,7 +157,7 @@ export const AuthPage: React.FC = () => {
         {/* Step 1: Phone Input */}
         {currentStep === 'phone' && (
           <div className="animate-fadeIn">
-            <PhoneInput onCodeSent={handleCodeSent} />
+            <PhoneInput onCodeSent={handleCodeSent} mode={authMode} />
           </div>
         )}
 
