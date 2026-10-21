@@ -27,6 +27,18 @@ export default {
         white: '#FFFFFF',
         error: '#EF4444',
         success: '#10B981',
+        // Probador V2 (src/v2): blanco, negro puro y gris de estudio.
+        ivory: '#ffffff',
+        studio: '#eceae7',
+        sand: '#eceae7',
+        line: '#e2e2e2',
+        ink: '#000000',
+        muted: '#6b6b6b',
+        accent: '#000000',
+        danger: '#b3261e',
+      },
+      transitionTimingFunction: {
+        'out-soft': 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
       fontFamily: {
         sans: [
@@ -81,5 +93,16 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Probador V2: etiqueta en mayúsculas espaciadas (secciones, botones, pestañas).
+    ({ addUtilities }) =>
+      addUtilities({
+        '.label-caps': {
+          'font-size': '12px',
+          'font-weight': '500',
+          'letter-spacing': '0.12em',
+          'text-transform': 'uppercase',
+        },
+      }),
+  ],
 }

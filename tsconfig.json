@@ -55,7 +55,12 @@
       "@pages/*": ["./src/pages/*"],
       "@utils/*": ["./src/utils/*"],
       "@constants/*": ["./src/constants/*"],
-      "@assets/*": ["./src/assets/*"]
+      "@assets/*": ["./src/assets/*"],
+      "@v2/*": ["./src/v2/*"],
+      "next/link": ["./src/v2/next/link.tsx"],
+      "next/navigation": ["./src/v2/next/navigation.ts"],
+      "next/image": ["./src/v2/next/image.tsx"],
+      "next": ["./src/v2/next/index.ts"]
     }
   },
   "include": ["src/**/*"],

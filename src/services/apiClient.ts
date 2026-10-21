@@ -147,7 +147,8 @@ apiClient.interceptors.response.use(
         localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
         localStorage.removeItem(STORAGE_KEYS.AVATAR_URL);
-        window.location.href = '/';
+        // La V2 (/v2) tiene su propia entrada.
+        window.location.href = window.location.pathname.startsWith('/v2') ? '/v2/entrar' : '/';
       } else {
         if (envConfig.enableLogs) {
           console.warn('[API] 401 Unauthorized during auth flow - letting component handle error');
