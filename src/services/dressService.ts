@@ -76,11 +76,13 @@ export const listBrides = async (params: {
   page?: number;
   brand?: string;
   cut?: string;
+  q?: string;
 } = {}): Promise<CollectionListResponse> => {
   const search = new URLSearchParams();
   if (params.page) search.set('page', String(params.page));
   if (params.brand) search.set('brand', params.brand);
   if (params.cut) search.set('cut', params.cut);
+  if (params.q) search.set('q', params.q);
   const qs = search.toString();
   const res = (await apiClient.get(
     `/probador/collections/brides${qs ? `?${qs}` : ''}`,
@@ -93,12 +95,13 @@ export const listBrides = async (params: {
 
 /** GET /probador/collections/grooms — trajes paginados (filtro por color opcional). */
 export const listGrooms = async (
-  params: { page?: number; color?: string; suitType?: string } = {},
+  params: { page?: number; color?: string; suitType?: string; q?: string } = {},
 ): Promise<CollectionListResponse> => {
   const search = new URLSearchParams();
   if (params.page) search.set('page', String(params.page));
   if (params.color) search.set('color', params.color);
   if (params.suitType) search.set('suitType', params.suitType);
+  if (params.q) search.set('q', params.q);
   const qs = search.toString();
   const res = (await apiClient.get(
     `/probador/collections/grooms${qs ? `?${qs}` : ''}`,

@@ -17,7 +17,11 @@ import type { Avatar, UploadAvatarResponse } from '../types/index.js';
  * @returns Promise with generation response
  */
 export const generateAvatar = async (prompt: string): Promise<UploadAvatarResponse> => {
-  const response = await apiClient.post(envConfig.endpoints.avatar.generate, { prompt });
+  const response = await apiClient.post(
+    envConfig.endpoints.avatar.generate,
+    { prompt },
+    { timeout: 180_000 },
+  );
   console.log('[avatarService] Raw generateAvatar response from backend:', response);
   return response as unknown as UploadAvatarResponse;
 };

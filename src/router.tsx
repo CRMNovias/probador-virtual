@@ -33,6 +33,7 @@ import { GalleryPage } from './pages/GalleryPage.js';
 import { AppointmentsPage } from './pages/AppointmentsPage.js';
 import { FavoritesPage } from './pages/FavoritesPage.js';
 import { SharePage } from './pages/SharePage.js';
+import { CoupleTryOnPage } from './pages/CoupleTryOnPage.js';
 
 /**
  * Home Route Component
@@ -53,17 +54,16 @@ const HomeRoute: React.FC = () => {
     );
   }
 
-  // If authenticated with avatar, go to try-on
-  if (isAuthenticated && user?.hasAvatar) {
-    return <Navigate to={routes.TRY_ON} replace />;
+  // Sin nombre no hay probador: primero el wizard de datos.
+  if (isAuthenticated && user && !user.name) {
+    return <Navigate to={`${routes.AUTH}?step=registration`} replace />;
   }
 
-  // If authenticated without avatar, go to avatar creation
-  if (isAuthenticated && user && !user.hasAvatar) {
-    return <Navigate to={routes.AVATAR_CREATION} replace />;
+  // Con los datos hechos, la home es la colección.
+  if (isAuthenticated && user) {
+    return <Navigate to={routes.COLLECTIONS_BRIDE} replace />;
   }
 
-  // Not authenticated, show welcome landing
   return <WelcomePage />;
 };
 
@@ -105,7 +105,7 @@ export const AppRouter: React.FC = () => {
       <Route
         path={routes.TRY_ON}
         element={
-          <ProtectedRoute requireAvatar>
+          <ProtectedRoute>
             <TryOnPage />
           </ProtectedRoute>
         }
@@ -114,7 +114,7 @@ export const AppRouter: React.FC = () => {
       <Route
         path={routes.GALLERY}
         element={
-          <ProtectedRoute requireAvatar>
+          <ProtectedRoute>
             <GalleryPage />
           </ProtectedRoute>
         }
@@ -123,7 +123,7 @@ export const AppRouter: React.FC = () => {
       <Route
         path={routes.APPOINTMENTS}
         element={
-          <ProtectedRoute requireAvatar>
+          <ProtectedRoute>
             <AppointmentsPage />
           </ProtectedRoute>
         }
@@ -132,7 +132,7 @@ export const AppRouter: React.FC = () => {
       <Route
         path={routes.APPOINTMENTS_NEW}
         element={
-          <ProtectedRoute requireAvatar>
+          <ProtectedRoute>
             <BookAppointmentPage />
           </ProtectedRoute>
         }
@@ -141,7 +141,7 @@ export const AppRouter: React.FC = () => {
       <Route
         path={routes.COLLECTIONS_BRIDE}
         element={
-          <ProtectedRoute requireAvatar>
+          <ProtectedRoute>
             <BrideCollectionPage />
           </ProtectedRoute>
         }
@@ -150,8 +150,17 @@ export const AppRouter: React.FC = () => {
       <Route
         path={routes.COLLECTIONS_GROOM}
         element={
-          <ProtectedRoute requireAvatar>
+          <ProtectedRoute>
             <GroomCollectionPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={routes.COUPLE}
+        element={
+          <ProtectedRoute>
+            <CoupleTryOnPage />
           </ProtectedRoute>
         }
       />

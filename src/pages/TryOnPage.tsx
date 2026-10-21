@@ -6,14 +6,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../components/layout/Header.js';
 import { Loader } from '../components/shared/Loader.js';
 import { ShareModal } from '../components/shared/ShareModal.js';
 import { WatermarkedImage } from '../components/shared/WatermarkedImage.js';
 import { FavoriteButton } from '../components/shared/FavoriteButton.js';
 import { CollapsibleCard } from '../components/shared/CollapsibleCard.js';
+import { BackgroundPicker } from '../components/tryon/BackgroundPicker.js';
 import { useApp } from '../context/AppContext.js';
+import { useAuth } from '../context/AuthContext.js';
+import { backgroundNoteFor } from '../constants/backgrounds.js';
 import { getAvatar, deleteAvatar } from '../services/avatarService.js';
 import { generateTryOn, deleteTryOn } from '../services/tryOnService.js';
 import { downloadImage, generateTryOnFilename } from '../utils/downloadImage.js';
@@ -83,12 +86,6 @@ const EyeIcon = () => (
   </svg>
 );
 
-const RefreshIcon = ({ className = '' }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-  </svg>
-);
-
 // 3 Poses predefinidas (frontend) - UI display configuration
 const POSES = [
   {
@@ -122,7 +119,11 @@ interface GeneratedTryOn {
  */
 export const TryOnPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const { dressId, dressName, dressCategory } = useApp();
+  const [backgroundId, setBackgroundId] = useState('brand');
+  const [customBackground, setCustomBackground] = useState('');
 
   const [avatar, setAvatar] = useState<Avatar | null>(null);
   const [selectedPoseId, setSelectedPoseId] = useState(POSES[0]?.id || 'pose1');
@@ -156,40 +157,27 @@ export const TryOnPage: React.FC = () => {
     loadAvatar();
   }, []);
 
-  // Sin dressId no podemos probar nada — en lugar de un error, ofrecemos
-  // entrar al catálogo de Colección Novia / Colección Novio.
-  if (!dressId) {
+  const urlDressId = searchParams.get('dressId');
+  const activeDressId = urlDressId || dressId;
+
+  if (user && !user.hasAvatar && activeDressId) {
+    const params = new URLSearchParams();
+    params.set('dressId', activeDressId);
+    const name = searchParams.get('dressName') || dressName || '';
+    if (name) params.set('dressName', name);
+    const image = searchParams.get('imageUrl');
+    if (image) params.set('imageUrl', image);
+    const cat = searchParams.get('category') || dressCategory;
+    if (cat) params.set('category', cat);
+    return <Navigate to={`${routes.AVATAR_CREATION}?${params.toString()}`} replace />;
+  }
+
+  if (!activeDressId) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#F5F3EF] to-[#E8E4DD]">
-        <Header />
-        <main className="flex-1 flex items-center justify-center p-4">
-          <div className="bg-white/80 backdrop-blur-sm border border-[#D4C8BE] rounded-2xl p-8 max-w-md text-center shadow-xl">
-            <h2 className="text-2xl font-serif text-[#1a1a1a] mb-3">
-              Elige una prenda para empezar
-            </h2>
-            <p className="text-sm text-[#4a4a4a] leading-relaxed mb-6">
-              Explora nuestras colecciones y prueba virtualmente cualquier
-              vestido de novia o traje de novio.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                type="button"
-                onClick={() => navigate(routes.COLLECTIONS_BRIDE)}
-                className="px-5 py-3 rounded-md bg-black text-white text-sm tracking-widest hover:bg-[#1a1a1a] transition-colors"
-              >
-                COLECCIÓN NOVIA
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate(routes.COLLECTIONS_GROOM)}
-                className="px-5 py-3 rounded-md bg-white text-black text-sm tracking-widest border border-black hover:bg-black hover:text-white transition-colors"
-              >
-                COLECCIÓN NOVIO
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
+      <Navigate
+        to={dressCategory === 'groom' ? routes.COLLECTIONS_GROOM : routes.COLLECTIONS_BRIDE}
+        replace
+      />
     );
   }
 
@@ -207,28 +195,14 @@ export const TryOnPage: React.FC = () => {
       // Generate comprehensive AI prompt using professional template
       const fullPrompt = generateTryOnPrompt(selectedPose.id, dressId);
 
-      console.log('[TryOnPage] Generating try-on with:', {
-        dressId,
-        poseId: selectedPose.id,
-        poseName: selectedPose.name,
-        promptLength: fullPrompt.length,
-        promptPreview: fullPrompt.substring(0, 100) + '...'
-      });
-
+      const backgroundNote = backgroundNoteFor(backgroundId, customBackground);
       const request: GenerateTryOnRequest = {
         dressId,
         prompt: fullPrompt,
+        ...(backgroundNote ? { backgroundNote } : {}),
       };
 
-      console.log('[TryOnPage] Full prompt being sent to backend:', fullPrompt);
-
       const response = await generateTryOn(request);
-
-      console.log('[TryOnPage] Try-on generated successfully:', {
-        tryOnId: response.data.id,
-        imageUrl: response.data.imageUrl,
-        thumbnailUrl: response.data.thumbnailUrl
-      });
 
       setGeneratedTryOn({
         id: response.data.id,
@@ -240,17 +214,15 @@ export const TryOnPage: React.FC = () => {
 
       // Provide user-friendly error messages
       let errorMessage = 'Error al generar prueba virtual';
+      const serverMessage = err.response?.data?.message;
 
-      // Check for AI processing rejection
-      if (err.response?.data?.message === 'Error en procesamiento IA') {
+      if (serverMessage === 'Error en procesamiento IA') {
         errorMessage = 'La IA no pudo procesar esta imagen. Por favor, intenta regenerar tu avatar o inténtalo más tarde.';
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
+      } else if (typeof serverMessage === 'string' && serverMessage !== '') {
+        errorMessage = serverMessage;
       } else if (err.response?.status === 500) {
         errorMessage = 'Hubo un problema al generar la prueba virtual. Por favor, intenta regenerar tu avatar o inténtalo más tarde.';
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.message) {
+      } else if (err instanceof Error && err.message) {
         errorMessage = err.message;
       }
 
@@ -394,7 +366,7 @@ export const TryOnPage: React.FC = () => {
               order-1 en desktop. El CTA "Pide cita" se renderiza con
               order-2 en móvil para aparecer encima de la imagen y captar
               la atención inmediatamente tras los controles. */}
-          <div className="relative w-full h-[60vh] lg:h-full bg-white rounded-2xl shadow-xl flex items-center justify-center overflow-hidden border border-white/40 backdrop-blur-sm order-3 lg:order-1">
+          <div className="relative w-full h-[60vh] lg:h-full bg-white rounded-2xl shadow-xl flex items-center justify-center overflow-hidden border border-white/40 backdrop-blur-sm order-1">
             {isLoading && <Loader text={loadingMessage} />}
 
             {!isLoading && avatarError && (
@@ -425,28 +397,6 @@ export const TryOnPage: React.FC = () => {
                 />
 
                 {/* Regenerate Button and Info Note (solo si hay try-on generada) */}
-                {generatedTryOn && (
-                  <>
-                    {/* Info Note */}
-                    <div className="absolute top-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-[#D4C8BE]">
-                      <p className="text-xs text-center text-[#1a1a1a] leading-relaxed">
-                        Si el vestido o traje no aparecen correctamente pulsa en <span className="font-semibold">Reintentar</span>
-                      </p>
-                    </div>
-
-                    {/* Prominent Regenerate Button */}
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <button
-                        onClick={handleRegenerateTryOn}
-                        className="w-full flex items-center justify-center gap-3 bg-[#333333] text-white py-4 px-6 rounded-xl hover:shadow-2xl hover:bg-[#1a1a1a] transition-all duration-300 shadow-xl font-semibold"
-                      >
-                        <RefreshIcon className="w-5 h-5" />
-                        <span>Reintentar</span>
-                      </button>
-                    </div>
-                  </>
-                )}
-
                 {/* Secondary Action Buttons (solo si hay try-on generada) */}
                 {generatedTryOn && (
                   <div className="absolute top-20 right-4 flex flex-col gap-2">
@@ -500,36 +450,7 @@ export const TryOnPage: React.FC = () => {
               después de los controles, antes del canvas). En desktop esta
               versión queda oculta porque ya hay otra en la columna derecha
               al lado de la imagen. */}
-          {generatedTryOn && (
-            <div className="order-2 lg:hidden">
-              {(() => {
-                const garmentNoun = dressCategory === 'groom' ? 'traje' : 'vestido';
-                return (
-                  <div className="bg-[#1f1f1f] text-white p-5 rounded-2xl shadow-xl ring-2 ring-black/10">
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-white/60 mb-1">
-                      Tu próximo paso
-                    </p>
-                    <h2 className="text-lg md:text-xl font-serif leading-snug mb-2">
-                      Este es el primer paso para encontrar tu {garmentNoun}
-                    </h2>
-                    <p className="text-xs text-white/75 leading-relaxed mb-4">
-                      Ahora, ¡ven a probártelo a tu Atelier más cercano!
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => navigate(routes.APPOINTMENTS_NEW)}
-                      className="w-full bg-white text-[#1f1f1f] font-medium tracking-widest text-sm py-3 rounded-md hover:bg-gray-100 transition-colors"
-                    >
-                      PIDE CITA
-                    </button>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-
-          {/* Columna Derecha: Controles - order-1 en móvil (arriba), order-2 en desktop */}
-          <div className="flex flex-col gap-6 order-1 lg:order-2">
+          <div className="flex flex-col gap-6 order-2">
             {/* Error Display */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm backdrop-blur-sm">
@@ -546,10 +467,47 @@ export const TryOnPage: React.FC = () => {
 
             {/* Card: CTA Pide cita — visible en desktop. En móvil se renderiza
                  fuera de esta columna, justo debajo de la imagen generada. */}
+            {generatedTryOn && (
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(dressCategory === 'groom' ? routes.COLLECTIONS_GROOM : routes.COLLECTIONS_BRIDE)
+                }
+                className="w-full py-4 rounded-2xl bg-[#333333] text-white font-serif text-lg hover:bg-black"
+              >
+                Probar otra prenda
+              </button>
+            )}
+
+            {generatedTryOn && (
+              <button
+                type="button"
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (dressId) params.set('dressId', dressId);
+                  if (dressName) params.set('dressName', dressName);
+                  if (dressCategory) params.set('category', dressCategory);
+                  navigate(`${routes.COUPLE}?${params.toString()}`);
+                }}
+                className="w-full py-3 rounded-2xl border border-black text-black text-sm tracking-widest hover:bg-black hover:text-white"
+              >
+                VER CON MI PAREJA
+              </button>
+            )}
+
+            <div className="bg-white/60 backdrop-blur-sm px-5 py-4 rounded-2xl shadow-sm border border-white/40">
+              <BackgroundPicker
+                value={backgroundId}
+                custom={customBackground}
+                onChange={setBackgroundId}
+                onCustom={setCustomBackground}
+              />
+            </div>
+
             {generatedTryOn && (() => {
               const garmentNoun = dressCategory === 'groom' ? 'traje' : 'vestido';
               return (
-                <div className="hidden lg:block bg-[#1f1f1f] text-white p-5 rounded-2xl shadow-xl ring-2 ring-black/10">
+                <div className="bg-[#1f1f1f] text-white p-5 rounded-2xl shadow-xl ring-2 ring-black/10">
                   <p className="text-[10px] uppercase tracking-[0.3em] text-white/60 mb-1">
                     Tu próximo paso
                   </p>
@@ -561,7 +519,11 @@ export const TryOnPage: React.FC = () => {
                   </p>
                   <button
                     type="button"
-                    onClick={() => navigate(routes.APPOINTMENTS_NEW)}
+                      onClick={() =>
+                        navigate(
+                          `${routes.APPOINTMENTS_NEW}${dressCategory ? `?category=${dressCategory}` : ''}`,
+                        )
+                      }
                     className="w-full bg-white text-[#1f1f1f] font-medium tracking-widest text-sm py-3 rounded-md hover:bg-gray-100 transition-colors"
                   >
                     PIDE CITA
@@ -618,7 +580,7 @@ export const TryOnPage: React.FC = () => {
             {/* Card: Elige una pose — colapsable; abierta por defecto solo
                  cuando aún no hay try-on para no estorbar tras la primera
                  generación. */}
-            <CollapsibleCard label="Elige una pose" defaultOpen={!generatedTryOn}>
+            <CollapsibleCard label="Elige una pose" defaultOpen={false}>
               <div className="flex justify-center md:justify-start gap-4 pt-2">
                 {POSES.map(pose => (
                   <button
@@ -656,12 +618,16 @@ export const TryOnPage: React.FC = () => {
 
             {/* Generar Button */}
             <button
-              onClick={handleGenerate}
+              onClick={generatedTryOn ? handleRegenerateTryOn : handleGenerate}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 bg-[#333333] text-white py-5 rounded-2xl hover:shadow-2xl hover:bg-[#1a1a1a] transition-all duration-300 shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full flex items-center justify-center gap-3 py-5 rounded-2xl transition-all duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                generatedTryOn
+                  ? 'bg-white text-black border border-black'
+                  : 'bg-[#333333] text-white hover:bg-[#1a1a1a] shadow-xl'
+              }`}
             >
               <SparklesIcon className="w-6 h-6" />
-              <span className="font-serif">Generar Prueba Virtual</span>
+              <span className="font-serif">{generatedTryOn ? 'Reintentar' : 'Generar Prueba Virtual'}</span>
             </button>
           </div>
         </div>

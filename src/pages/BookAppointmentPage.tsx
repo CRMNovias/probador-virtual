@@ -5,17 +5,17 @@
  * Como el cliente ya está logueado, NO se piden datos de contacto: solo
  * atelier, servicio (Vestido de Novia / Traje de Novio), fecha y hora.
  *
- * Flujo:
- *  1. Atelier — selector con los 6 ateliers públicos.
- *  2. Servicio — Vestido de Novia o Traje de Novio.
- *  3. Fecha — calendario simple del mes vigente y siguiente; los días
- *     cerrados (festivos del atelier) quedan deshabilitados.
- *  4. Hora — slots reales devueltos por el CRM via findAppointments.
- *  5. Confirmar — POST que crea la cita en CRM y vuelve a /appointments.
+ * Flujo (mismo criterio que el plugin web Outlet):
+ *  1. Tienda — Madrid / Córdoba.
+ *  2. Servicio — solo los de esa tienda con in_web (Córdoba: novia).
+ *  3. Fecha — apertura tienda + min/max del servicio + cerrados/sin horas.
+ *  4. Hora — slots reales del CRM.
+ *  5. Confirmar — POST al CRM.
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.js';
 import { Header } from '../components/layout/Header.js';
 import { Button } from '../components/shared/Button.js';
 import {
@@ -23,6 +23,7 @@ import {
   listBookingServices,
   listClosedDays,
   listAvailability,
+  getBookingOpeningDate,
   bookAppointment,
   updateAppointmentBooking,
   getUserAppointments,
@@ -71,6 +72,13 @@ const buildMonthMatrix = (year: number, month: number /* 0..11 */): Array<Array<
 export const BookAppointmentPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const preferredCategory = searchParams.get('category') === 'groom'
+    ? 'groom'
+    : searchParams.get('category') === 'bride'
+      ? 'bride'
+      : null;
+  const shouldAutoAdvance = useRef(!searchParams.get('edit') && preferredCategory !== null);
 
   // Si llega `?edit=<id>` el wizard funciona en modo "modificar cita"
   // existente — precarga shop/service y hace PUT en vez de POST.
@@ -94,30 +102,40 @@ export const BookAppointmentPage: React.FC = () => {
 
   // Estados de carga/error por sección
   const [loadingCatalog, setLoadingCatalog] = useState<boolean>(true);
+  const [loadingServices, setLoadingServices] = useState<boolean>(false);
   const [loadingClosed, setLoadingClosed] = useState<boolean>(false);
   const [loadingSlots, setLoadingSlots] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [suggestedStartDate, setSuggestedStartDate] = useState<string | null>(null);
+  const [, setPendingEditAppointment] = useState<any | null>(null);
 
-  // Carga inicial: shops + services (+ cita actual si estamos editando)
+  // Carga inicial: solo tiendas (+ cita si editamos). Los servicios van por tienda.
   useEffect(() => {
     let cancelled = false;
-    const tasks: [Promise<BookingShop[]>, Promise<BookingService[]>, Promise<unknown>] = [
+    Promise.all([
       listBookingShops(),
-      listBookingServices(),
       isEditing ? getUserAppointments() : Promise.resolve(null),
-    ];
-
-    Promise.all(tasks)
-      .then(([s, sv, appointmentsRaw]) => {
+    ])
+      .then(([s, appointmentsRaw]) => {
         if (cancelled) return;
         setShops(s);
-        setServices(sv);
+
+        if (!isEditing) {
+          const profileShop = user?.shopId
+            ? s.find((shop) => shop.id === user.shopId) ?? null
+            : null;
+          const shop = profileShop ?? (s.length === 1 ? s[0] : null);
+          if (shop) {
+            setSelectedShop(shop);
+            setStep('service');
+            return;
+          }
+        }
 
         if (!isEditing || !appointmentsRaw) return;
 
-        // Buscamos la cita en today + upcoming
         const raw = appointmentsRaw as { data?: unknown } | unknown;
         const data: { today?: unknown[]; upcoming?: unknown[] } =
           raw && typeof raw === 'object' && 'data' in (raw as object)
@@ -134,18 +152,10 @@ export const BookAppointmentPage: React.FC = () => {
           return;
         }
 
-        // Pre-selección desde la cita actual.
         const matchedShop = s.find((shop) => shop.name === apt?.location?.name) ?? null;
         if (matchedShop) setSelectedShop(matchedShop);
+        setPendingEditAppointment(apt);
 
-        const matchedService =
-          (typeof apt?.service_id === 'number'
-            ? sv.find((sx) => sx.id === apt.service_id)
-            : null) ??
-          sv[0] ?? null;
-        if (matchedService) setSelectedService(matchedService);
-
-        // Fecha y hora desde el ISO string
         if (apt?.date) {
           const dt = new Date(apt.date);
           if (!isNaN(dt.getTime())) {
@@ -159,10 +169,11 @@ export const BookAppointmentPage: React.FC = () => {
             setCalendarMonth({ year: y, month: dt.getMonth() });
           }
         }
+        if (matchedShop) setStep('service');
       })
       .catch((err) => {
         console.error('[BookAppointment] Error cargando catálogos:', err);
-        if (!cancelled) setError('No se pudieron cargar los ateliers. Recarga la página.');
+        if (!cancelled) setError('No se pudieron cargar las tiendas. Recarga la página.');
       })
       .finally(() => {
         if (!cancelled) setLoadingCatalog(false);
@@ -172,17 +183,81 @@ export const BookAppointmentPage: React.FC = () => {
     };
   }, [isEditing, editId]);
 
-  // Cuando el cliente entra al paso "date" cargamos los días cerrados del shop
+  // Servicios online de la tienda elegida (como get_services del plugin).
   useEffect(() => {
-    if (step !== 'date' || !selectedShop) return;
+    if (!selectedShop) return;
     let cancelled = false;
-    setLoadingClosed(true);
-    listClosedDays(selectedShop.id)
-      .then((days) => {
-        if (!cancelled) setClosedDays(new Set(days));
+    setLoadingServices(true);
+    setError(null);
+    listBookingServices(selectedShop.id)
+      .then((sv) => {
+        if (cancelled) return;
+        setServices(sv);
+        if (shouldAutoAdvance.current && preferredCategory) {
+          const textOf = (service: BookingService) => `${service.name} ${service.label}`.toLowerCase();
+          const matched = preferredCategory === 'groom'
+            ? sv.find((service) => /novio|traje/.test(textOf(service)))
+            : sv.find((service) => /novia|vestido/.test(textOf(service)));
+          const chosen = matched ?? sv[0];
+          if (chosen) {
+            setSelectedService(chosen);
+            setStep('date');
+            shouldAutoAdvance.current = false;
+            return;
+          }
+        }
+        setPendingEditAppointment((apt: any | null) => {
+          if (!apt) {
+            setSelectedService((prev) =>
+              prev && sv.some((x) => x.id === prev.id) ? prev : null,
+            );
+            return null;
+          }
+          const matchedService =
+            (typeof apt?.service_id === 'number'
+              ? sv.find((sx) => sx.id === apt.service_id)
+              : null) ??
+            sv[0] ??
+            null;
+          if (matchedService) setSelectedService(matchedService);
+          return null;
+        });
       })
       .catch((err) => {
-        console.error('[BookAppointment] Error cargando días cerrados:', err);
+        console.error('[BookAppointment] Error cargando servicios:', err);
+        if (!cancelled) {
+          setServices([]);
+          setError('No se pudieron cargar los servicios de esta tienda.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingServices(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedShop?.id]);
+
+  // Calendario: closed-days + opening-date (plugin AtcrmCalendar).
+  useEffect(() => {
+    if (step !== 'date' || !selectedShop || !selectedService) return;
+    let cancelled = false;
+    setLoadingClosed(true);
+    Promise.all([
+      listClosedDays(selectedShop.id, selectedService.id),
+      getBookingOpeningDate(selectedShop.id),
+    ])
+      .then(([days, opening]) => {
+        if (cancelled) return;
+        setClosedDays(new Set(days));
+        setSuggestedStartDate(opening.suggestedStartDate);
+        if (opening.suggestedStartDate) {
+          const [y, m] = opening.suggestedStartDate.split('-').map(Number);
+          if (y && m) setCalendarMonth({ year: y, month: m - 1 });
+        }
+      })
+      .catch((err) => {
+        console.error('[BookAppointment] Error cargando calendario:', err);
       })
       .finally(() => {
         if (!cancelled) setLoadingClosed(false);
@@ -190,7 +265,7 @@ export const BookAppointmentPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [step, selectedShop]);
+  }, [step, selectedShop, selectedService]);
 
   // Cuando el cliente elige fecha, pedimos slots
   useEffect(() => {
@@ -226,17 +301,27 @@ export const BookAppointmentPage: React.FC = () => {
     return d;
   }, []);
 
-  // Ventana de reserva: mínimo 1 día de antelación, máximo 30.
+  // Ventana: antelación del servicio + apertura de tienda (plugin).
   const minBookableDate = useMemo(() => {
+    const minDays = Math.max(1, selectedService?.minDays ?? 1);
     const d = new Date(today);
-    d.setDate(d.getDate() + 1);
+    d.setDate(d.getDate() + minDays);
+    if (suggestedStartDate) {
+      const [y, m, day] = suggestedStartDate.split('-').map(Number);
+      if (y && m && day) {
+        const opening = new Date(y, m - 1, day);
+        opening.setHours(0, 0, 0, 0);
+        if (opening > d) return opening;
+      }
+    }
     return d;
-  }, [today]);
+  }, [today, selectedService, suggestedStartDate]);
   const maxBookableDate = useMemo(() => {
+    const maxDays = Math.max(1, selectedService?.maxDays ?? 30);
     const d = new Date(today);
-    d.setDate(d.getDate() + 30);
+    d.setDate(d.getDate() + maxDays);
     return d;
-  }, [today]);
+  }, [today, selectedService]);
 
   // Mes mostrado en el calendario (mes "actual" del navegador)
   const [calendarMonth, setCalendarMonth] = useState<{ year: number; month: number }>(() => {
@@ -260,7 +345,11 @@ export const BookAppointmentPage: React.FC = () => {
 
   const goBack = (): void => {
     setError(null);
-    if (step === 'service') setStep('shop');
+    // Si solo hay una tienda (Outlet), el paso "shop" se omite y desde
+    // "service" no se puede ir más atrás: la marca Outlet siempre reserva
+    // en Outlet Madrid (sin selector).
+    const singleShop = shops.length === 1;
+    if (step === 'service' && !singleShop) setStep('shop');
     else if (step === 'date') setStep('service');
     else if (step === 'hour') setStep('date');
     else if (step === 'confirm') setStep('hour');
@@ -301,50 +390,65 @@ export const BookAppointmentPage: React.FC = () => {
   // ============================================================
   // Render auxiliar — stepper
   // ============================================================
-  const stepIndex = (['shop', 'service', 'date', 'hour', 'confirm'] as WizardStep[]).indexOf(step);
+  // Cuando solo hay una tienda (Outlet) ocultamos el paso "shop" del progress
+  // bar para que el cliente no vea un paso fantasma.
+  const wizardSteps: WizardStep[] = shops.length === 1
+    ? ['service', 'date', 'hour', 'confirm']
+    : ['shop', 'service', 'date', 'hour', 'confirm'];
+  const stepIndex = wizardSteps.indexOf(step);
+  const totalSteps = wizardSteps.length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
 
-      <main className="flex-1 px-4 py-8 md:py-12">
+      <main className="flex-1 px-5 md:px-10 py-10 md:py-14">
         <div className="max-w-2xl mx-auto">
-          <div className="mb-6">
+          {/* Cabecera estilo Outlet: número, etiqueta, título serif. */}
+          <div className="mb-8 md:mb-10">
             {step !== 'shop' && (
               <button
                 type="button"
                 onClick={goBack}
                 disabled={submitting}
-                className="inline-flex items-center gap-1 text-sm text-[#4a4a4a] hover:text-[#1f1f1f] -ml-2 px-2 py-1 rounded-md hover:bg-black/5 transition-colors mb-3"
+                className="inline-flex items-center gap-2 text-[10px] tracking-[0.3em] font-bold uppercase text-black/60 hover:text-black transition-colors mb-6"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 12H5" />
                   <path d="M12 19l-7-7 7-7" />
                 </svg>
                 <span>Atrás</span>
               </button>
             )}
-            <div className="flex items-center gap-2 mb-2" aria-label={`Paso ${stepIndex + 1} de 5`}>
-              {Array.from({ length: 5 }).map((_, i) => (
+
+            <p className="font-mono text-xs tracking-widest text-black/40 mb-3">
+              {String(stepIndex + 1).padStart(2, '0')} / {String(totalSteps).padStart(2, '0')}
+            </p>
+
+            {/* Progress bar lineal, sin pills */}
+            <div className="flex gap-1 mb-5" aria-label={`Paso ${stepIndex + 1} de ${totalSteps}`}>
+              {Array.from({ length: totalSteps }).map((_, i) => (
                 <span
                   key={i}
-                  className={`h-1.5 w-8 rounded-full ${i <= stepIndex ? 'bg-black' : 'bg-black/20'}`}
+                  className={`h-[2px] flex-1 ${i <= stepIndex ? 'bg-black' : 'bg-black/15'}`}
                 />
               ))}
             </div>
-            <h1 className="text-3xl md:text-4xl text-[#000000] mt-3">
-              {isEditing ? 'Modificar cita' : 'Reservar cita'}
+
+            <p className="tracking-[0.3em] text-[10px] md:text-xs text-black/50 mb-2">RESERVA</p>
+            <h1 className="font-serif font-black text-black text-4xl md:text-6xl leading-none">
+              {isEditing ? 'Modificar' : 'Reservar'}
             </h1>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm text-center">{error}</p>
+            <div className="mb-6 border border-black/30 px-4 py-3 bg-neutral-50">
+              <p className="text-black text-sm text-center font-mono">{error}</p>
             </div>
           )}
           {successMsg && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 text-sm text-center">{successMsg}</p>
+            <div className="mb-6 border border-black px-4 py-3 bg-neutral-50">
+              <p className="text-black text-sm text-center font-mono">{successMsg}</p>
             </div>
           )}
 
@@ -368,7 +472,7 @@ export const BookAppointmentPage: React.FC = () => {
                           key={shop.id}
                           type="button"
                           onClick={() => setSelectedShop(shop)}
-                          className={`text-left p-4 rounded-xl border transition-colors ${
+                          className={`text-left p-4 border transition-colors ${
                             selected
                               ? 'border-black bg-black text-white'
                               : 'border-gray-200 bg-white hover:border-black'
@@ -392,7 +496,13 @@ export const BookAppointmentPage: React.FC = () => {
                       size="md"
                       fullWidth
                       disabled={!selectedShop}
-                      onClick={() => setStep('service')}
+                      onClick={() => {
+                        setSelectedService(null);
+                        setSelectedDate(null);
+                        setSelectedHour(null);
+                        setServices([]);
+                        setStep('service');
+                      }}
                     >
                       Continuar
                     </Button>
@@ -406,6 +516,15 @@ export const BookAppointmentPage: React.FC = () => {
                   <h2 className="text-lg font-semibold text-[#000000] mb-4">
                     ¿Qué quieres probarte?
                   </h2>
+                  {loadingServices ? (
+                    <div className="flex justify-center py-10">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-black" />
+                    </div>
+                  ) : services.length === 0 ? (
+                    <p className="text-sm text-black/60 text-center py-8">
+                      No hay servicios disponibles en esta tienda en este momento.
+                    </p>
+                  ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {services.map((sv) => {
                       const selected = selectedService?.id === sv.id;
@@ -414,7 +533,7 @@ export const BookAppointmentPage: React.FC = () => {
                           key={sv.id}
                           type="button"
                           onClick={() => setSelectedService(sv)}
-                          className={`text-center p-6 rounded-xl border transition-colors ${
+                          className={`text-center p-6 border transition-colors ${
                             selected
                               ? 'border-black bg-black text-white'
                               : 'border-gray-200 bg-white hover:border-black'
@@ -425,14 +544,19 @@ export const BookAppointmentPage: React.FC = () => {
                       );
                     })}
                   </div>
+                  )}
                   <div className="mt-6">
                     <Button
                       type="button"
                       variant="primary"
                       size="md"
                       fullWidth
-                      disabled={!selectedService}
-                      onClick={() => setStep('date')}
+                      disabled={!selectedService || loadingServices}
+                      onClick={() => {
+                        setSelectedDate(null);
+                        setSelectedHour(null);
+                        setStep('date');
+                      }}
                     >
                       Continuar
                     </Button>
@@ -443,7 +567,12 @@ export const BookAppointmentPage: React.FC = () => {
               {/* STEP 3 — Fecha */}
               {step === 'date' && (
                 <section>
-                  <h2 className="text-lg font-semibold text-[#000000] mb-4">Elige la fecha</h2>
+                  <h2 className="text-lg font-semibold text-[#000000] mb-2">Elige la fecha</h2>
+                  {selectedShop && selectedService && (
+                    <p className="text-sm text-gray-600 mb-4">
+                      {selectedShop.name} · {selectedService.label || selectedService.name}. Puedes volver atrás si quieres cambiarlo.
+                    </p>
+                  )}
 
                   {/* Navegación de mes */}
                   <div className="flex items-center justify-between mb-3">
@@ -592,7 +721,7 @@ export const BookAppointmentPage: React.FC = () => {
               {step === 'confirm' && selectedShop && selectedService && selectedDate && selectedHour && (
                 <section>
                   <h2 className="text-lg font-semibold text-[#000000] mb-4">Confirma tu cita</h2>
-                  <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                  <div className="border border-black/15 p-5 space-y-3">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Atelier</span>
                       <span className="text-sm font-medium">{selectedShop.name}</span>

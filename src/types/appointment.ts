@@ -78,13 +78,16 @@ export interface BookingShop {
   city: string;
   phone: string;
   email: string;
+  openingDate?: string | null;
 }
 
-/** Servicio reservable desde el Probador. */
+/** Servicio reservable desde el Probador (por tienda, como el plugin web). */
 export interface BookingService {
   id: number;
   name: string;
   label: string;
+  minDays?: number;
+  maxDays?: number;
 }
 
 /** Slot devuelto por `availability`. */

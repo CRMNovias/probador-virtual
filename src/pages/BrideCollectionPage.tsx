@@ -13,7 +13,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header.js';
 import { FilterDropdown } from '../components/collections/FilterDropdown.js';
+import { CollectionLens } from '../components/collections/CollectionLens.js';
+import { FavoriteButton } from '../components/shared/FavoriteButton.js';
 import { listBrideBrands, listBrideCuts, listBrides } from '../services/dressService.js';
+import { getFavoriteIds } from '../services/favoriteService.js';
 import { routes } from '../constants/routes.js';
 import type { CollectionBrand, CollectionItem } from '../types/index.js';
 
@@ -31,6 +34,7 @@ export const BrideCollectionPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
   // Marcas y cortes (catálogo)
   useEffect(() => {
@@ -41,6 +45,21 @@ export const BrideCollectionPage: React.FC = () => {
       .then(setCuts)
       .catch((err) => console.error('[BrideCollection] Error cargando cortes:', err));
   }, []);
+
+  useEffect(() => {
+    getFavoriteIds()
+      .then(setFavoriteIds)
+      .catch((err) => console.warn('[BrideCollection] No se pudieron cargar favoritos:', err));
+  }, []);
+
+  const handleFavoriteChange = (dressId: string, favorited: boolean): void => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (favorited) next.add(dressId);
+      else next.delete(dressId);
+      return next;
+    });
+  };
 
   /** Construye el payload de filtros activos. */
   const buildFilters = () => ({
@@ -95,6 +114,7 @@ export const BrideCollectionPage: React.FC = () => {
       dressId: item.dressId,
       dressName: item.name,
       category: 'bride',
+      imageUrl: item.imageUrl,
     });
     navigate(`${routes.TRY_ON}?${params.toString()}`);
   };
@@ -107,9 +127,12 @@ export const BrideCollectionPage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           {/* Cabecera */}
           <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <h1 className="text-2xl md:text-3xl tracking-[0.15em] text-[#000000]">
-              COLECCIÓN NOVIA
-            </h1>
+            <div className="flex flex-col gap-3">
+              <h1 className="text-2xl md:text-3xl tracking-[0.15em] text-[#000000]">
+                COLECCIÓN
+              </h1>
+              <CollectionLens active="bride" />
+            </div>
             <p className="text-xs text-gray-500">
               {loading ? 'Cargando…' : `${total} ${total === 1 ? 'vestido' : 'vestidos'}`}
             </p>
@@ -175,6 +198,14 @@ export const BrideCollectionPage: React.FC = () => {
                         loading="lazy"
                         className="absolute inset-0 w-full h-full object-cover"
                       />
+                      <div className="absolute top-2 right-2 z-10">
+                        <FavoriteButton
+                          variant="icon"
+                          dressId={item.dressId}
+                          initialFavorited={favoriteIds.has(item.dressId)}
+                          onChange={(favorited) => handleFavoriteChange(item.dressId, favorited)}
+                        />
+                      </div>
                       {/* Overlay con CTA — más compacto en móvil/tablet */}
                       <button
                         type="button"

@@ -57,6 +57,10 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   const hasInitial = typeof initialFavorited === 'boolean';
 
   useEffect(() => {
+    if (hasInitial) setFavorited(Boolean(initialFavorited));
+  }, [hasInitial, initialFavorited]);
+
+  useEffect(() => {
     if (hasInitial || !dressId) return undefined;
 
     const controller = new AbortController();

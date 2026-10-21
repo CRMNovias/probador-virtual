@@ -64,12 +64,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  /**
-   * Redirect to avatar creation if avatar is required but missing
-   */
+  if (user && !user.name) {
+    return <Navigate to="/auth?step=registration" replace />;
+  }
+
   if (requireAvatar && user && !user.hasAvatar) {
-    console.log('[ProtectedRoute] Redirecting to avatar-creation - user.hasAvatar:', user.hasAvatar, 'user:', user);
-    return <Navigate to="/avatar-creation" state={{ from: location }} replace />;
+    const search = location.search || '';
+    return <Navigate to={`/avatar-creation${search}`} state={{ from: location }} replace />;
   }
 
   /**

@@ -4,51 +4,25 @@
  * Helper functions to download images with watermark
  */
 
-import logoImg from '../assets/images/logo/logo.jpg';
-
 /**
- * Download an image with watermark applied
- * Uses canvas to composite watermark onto the image
+ * Downloads the try-on as stored. The brand logo is already in the image.
  *
  * @param imageUrl - URL of the image to download
  * @param filename - Name for the downloaded file (default: 'image.png')
  */
 export const downloadImage = async (imageUrl: string, filename: string = 'image.png'): Promise<void> => {
   try {
-    console.log('[downloadImage] Starting download with watermark:', { imageUrl, filename });
-
-    // Create canvas
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw new Error('Failed to get canvas context');
     }
 
-    // Load main image with CORS
     const mainImage = await loadImageWithCORS(imageUrl);
 
-    // Set canvas size
     canvas.width = mainImage.width;
     canvas.height = mainImage.height;
-
-    // Draw main image
     ctx.drawImage(mainImage, 0, 0);
-
-    // Load watermark (local file, no CORS issues)
-    const watermark = await loadImageWithCORS(logoImg);
-
-    // Watermark dimensions: 254x90 (original size)
-    const watermarkWidth = 254;
-    const watermarkHeight = 90;
-
-    // Position: 25px from right and bottom
-    const xPosition = canvas.width - watermarkWidth - 25;
-    const yPosition = canvas.height - watermarkHeight - 25;
-
-    // Draw watermark with transparency
-    ctx.globalAlpha = 0.9;
-    ctx.drawImage(watermark, xPosition, yPosition, watermarkWidth, watermarkHeight);
-    ctx.globalAlpha = 1.0;
 
     // Convert to blob and download
     canvas.toBlob((blob) => {

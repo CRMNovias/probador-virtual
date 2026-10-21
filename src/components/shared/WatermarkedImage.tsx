@@ -1,12 +1,10 @@
 /**
- * WatermarkedImage Component
- *
- * Displays an image with a watermark logo overlay in the bottom-right corner.
- * The watermark is positioned 25px from the right and bottom edges.
+ * Muestra la prueba tal cual llega del servidor.
+ * El logo de marca ya va dentro de la foto (arriba a la derecha, sin recuadro).
+ * No se superpone otro logo: el JPEG local tiene fondo blanco y salía abajo.
  */
 
 import React from 'react';
-import logoImg from '../../assets/images/logo/logo.jpg';
 
 export interface WatermarkedImageProps {
   /**
@@ -30,12 +28,6 @@ export interface WatermarkedImageProps {
   onClick?: () => void;
 }
 
-/**
- * WatermarkedImage Component
- *
- * Renders an image with the Atelier de Bodas logo watermark
- * positioned in the bottom-right corner (25px offset)
- */
 export const WatermarkedImage: React.FC<WatermarkedImageProps> = ({
   src,
   alt,
@@ -44,25 +36,10 @@ export const WatermarkedImage: React.FC<WatermarkedImageProps> = ({
 }) => {
   return (
     <div className={`relative ${className}`} onClick={onClick}>
-      {/* Main Image */}
       <img
         src={src}
         alt={alt}
         className="w-full h-full object-cover"
-      />
-
-      {/* Watermark Logo - Bottom Right with 25px offset */}
-      <img
-        src={logoImg}
-        alt="Atelier de Bodas"
-        className="absolute pointer-events-none"
-        style={{
-          bottom: '25px',
-          right: '25px',
-          width: '127px',   // 254px / 2 (50% scale for better visibility)
-          height: '45px',   // 90px / 2
-          opacity: 0.9,
-        }}
       />
     </div>
   );
