@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { Backdrop } from './backdrop';
-import { withBase } from '@v2/lib/base-path';
+import { asset } from '@v2/lib/base-path';
 
-const DEMO = withBase('/demo/prueba.jpg');
+const DEMO = asset('/demo/prueba.jpg');
 
 /**
  * Pantallas de formulario (entrar, datos). En móvil, una columna; en tablet, la

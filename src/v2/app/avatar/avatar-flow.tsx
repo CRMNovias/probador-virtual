@@ -12,7 +12,7 @@ import { brand } from '@v2/lib/brand';
 import { reviewPhoto, type PhotoReview } from '@v2/lib/photo-quality';
 import { useLoad } from '@v2/lib/use-load';
 import { turntableLabel, useTurntable } from '@v2/lib/use-turntable';
-import { withBase } from '@v2/lib/base-path';
+import { asset } from '@v2/lib/base-path';
 
 const MAX_MB = 10;
 const VERDICT = { good: 'La foto sirve', weak: 'Se puede mejorar', poor: 'Mejor con otra foto' } as const;
@@ -232,12 +232,12 @@ export function AvatarFlow() {
   return (
     <Layout
       back={back}
-      backdrop={withBase('/demo/avatar.jpg')}
+      backdrop={asset('/demo/avatar.jpg')}
       stage={
         <>
           {/* Ejemplo real: esta foto y el avatar que la IA creó con ella */}
           <Image
-            src={withBase('/demo/avatar.jpg')}
+            src={asset('/demo/avatar.jpg')}
             alt="Ejemplo de avatar de cuerpo entero creado con IA"
             fill
             priority
@@ -246,7 +246,7 @@ export function AvatarFlow() {
           />
           <figure className="absolute bottom-4 left-4 w-[28%] max-w-32">
             <Image
-              src={withBase('/examples/foto.jpg')}
+              src={asset('/examples/foto.jpg')}
               alt="Ejemplo de foto: selfie de frente con buena luz"
               width={600}
               height={600}

@@ -2,11 +2,11 @@ import Image from 'next/image';
 import { Backdrop } from '@v2/components/backdrop';
 import { LinkButton } from '@v2/components/ui';
 import { brand } from '@v2/lib/brand';
-import { withBase } from '@v2/lib/base-path';
+import { asset } from '@v2/lib/base-path';
 
 /** Giro real generado con IA: el avatar de la clienta de ejemplo con un vestido de la colección. */
-const DEMO_VIDEO = withBase('/demo/giro-360.mp4');
-const DEMO_STILL = withBase('/demo/prueba.jpg');
+const DEMO_VIDEO = asset('/demo/giro-360.mp4');
+const DEMO_STILL = asset('/demo/prueba.jpg');
 
 const STEPS = ['Tu foto', 'Tu avatar en 360°', 'Pruébate la colección'];
 

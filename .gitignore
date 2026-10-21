@@ -53,4 +53,4 @@ Thumbs.db
 .env
 
 # Probador V2: el vídeo de su portada sí va al repo.
-!public/v2/**/*.mp4
+!public/probador-v2/**/*.mp4
