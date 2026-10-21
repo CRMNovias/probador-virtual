@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+/*
+ * Estética de probador tipo Zara: blanco, negro puro, gris de estudio (el mismo
+ * fondo que genera la IA, para que el avatar no tenga corte), sin esquinas
+ * redondeadas y con etiquetas en mayúsculas.
+ */
+@theme {
+  --color-ivory: #ffffff;
+  --color-studio: #eceae7;
+  --color-sand: #eceae7;
+  --color-line: #e2e2e2;
+  --color-ink: #000000;
+  --color-muted: #6b6b6b;
+  --color-accent: #000000;
+  --color-danger: #b3261e;
+  --color-success: #2e6b34;
+
+  --font-sans: var(--font-inter), "Helvetica Neue", Arial, sans-serif;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  background: #ffffff;
+  color: #000000;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+/* Etiqueta en mayúsculas espaciadas (secciones, botones, pestañas). */
+@utility label-caps {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Espacio para la barra inferior y la zona segura del iPhone. */
+.pb-nav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 64rem) {
+  /* En ordenador el menú va arriba. */
+  .pb-nav {
+    padding-bottom: 4rem;
+  }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.shimmer {
+  background: linear-gradient(100deg, #eceae7 30%, #f5f4f2 50%, #eceae7 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
