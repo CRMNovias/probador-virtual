@@ -16,13 +16,14 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { href: '/probador', label: 'Probador', also: ['/avatar'], icon: Shirt },
+  { href: '/probador', label: 'Probador', also: [], icon: Shirt },
   { href: '/coleccion', label: 'Colección', also: [], icon: LayoutGrid },
   { href: '/mis-pruebas', label: 'Mis pruebas', short: 'Pruebas', also: [], icon: Images },
   { href: '/favoritos', label: 'Favoritos', also: [], icon: Heart },
   { href: '/citas', label: 'Citas', also: ['/cita/'] },
   // En móvil las citas viven dentro del perfil.
-  { href: '/perfil', label: 'Perfil', also: [], icon: UserRound },
+  // El avatar se cambia desde el perfil.
+  { href: '/perfil', label: 'Perfil', also: ['/avatar'], icon: UserRound },
 ];
 const MOBILE_NAV = NAV.filter((item) => item.icon);
 const MOBILE_ALSO: Record<string, readonly string[]> = { '/perfil': ['/citas', '/cita/'] };

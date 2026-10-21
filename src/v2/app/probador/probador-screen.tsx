@@ -161,13 +161,7 @@ export function ProbadorScreen() {
 
   return (
     <div className="flex h-dvh flex-col">
-      <TopBar
-        right={
-          <Link href="/avatar" className="grid size-11 place-items-center" aria-label="Mi avatar">
-            <UserRound className="size-5" strokeWidth={1.5} aria-hidden />
-          </Link>
-        }
-      />
+      <TopBar />
 
       {/* Móvil y tablet: escenario arriba y prendas abajo. Ordenador: prendas en una columna a la derecha. */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -271,8 +265,27 @@ export function ProbadorScreen() {
               </div>
             ) : null}
 
-            {/* Opciones de la prueba: dónde te ves y si sales con tu pareja (no son pasos obligatorios) */}
+            {/* Opciones de la prueba: con qué avatar, dónde te ves y si sales con tu pareja (no son pasos obligatorios) */}
             <div className="mb-3 flex items-center gap-3">
+              <Link
+                href="/avatar?next=/probador"
+                aria-disabled={busy}
+                aria-label="Avatar: cambiarlo"
+                className={`flex shrink-0 items-center gap-2 text-left ${busy ? 'pointer-events-none opacity-50' : ''}`}
+              >
+                <span className="grid size-8 shrink-0 place-items-center overflow-hidden bg-studio">
+                  {avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- imagen del CRM (S3)
+                    <img src={avatar.avatarUrl} alt="" className="h-full w-full object-cover object-top" />
+                  ) : (
+                    <UserRound className="size-4" strokeWidth={1.5} aria-hidden />
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[10px] uppercase tracking-[0.1em] text-muted">Avatar</span>
+                  <span className="label-caps block">Cambiar</span>
+                </span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setSheet('background')}

@@ -59,7 +59,9 @@ export function AvatarFlow() {
 
   const shown = avatarUrl ?? (step === 'intro' ? existing?.avatarUrl : null) ?? null;
   const turntable = useTurntable(shown, avatarTurntable);
-  const back = existing ? '/probador' : undefined;
+  // Se llega desde el probador o desde el perfil: se vuelve allí.
+  const back = existing ? next : undefined;
+  const doneLabel = next.startsWith('/perfil') ? 'Volver al perfil' : 'Ir al probador';
 
   useEffect(() => () => {
     if (preview) URL.revokeObjectURL(preview);
@@ -132,7 +134,7 @@ export function AvatarFlow() {
         </p>
         <div className="mt-5 space-y-2">
           <Button block onClick={() => router.push(next)}>
-            Ir al probador
+            {doneLabel}
           </Button>
           <Button
             block
