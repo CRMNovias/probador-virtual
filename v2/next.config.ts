@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
@@ -11,6 +12,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: 'https', hostname: 'atelierdebodas.com', pathname: '/wp-content/uploads/**' }],
   },
   turbopack: {
+    // La V2 vive en v2/ del repo de la V1, que tiene su propio package-lock: la raíz es esta carpeta.
+    root: path.resolve(__dirname),
     rules: {
       '*.css': {
         loaders: ['@tailwindcss/turbopack'],
