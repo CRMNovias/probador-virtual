@@ -64,8 +64,9 @@ Gemini Omni Flash (~1 $ por vídeo de 10 s). El 360 necesita `ffmpeg` para poner
 
 ## Despliegue
 
-En producción se sirve en `https://probador.crmnovias.com/v2`, en el mismo servidor que
-la V1 y con el mismo sistema (acción de GitHub por SSH + PM2). Pasos y requisitos en
+Vive en la carpeta `v2/` del repo de la V1 y se sirve en
+`https://probador.crmnovias.com/v2`, en el mismo servidor y con la misma acción de
+despliegue (un paso propio después del de la V1). Pasos y requisitos en
 [`docs/deploy.md`](docs/deploy.md).
 
 ## Cómo está hecho

@@ -1,30 +1,25 @@
 # Despliegue en probador.crmnovias.com/v2
 
-La V2 vive en el mismo servidor que la V1 (el de `probador.crmnovias.com`) y se
-despliega igual: cada push a `main` lanza `.github/workflows/deploy.yml`, que entra
-por SSH, hace `git pull`, compila y recarga la app en PM2. La V1 no se toca: nginx
-manda `/v2` a la V2 y todo lo demás sigue yendo a la V1.
+La V2 vive en la carpeta `v2/` del repo de la V1 (`CRMNovias/probador-virtual`) y se
+despliega con la misma acción (`.github/workflows/main.yml`): cada push a `main` entra
+por SSH al servidor, hace `git pull` y compila la V1 como siempre; después, en un paso
+aparte, compila la V2 y la recarga en PM2. Si la V1 falla, la V2 no se toca; si falla
+la V2, la V1 ya está desplegada. nginx manda `/v2` a la V2 y todo lo demás sigue yendo
+a la V1.
 
-A diferencia de la V1 (una SPA estática), la V2 es una app de Node: tiene pasarela al
-CRM, sesión en cookie httpOnly y genera los vídeos 360. Por eso necesita un proceso
-propio (PM2, puerto 3100) y `ffmpeg`.
+A diferencia de la V1 (una SPA), la V2 es una app de Node: tiene pasarela al CRM,
+sesión en cookie httpOnly y genera los vídeos 360. Por eso necesita un proceso propio
+(PM2, puerto 3100) y `ffmpeg`.
 
 ## Preparación única del servidor
 
 1. **Node 20.9 o superior** (`node -v`) y **ffmpeg** (`apt-get install -y ffmpeg`;
    sin él el 360 sale sin logo).
 
-2. **Código**, junto a la V1:
+2. **Código**: ya está, es el mismo clon de la V1 (`/home/probador/probador-virtual`);
+   la V2 llega con el `git pull` en `v2/`.
 
-   ```bash
-   cd /home/probador
-   git clone git@github.com:ARS-BRIDAL/probador-v2.git
-   ```
-
-   El servidor necesita poder leer el repo privado (una deploy key de solo lectura en
-   GitHub, como la que use la V1).
-
-3. **Variables**, en `/home/probador/probador-v2/.env.local` (no van al repo):
+3. **Variables**, en `/home/probador/probador-virtual/v2/.env.local` (no van al repo):
 
    ```bash
    NEXT_PUBLIC_BASE_PATH=/v2
@@ -32,13 +27,14 @@ propio (PM2, puerto 3100) y `ffmpeg`.
    GEMINI_API_KEY=...        # para el vídeo 360
    ```
 
-   `NEXT_PUBLIC_BASE_PATH` se lee al compilar: si cambia, hay que volver a compilar.
+   `NEXT_PUBLIC_BASE_PATH` se lee al compilar: si cambia, hay que volver a compilar. Sin
+   este archivo, la acción no despliega la V2 (para no publicarla mal configurada).
 
 4. **Primer arranque**:
 
    ```bash
-   cd /home/probador/probador-v2
-   npm ci && npm run build
+   cd /home/probador/probador-virtual && git pull origin main
+   cd v2 && npm ci && npm run build
    pm2 start ecosystem.config.cjs && pm2 save
    ```
 
@@ -61,9 +57,7 @@ propio (PM2, puerto 3100) y `ffmpeg`.
 
    Después: `nginx -t && systemctl reload nginx`.
 
-6. **GitHub**: en el repo `ARS-BRIDAL/probador-v2`, el secreto `DEPLOY_PRIVATE_KEY`
-   con la misma clave que usa la V1 para entrar por SSH. A partir de ahí, cada push a
-   `main` despliega solo.
+La clave SSH de la acción es la de la V1 (`DEPLOY_PRIVATE_KEY`, ya en el repo).
 
 ## Antes de abrirlo a clientas: límite del CRM
 
@@ -78,8 +72,8 @@ así el límite vuelve a ser por clienta, como con la V1.
 
 ## WhatsApp con el vídeo 360
 
-Para que el WhatsApp lleve el vídeo en lugar de la foto hace falta desplegar en el CRM
-la rama `feat/probador-v2-video-whatsapp` y que exista la plantilla de Meta
+Para que el WhatsApp lleve el vídeo en lugar de la foto hace falta el cambio del CRM
+(`ARS-BRIDAL/crmnovias-com#297`, ya en `master`) desplegado y la plantilla de Meta
 `probador_tryon_video` (ver `docs/crm-360.md`). Mientras no estén, se sigue mandando la
 foto.
 
@@ -87,4 +81,6 @@ foto.
 
 - `https://probador.crmnovias.com/v2` abre la portada de la V2.
 - `https://probador.crmnovias.com/` sigue siendo la V1.
+- En el servidor: `pm2 ls` muestra `probador-v2` *online* y
+  `curl -I http://127.0.0.1:3100/v2` responde la V2.
 - `pm2 logs probador-v2` muestra las peticiones y la generación de los 360 (`[360]`).
