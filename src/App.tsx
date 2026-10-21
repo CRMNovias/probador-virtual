@@ -11,7 +11,6 @@
 import React from 'react';
 import { AuthProvider } from './context/AuthContext.js';
 import { AppRouter } from './router.js';
-import { FullscreenButton } from './components/shared/FullscreenButton.js';
 
 /**
  * App Component
@@ -19,7 +18,6 @@ import { FullscreenButton } from './components/shared/FullscreenButton.js';
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <FullscreenButton />
       <AppRouter />
     </AuthProvider>
   );
