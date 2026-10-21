@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+
+const ATELIER_PAGE = 'https://atelierdebodas.com/probador-virtual/';
 
 const isEmbedded = (): boolean => {
   try {
@@ -9,53 +11,37 @@ const isEmbedded = (): boolean => {
 };
 
 /**
- * Dentro de atelierdebodas.com el probador vive en un iframe de 1000px.
- * El iframe ya lleva allowfullscreen, así que el documento puede ocupar
- * el navegador. Si el móvil no lo permite, se abre el probador aparte.
+ * El probador va en un iframe de atelierdebodas.com. Si el propio iframe
+ * pide pantalla completa, el navegador muestra probador.crmnovias.com.
+ * Por eso se abre la página de Atelier, no el dominio del CRM.
  */
 export const FullscreenButton: React.FC = () => {
   const [embedded] = useState(isEmbedded);
-  const [active, setActive] = useState(false);
 
-  useEffect(() => {
-    const sync = (): void => setActive(Boolean(document.fullscreenElement));
-    document.addEventListener('fullscreenchange', sync);
-    return () => document.removeEventListener('fullscreenchange', sync);
-  }, []);
-
-  if (!embedded && !active) {
+  if (!embedded) {
     return null;
   }
 
-  const openStandalone = (): void => {
-    const opened = window.open(window.location.href, '_blank', 'noopener,noreferrer');
+  const openOnAtelier = (): void => {
+    const width = window.screen?.availWidth ?? 1280;
+    const height = window.screen?.availHeight ?? 800;
+    const opened = window.open(
+      ATELIER_PAGE,
+      'atelier-probador',
+      `popup=yes,width=${width},height=${height},left=0,top=0`,
+    );
     if (!opened) {
-      window.location.assign(window.location.href);
+      window.open(ATELIER_PAGE, '_blank', 'noopener,noreferrer');
     }
-  };
-
-  const toggle = (): void => {
-    if (document.fullscreenElement) {
-      void document.exitFullscreen();
-      return;
-    }
-
-    const request = document.documentElement.requestFullscreen?.();
-    if (!request) {
-      openStandalone();
-      return;
-    }
-
-    request.catch(() => openStandalone());
   };
 
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={openOnAtelier}
       className="fixed top-3 right-3 z-50 whitespace-nowrap rounded-full border border-black bg-white px-3 py-1.5 text-[11px] font-medium tracking-wide text-black shadow-sm hover:bg-black hover:text-white"
     >
-      {active ? 'Salir' : 'Pantalla completa'}
+      Pantalla completa
     </button>
   );
 };
