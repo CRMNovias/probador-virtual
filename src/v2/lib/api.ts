@@ -248,9 +248,13 @@ export const generateTryOn = async (dressId: string, { backgroundNote, partner, 
   );
   return res.data as unknown as TryOn;
 };
+/** El CRM pone el modelo en el grupo y no en cada prueba: se copia a cada una (Mis pruebas enlaza con él). */
 export const listTryOns = () =>
-  call(() => apiClient.get(probador('tryons/user'))).then(
-    (res) => unwrap<{ tryOnsByDress?: TryOnGroup[] }>(res).tryOnsByDress ?? [],
+  call(() => apiClient.get(probador('tryons/user'))).then((res) =>
+    (unwrap<{ tryOnsByDress?: TryOnGroup[] }>(res).tryOnsByDress ?? []).map((g) => ({
+      ...g,
+      tryOns: g.tryOns.map((t) => ({ ...t, dressId: g.dressId })),
+    })),
   );
 export const deleteTryOn = (id: string) => call(() => tryOns.deleteTryOn(id));
 

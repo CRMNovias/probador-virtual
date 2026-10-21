@@ -128,7 +128,7 @@ export function ProfileScreen() {
 
         <ul className="mt-6 divide-y divide-line border-y border-line">
           <li>
-            <Link href="/avatar" className="flex items-center gap-4 py-4">
+            <Link href="/avatar?next=/perfil" className="flex items-center gap-4 py-4">
               <span className="relative block h-20 w-14 shrink-0 overflow-hidden bg-studio">
                 {avatar?.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element -- imagen del CRM (S3)
@@ -137,7 +137,7 @@ export function ProfileScreen() {
               </span>
               <span className="flex-1">
                 <span className="label-caps block">Mi avatar</span>
-                <span className="text-[13px] text-muted">{avatar ? 'Verlo en 360° o hacerlo con otra foto' : 'Aún no lo has creado'}</span>
+                <span className="text-[13px] text-muted">{avatar ? 'Cambiarlo con otra foto o verlo en 360°' : 'Aún no lo has creado'}</span>
               </span>
               <ChevronRight className="size-4 text-muted" strokeWidth={1.5} aria-hidden />
             </Link>
