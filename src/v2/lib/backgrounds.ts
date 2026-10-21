@@ -1,4 +1,4 @@
-import { withBase } from './base-path';
+import { asset } from './base-path';
 
 /**
  * Fondos del probador. Se mandan al CRM como `backgroundNote` (igual que la
@@ -20,37 +20,37 @@ export const BACKGROUNDS: Background[] = [
     id: 'estudio',
     label: 'Estudio',
     note: 'Un estudio fotográfico profesional con fondo continuo gris cálido claro y suelo del mismo tono, luz suave de softbox, sin objetos ni texto.',
-    image: withBase('/backgrounds/estudio.webp'),
+    image: asset('/backgrounds/estudio.webp'),
   },
   {
     id: 'playa',
     label: 'Playa',
     note: 'Una playa mediterránea tranquila al atardecer, arena clara y mar en calma detrás, luz dorada suave, sin gente ni texto.',
-    image: withBase('/backgrounds/playa.webp'),
+    image: asset('/backgrounds/playa.webp'),
   },
   {
     id: 'campo',
     label: 'Campo',
     note: 'Un campo abierto de espigas doradas al atardecer, horizonte suave y cielo despejado, sin gente ni texto.',
-    image: withBase('/backgrounds/campo.webp'),
+    image: asset('/backgrounds/campo.webp'),
   },
   {
     id: 'catedral',
     label: 'Catedral',
     note: 'El interior luminoso de una catedral gótica, pasillo central de piedra y vidrieras, luz cálida, sin gente ni texto.',
-    image: withBase('/backgrounds/catedral.webp'),
+    image: asset('/backgrounds/catedral.webp'),
   },
   {
     id: 'jardin',
     label: 'Jardín',
     note: 'Un jardín romántico de día con césped, setos y rosales blancos, luz natural suave, sin gente ni texto.',
-    image: withBase('/backgrounds/jardin.webp'),
+    image: asset('/backgrounds/jardin.webp'),
   },
   {
     id: 'finca',
     label: 'Finca',
     note: 'El patio de una finca andaluza con paredes encaladas, buganvillas y suelo de barro, luz de tarde, sin gente ni texto.',
-    image: withBase('/backgrounds/finca.webp'),
+    image: asset('/backgrounds/finca.webp'),
   },
 ];
 

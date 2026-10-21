@@ -1,4 +1,4 @@
-import { withBase } from './base-path';
+import { asset } from './base-path';
 
 /**
  * Marca del probador. Hoy solo Atelier; Outlet y Sedka usan el mismo CRM con
@@ -8,7 +8,7 @@ import { withBase } from './base-path';
 export const brand = {
   id: 'atelier',
   name: 'Atelier de Bodas',
-  logo: withBase('/logo-atelier.webp'),
+  logo: asset('/logo-atelier.webp'),
   website: 'https://atelierdebodas.com',
   privacyUrl: 'https://atelierdebodas.com/politica-de-privacidad/',
   bookingUrl: 'https://atelierdebodas.com/pide-cita/',

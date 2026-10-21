@@ -21,7 +21,8 @@ servidor aparte.
 - **Estilos**: Tailwind de la V1 con los colores de la V2 (`ink`, `studio`, `line`,
   `muted`… que la V1 no usa) y `label-caps` en `tailwind.config.js`; el resto, solo dentro
   de `.v2-root` (`src/v2/v2.css`). La V1 no cambia.
-- **Archivos**: `public/v2` (vídeo de la portada, fondos, logo).
+- **Archivos**: `public/probador-v2` (vídeo de la portada, fondos, logo). No van en
+  `public/v2`: una carpeta `v2` en el build hace que nginx responda 403 en `/v2`.
 
 ## Lo que hace el CRM
 
