@@ -71,7 +71,10 @@ export interface Favorite {
   id: string;
   dressId: string;
   dressName: string;
+  /** La de maniquí que usa la IA para la prueba. */
   dressImageUrl: string | null;
+  /** La primera foto del modelo en la web, como en Colección. */
+  imageUrl?: string | null;
 }
 
 export type Category = 'bride' | 'groom';

@@ -28,7 +28,7 @@ export function Favorites() {
         <GarmentCard
           key={f.dressId}
           href={`/probador?d=${f.dressId}`}
-          imageUrl={f.dressImageUrl}
+          imageUrl={f.imageUrl ?? f.dressImageUrl}
           name={f.dressName}
           detail="Probármelo"
           action={
