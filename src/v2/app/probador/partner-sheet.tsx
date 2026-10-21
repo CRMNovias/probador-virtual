@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
-import { Camera, Check, ImageUp } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Camera, Check, ImageUp, Search } from 'lucide-react';
 import { Sheet } from '@v2/components/sheet';
 import { Button, Notice } from '@v2/components/ui';
+import { listGarments } from '@v2/lib/api';
 import { photoToDataUrl } from '@v2/lib/images';
 import type { Category, CollectionItem } from '@v2/lib/types';
 
@@ -37,14 +38,42 @@ export function PartnerSheet({
   onClose: () => void;
 }) {
   const [image, setImage] = useState<string | null>(value?.image ?? null);
-  const [dressId, setDressId] = useState<string | null>(value?.dressId ?? null);
+  const [picked, setPicked] = useState<CollectionItem | null>(null);
   const [tab, setTab] = useState<Category | null>(null);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<{ key: string; items: CollectionItem[]; failed: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const category = tab ?? defaultCategory;
-  const list = garments?.[category] ?? null;
-  const dress = garments ? [...garments.bride, ...garments.groom].find((g) => g.dressId === dressId) : undefined;
+  const dress = picked ?? (value ? { dressId: value.dressId, name: value.dressName } : null);
+
+  // Sin buscar, los primeros modelos del catálogo; buscando, todo el catálogo (como en Colección).
+  const q = query.trim();
+  const searchKey = q.length >= 2 ? `${category}|${q}` : null;
+  useEffect(() => {
+    if (!searchKey) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      listGarments(category, { q }).then(
+        (res) => !cancelled && setResults({ key: searchKey, items: res.items, failed: false }),
+        () => !cancelled && setResults({ key: searchKey, items: [], failed: true }),
+      );
+    }, 350);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [searchKey, category, q]);
+  const found = searchKey && results?.key === searchKey ? results : null;
+  const firstPage = garments?.[category] ?? null;
+  const list = searchKey ? (found?.items ?? null) : firstPage;
+  // El elegido en una búsqueda sigue a la vista al borrarla.
+  const shown =
+    !searchKey && list && picked && (picked.category ?? category) === category && !list.some((g) => g.dressId === picked.dressId)
+      ? [picked, ...list]
+      : list;
+  const noun = category === 'groom' ? 'traje' : 'vestido';
 
   const pick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -104,28 +133,49 @@ export function PartnerSheet({
           ))}
         </div>
       </div>
-      <ul className="no-scrollbar -mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Prendas para tu pareja">
-        {(list ?? Array.from({ length: 4 }, () => null)).map((g, i) => (
-          <li key={g?.dressId ?? i} className="shrink-0">
-            {g ? (
-              <button type="button" aria-pressed={dressId === g.dressId} onClick={() => setDressId(g.dressId)} className="block w-[72px] text-left">
-                <span className={`relative block aspect-[3/4] bg-studio ${dressId === g.dressId ? 'outline outline-1 outline-offset-2 outline-ink' : ''}`}>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- imagen del catálogo */}
-                  <img src={g.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
-                  {dressId === g.dressId ? (
-                    <span className="absolute right-1 top-1 grid size-4 place-items-center bg-white">
-                      <Check className="size-3" aria-hidden />
-                    </span>
-                  ) : null}
-                </span>
-                <span className="mt-1 block truncate text-[10px] uppercase tracking-[0.08em]">{g.name}</span>
-              </button>
-            ) : (
-              <span className="block aspect-[3/4] w-[72px] shimmer" />
-            )}
-          </li>
-        ))}
-      </ul>
+      <div className="relative mt-2">
+        <label htmlFor="partner-search" className="sr-only">
+          Buscar {noun} por nombre
+        </label>
+        <Search className="pointer-events-none absolute left-0 top-1/2 size-4 -translate-y-1/2 text-muted" strokeWidth={1.5} aria-hidden />
+        <input
+          id="partner-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={`Buscar ${noun} por nombre`}
+          autoComplete="off"
+          className="h-9 w-full border-0 border-b border-neutral-300 bg-transparent pl-6 text-base uppercase tracking-[0.06em] outline-none placeholder:text-[12px] placeholder:normal-case placeholder:tracking-normal placeholder:text-neutral-400 focus:border-ink"
+        />
+      </div>
+      {found && !found.items.length ? (
+        <p className="mt-3 text-[13px] text-muted" aria-live="polite">
+          {found.failed ? 'No se pudo buscar. Inténtalo de nuevo.' : `No encontramos ningún ${noun} con «${q}».`}
+        </p>
+      ) : (
+        <ul className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Prendas para tu pareja">
+          {(shown ?? Array.from({ length: 4 }, () => null)).map((g, i) => (
+            <li key={g?.dressId ?? i} className="shrink-0">
+              {g ? (
+                <button type="button" aria-pressed={dress?.dressId === g.dressId} onClick={() => setPicked(g)} className="block w-[72px] text-left">
+                  <span className={`relative block aspect-[3/4] bg-studio ${dress?.dressId === g.dressId ? 'outline outline-1 outline-offset-2 outline-ink' : ''}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- imagen del catálogo */}
+                    <img src={g.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    {dress?.dressId === g.dressId ? (
+                      <span className="absolute right-1 top-1 grid size-4 place-items-center bg-white">
+                        <Check className="size-3" aria-hidden />
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="mt-1 block truncate text-[10px] uppercase tracking-[0.08em]">{g.name}</span>
+                </button>
+              ) : (
+                <span className="block aspect-[3/4] w-[72px] shimmer" />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {error ? (
         <div className="mt-4">
