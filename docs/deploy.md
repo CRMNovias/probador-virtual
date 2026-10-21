@@ -18,7 +18,7 @@ propio (PM2, puerto 3100) y `ffmpeg`.
 
    ```bash
    cd /home/probador
-   git clone git@github.com:CRMNovias/probador-v2.git
+   git clone git@github.com:ARS-BRIDAL/probador-v2.git
    ```
 
    El servidor necesita poder leer el repo privado (una deploy key de solo lectura en
@@ -61,7 +61,7 @@ propio (PM2, puerto 3100) y `ffmpeg`.
 
    Después: `nginx -t && systemctl reload nginx`.
 
-6. **GitHub**: en el repo `CRMNovias/probador-v2`, el secreto `DEPLOY_PRIVATE_KEY`
+6. **GitHub**: en el repo `ARS-BRIDAL/probador-v2`, el secreto `DEPLOY_PRIVATE_KEY`
    con la misma clave que usa la V1 para entrar por SSH. A partir de ahí, cada push a
    `main` despliega solo.
 
