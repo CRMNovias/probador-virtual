@@ -21,3 +21,25 @@ jobs:
             git pull origin main
             npm install
             npm run build
+
+      # Probador V2 (carpeta v2/), en probador.crmnovias.com/v2. Va después de la
+      # V1 y no cambia nada de su paso. Preparación del servidor: v2/docs/deploy.md.
+      - name: Deploy V2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 144.76.145.228
+          username: root
+          port: 5555
+          key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          command_timeout: 20m
+          script: |
+            set -e
+            cd /home/probador/probador-virtual/v2
+            if [ ! -f .env.local ]; then
+              echo "Falta v2/.env.local: la V2 no se despliega (ver v2/docs/deploy.md)."
+              exit 1
+            fi
+            npm ci
+            npm run build
+            pm2 startOrReload ecosystem.config.cjs --update-env
+            pm2 save
