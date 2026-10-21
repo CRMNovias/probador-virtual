@@ -349,6 +349,15 @@ export function ProbadorScreen() {
                   >
                     <Download className="size-5" strokeWidth={1.5} aria-hidden />
                   </a>
+                ) : turntable?.status === 'failed' || turntable?.status === 'none' ? (
+                  <span
+                    role="img"
+                    aria-label="Esta prueba no tiene vídeo 360°"
+                    title="Esta prueba no tiene vídeo 360°"
+                    className="grid size-12 place-items-center border border-line text-neutral-300"
+                  >
+                    <Download className="size-5" strokeWidth={1.5} aria-hidden />
+                  </span>
                 ) : (
                   <span
                     role="img"

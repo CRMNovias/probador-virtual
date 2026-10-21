@@ -195,6 +195,8 @@ export const generateTryOn = (dressId: string, { backgroundNote, partner, pose =
     json({
       dressId,
       prompt: partner ? COUPLE_TRYON_PROMPT : tryOnPrompt(pose),
+      // El WhatsApp de la V2 lleva el vídeo 360 en lugar de la foto (lo manda el CRM al recibirlo).
+      deliverVideo: true,
       ...(backgroundNote ? { backgroundNote } : {}),
       ...(partner ? { partnerDressId: partner.dressId, partnerImage: partner.image } : {}),
     }),

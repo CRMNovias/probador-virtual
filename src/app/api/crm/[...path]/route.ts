@@ -17,6 +17,7 @@ const ALLOWED = [
 ];
 const SLOW = /(avatar\/generate|tryons\/generate|tryons\/partner)$/;
 const TURNTABLE = new RegExp(`^probador/${brand.id}/(?:avatar|tryons/([^/]+))/turntable$`);
+const GENERATE = new RegExp(`^probador/${brand.id}/tryons/generate$`);
 
 /** Imagen del CRM de la que sale el giro: el avatar o una prueba concreta. */
 const turntableImage = async (tryOnId: string | undefined, token: string): Promise<string | null> => {
@@ -56,9 +57,11 @@ const forward = async (request: Request, ctx: Ctx): Promise<Response> => {
 
   const search = new URL(request.url).search;
   const contentType = request.headers.get('content-type');
+  // La prueba se lee entera: hace falta saber si va con pareja para su 360.
+  const tryOnRequest = GENERATE.test(path) ? await request.text() : null;
   const res = await crmFetch(`/${path}${search}`, {
     method: request.method,
-    body: request.method === 'GET' || request.method === 'DELETE' ? null : request.body,
+    body: tryOnRequest ?? (request.method === 'GET' || request.method === 'DELETE' ? null : request.body),
     headers: contentType ? { 'Content-Type': contentType } : {},
     token,
     from: request,
@@ -73,7 +76,7 @@ const forward = async (request: Request, ctx: Ctx): Promise<Response> => {
   }
 
   // El CRM reemite el token al completar el perfil: se guarda y no se expone.
-  const body = (await res.json()) as { data?: { token?: string; tryOnsByDress?: TryOnGroup[] } };
+  const body = (await res.json()) as { data?: { token?: string; tryOnsByDress?: TryOnGroup[]; id?: string | number; imageUrl?: string } };
   if (body?.data?.token) {
     await setSessionToken(body.data.token);
     delete body.data.token;
@@ -81,6 +84,17 @@ const forward = async (request: Request, ctx: Ctx): Promise<Response> => {
   // Cada prueba lleva su 360 si ya está hecho, para marcarlo en «Mis pruebas».
   for (const group of body?.data?.tryOnsByDress ?? []) {
     for (const t of group.tryOns) t.turntable = (await readyTurntable(t.imageUrl)) ?? t.turntable ?? null;
+  }
+  // Nueva prueba: su 360 empieza ya en el servidor (aunque la clienta cierre la
+  // página) y, al terminar, el CRM lo manda por WhatsApp en lugar de la foto.
+  if (tryOnRequest && res.ok && body?.data?.id && body.data.imageUrl) {
+    const couple = Boolean((JSON.parse(tryOnRequest) as { partnerDressId?: string }).partnerDressId);
+    await bridgeTurntable(body.data.imageUrl, {
+      start: true,
+      kind: 'tryon',
+      couple,
+      delivery: { tryOnId: String(body.data.id), token },
+    });
   }
   return Response.json(body, { status: res.status });
 };

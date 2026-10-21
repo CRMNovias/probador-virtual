@@ -76,6 +76,13 @@ La V2 ya reenvía la IP de la clienta en `X-Forwarded-For`. Falta que el CRM con
 este servidor como proxy (Laravel `TrustProxies` con la IP del servidor del probador);
 así el límite vuelve a ser por clienta, como con la V1.
 
+## WhatsApp con el vídeo 360
+
+Para que el WhatsApp lleve el vídeo en lugar de la foto hace falta desplegar en el CRM
+la rama `feat/probador-v2-video-whatsapp` y que exista la plantilla de Meta
+`probador_tryon_video` (ver `docs/crm-360.md`). Mientras no estén, se sigue mandando la
+foto.
+
 ## Comprobar
 
 - `https://probador.crmnovias.com/v2` abre la portada de la V2.

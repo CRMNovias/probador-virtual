@@ -303,6 +303,16 @@ const routes = async (req, res, url) => {
     }
     return json(res, 200, { success: true, data: { total: state.tryOns.length, tryOnsByDress: [...groups.values()] } });
   }
+  // Probador V2: el giro 360 de la prueba para el WhatsApp (el CRM real lo sube a S3 y lo manda).
+  const turntableVideo = /^\/tryons\/([^/]+)\/turntable-video$/.exec(p);
+  if (m === 'POST' && turntableVideo) {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const size = Buffer.concat(chunks).length;
+    const what = size > 10_000 ? `vídeo 360 (${Math.round(size / 1024)} KB)` : 'foto (sin vídeo 360)';
+    console.log(`[whatsapp simulado] prueba ${turntableVideo[1]}: se mandaría ${what}`);
+    return json(res, 200, { success: true, data: { sent: true, videoUrl: null } });
+  }
   const deleteTryOn = /^\/tryons\/([^/]+)$/.exec(p);
   if (m === 'DELETE' && deleteTryOn) {
     state.tryOns = state.tryOns.filter((x) => x.id !== deleteTryOn[1]);

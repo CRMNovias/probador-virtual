@@ -5,6 +5,7 @@ import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Turntable } from '@/lib/types';
 import { generateTurntable, hasAi } from './ai.mjs';
+import { crmFetch, crmPath } from './crm';
 import { withBase } from '@/lib/base-path';
 
 /**
@@ -16,6 +17,8 @@ import { withBase } from '@/lib/base-path';
  *  3. pone el logo vectorial arriba a la derecha, en blanco o negro según lo
  *     claro que sea el fondo en esa esquina.
  * El resultado se guarda en disco y es el mismo vídeo que se ve y se descarga.
+ * En las pruebas, además, se sube al CRM para que lo mande por WhatsApp en
+ * lugar de la foto (`turntable-video`, ver docs/crm-360.md).
  */
 
 const DIR = path.join(process.cwd(), '.data', 'turntables');
@@ -105,7 +108,33 @@ const brand = async (input: string, output: string) => {
   return tone;
 };
 
-const render = async (id: string, imageUrl: string, kind: TurntableKind, couple: boolean, startedAt: number) => {
+/** La prueba del CRM que espera este vídeo para el WhatsApp, y el token de la clienta. */
+export interface Delivery {
+  tryOnId: string;
+  token: string;
+}
+
+/**
+ * Sube el giro al CRM para que lo mande por WhatsApp. Sin vídeo (el 360 no se
+ * pudo hacer) el CRM manda la foto, para que la clienta reciba algo igualmente.
+ */
+const deliver = async ({ tryOnId, token }: Delivery, video: string | null) => {
+  try {
+    const form = new FormData();
+    if (video) form.append('video', new Blob([await readFile(video)], { type: 'video/mp4' }), 'probador-360.mp4');
+    const res = await crmFetch(crmPath.probador(`tryons/${encodeURIComponent(tryOnId)}/turntable-video`), {
+      method: 'POST',
+      body: form,
+      token,
+      timeoutMs: 60_000,
+    });
+    if (!res.ok) console.warn('[360] WhatsApp', res.status, (await res.text().catch(() => '')).slice(0, 200));
+  } catch (err) {
+    console.error('[360] WhatsApp', err);
+  }
+};
+
+const render = async (id: string, imageUrl: string, kind: TurntableKind, couple: boolean, startedAt: number, delivery?: Delivery) => {
   const work = path.join(DIR, `${id}-work`);
   try {
     await mkdir(work, { recursive: true });
@@ -128,9 +157,11 @@ const render = async (id: string, imageUrl: string, kind: TurntableKind, couple:
     const final = path.join(work, 'final.mp4');
     if (withFfmpeg) console.log(`[360] logo en ${await brand(raw, final)}`);
     await rename(withFfmpeg ? final : raw, turntableFile(id));
+    if (delivery) await deliver(delivery, turntableFile(id));
   } catch (err) {
     console.error('[360]', err);
     await writeJob(id, { status: 'failed', startedAt, error: err instanceof Error ? err.message : String(err) });
+    if (delivery) await deliver(delivery, null);
   } finally {
     await rm(work, { recursive: true, force: true });
   }
@@ -142,10 +173,13 @@ export async function readyTurntable(imageUrl: string): Promise<Turntable | null
   return (await exists(turntableFile(id))) ? { status: 'ready', videoUrl: turntableUrl(id), posterUrl: imageUrl } : null;
 }
 
-/** Estado del giro de una imagen; con `start`, lo encarga si aún no existe. */
+/**
+ * Estado del giro de una imagen; con `start`, lo encarga si aún no existe.
+ * Con `delivery`, al terminar se manda al CRM para el WhatsApp de esa prueba.
+ */
 export async function bridgeTurntable(
   imageUrl: string,
-  { start, kind, couple = false }: { start: boolean; kind: TurntableKind; couple?: boolean },
+  { start, kind, couple = false, delivery }: { start: boolean; kind: TurntableKind; couple?: boolean; delivery?: Delivery },
 ): Promise<Turntable> {
   const ready = await readyTurntable(imageUrl);
   if (ready) return ready;
@@ -153,11 +187,13 @@ export async function bridgeTurntable(
   const id = turntableId(imageUrl);
   const job = await readJob(id);
   if (job?.status === 'processing' && Date.now() - job.startedAt < STALE_MS) return { status: 'processing' };
+  // Sin IA no hay vídeo: el CRM manda la foto.
+  if (start && delivery && !hasAi()) void deliver(delivery, null);
   if (!start || !hasAi()) return job?.status === 'failed' ? { status: 'failed', error: job.error } : { status: 'none' };
 
   const startedAt = Date.now();
   await writeJob(id, { status: 'processing', startedAt });
   // Tarda ~1 min: se responde ya y la pantalla consulta el estado cada pocos segundos.
-  void render(id, imageUrl, kind, couple, startedAt);
+  void render(id, imageUrl, kind, couple, startedAt, delivery);
   return { status: 'processing' };
 }
