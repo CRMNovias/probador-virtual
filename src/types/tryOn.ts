@@ -69,4 +69,6 @@ export interface GenerateTryOnRequest {
   partnerPhone?: string;
   /** Data URL o base64 de la foto de la pareja. */
   partnerImage?: string;
+  /** Probador V2: el CRM hace el 360 y, con la plantilla de vídeo, lo manda por WhatsApp en lugar de la foto. */
+  deliverVideo?: boolean;
 }

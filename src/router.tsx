@@ -13,7 +13,7 @@
  * - /share/:id (PUBLIC) - Share page for viewing shared images
  */
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/routing/ProtectedRoute.js';
 import { useAuth } from './context/AuthContext.js';
@@ -34,6 +34,9 @@ import { AppointmentsPage } from './pages/AppointmentsPage.js';
 import { FavoritesPage } from './pages/FavoritesPage.js';
 import { SharePage } from './pages/SharePage.js';
 import { CoupleTryOnPage } from './pages/CoupleTryOnPage.js';
+
+// Probador V2 (src/v2): todas sus pantallas bajo /v2, cargadas solo al entrar ahí.
+const V2App = lazy(() => import('./v2/routes.js'));
 
 /**
  * Home Route Component
@@ -171,6 +174,16 @@ export const AppRouter: React.FC = () => {
           <ProtectedRoute>
             <FavoritesPage />
           </ProtectedRoute>
+        }
+      />
+
+      {/* Probador V2 */}
+      <Route
+        path="/v2/*"
+        element={
+          <Suspense fallback={<div className="min-h-screen bg-white" />}>
+            <V2App />
+          </Suspense>
         }
       />
 

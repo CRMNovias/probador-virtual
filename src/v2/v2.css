@@ -1,0 +1,64 @@
+/*
+ * Estilos propios de la V2 (los de su globals.css), solo dentro de .v2-root
+ * para no cambiar nada de la V1. Los colores, la curva ease-out-soft y
+ * label-caps están en tailwind.config.js.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+.v2-root {
+  min-height: 100dvh;
+  background: #ffffff;
+  color: #000000;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.v2-root :focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+/* Espacio para la barra inferior y la zona segura del iPhone. */
+.v2-root .pb-nav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 64rem) {
+  /* En ordenador el menú va arriba. */
+  .v2-root .pb-nav {
+    padding-bottom: 4rem;
+  }
+}
+
+.v2-root .no-scrollbar {
+  scrollbar-width: none;
+}
+.v2-root .no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.v2-root .shimmer {
+  background: linear-gradient(100deg, #eceae7 30%, #f5f4f2 50%, #eceae7 70%);
+  background-size: 300% 100%;
+  animation: v2-shimmer 1.6s linear infinite;
+}
+
+@keyframes v2-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v2-root *,
+  .v2-root *::before,
+  .v2-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
