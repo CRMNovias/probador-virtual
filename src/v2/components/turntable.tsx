@@ -293,9 +293,12 @@ function TurntableView({ stillUrl, videoUrl, alt, pendingLabel, className = '' }
             >
               {paused ? <Play className="size-4" strokeWidth={1.5} aria-hidden /> : <Pause className="size-4" strokeWidth={1.5} aria-hidden />}
             </button>
+            {/* Encima de los botones de abajo (pantalla completa y pausa): en el visor estrecho no cabe entre ellos. */}
             {!touched ? (
-              <span className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
-                <span className="label-caps bg-white/85 px-2 py-1 text-ink/80">Desliza para girar</span>
+              <span
+                className={`pointer-events-none absolute inset-x-0 flex justify-center ${full ? 'bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+3rem)]' : 'bottom-14'}`}
+              >
+                <span className="label-caps whitespace-nowrap bg-white/85 px-2 py-1 !text-[10px] !tracking-[0.08em] text-ink/80">Desliza para girar</span>
               </span>
             ) : null}
           </>
