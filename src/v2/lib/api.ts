@@ -245,7 +245,8 @@ export const generateTryOn = async (dressId: string, { backgroundNote, partner, 
       deliverVideo: true,
       ...(backgroundNote ? { backgroundNote } : {}),
       ...(backgroundNote && twoStep ? { backgroundTwoStep: true } : {}),
-      ...(partner ? { partnerDressId: partner.dressId, partnerImage: partner.image } : {}),
+      // Con la pareja, el CRM pone delante de cada imagen quién es y de quién es la prenda.
+      ...(partner ? { partnerDressId: partner.dressId, partnerImage: partner.image, imageLabels: true } : {}),
     }),
   );
   return res.data as unknown as TryOn;
