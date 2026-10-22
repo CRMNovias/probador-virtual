@@ -34,7 +34,7 @@ const TABS: { id: Category; label: string }[] = [
  * Segundos que suele tardar la IA en vestir al avatar (imagen fija); con pareja,
  * algo más; con un fondo de exterior, un paso más (ver twoStep en generateTryOn).
  */
-const EXPECTED_SECONDS = { single: 50, couple: 65, scene: 30 };
+const EXPECTED_SECONDS = { single: 50, couple: 85, scene: 30 };
 
 /** Una prueba hecha en esta visita, con las opciones con que se hizo. */
 interface Made {

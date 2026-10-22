@@ -73,6 +73,8 @@ export interface GenerateTryOnRequest {
   deliverVideo?: boolean;
   /** Probador V2: con un fondo de exterior, primero la prueba en un estudio y luego solo el fondo (la persona cambia menos). */
   backgroundTwoStep?: boolean;
-  /** Probador V2: el CRM etiqueta cada imagen de la pareja (quién es y de quién es la prenda). */
-  imageLabels?: boolean;
+  /** Probador V2: la IA ve la prenda sin la modelo de la foto de la web. */
+  garmentOnly?: boolean;
+  /** Probador V2: la foto de pareja por pasos (cada uno vestido por separado y luego juntos); `prompt` es el de una persona. */
+  coupleInSteps?: boolean;
 }

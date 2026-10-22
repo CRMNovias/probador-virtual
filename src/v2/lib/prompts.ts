@@ -43,10 +43,3 @@ export type PoseId = keyof typeof POSES;
 
 export const tryOnPrompt = (pose: PoseId): string =>
   `${BASE_TRYON_PROMPT}\n\n**Pose Specification:**\n${POSES[pose].prompt}`;
-
-/**
- * Foto en pareja: el texto que manda la V1 (CoupleTryOnPage) más la sonrisa de
- * las pruebas; el CRM añade su bloque de pareja.
- */
-export const COUPLE_TRYON_PROMPT =
-  'Couple portrait of exactly two real people: person A (Image 1) and person B (Image 3). Person A wears the garment of Image 2 and person B wears the garment of Image 4, each one their own, even if that garment is usually worn by another gender: never swap the garments and never leave anyone in their previous clothes. Images 2 and 4 are catalogue photos: use them only for the garment and never copy the catalogue models, their faces, hair or bodies. Both people must be immediately recognizable as the people in Images 1 and 3; never invent, replace or add anyone. One photograph of both, full body. Both with a soft, natural, closed-mouth smile, relaxed and genuine, as in a happy wedding portrait; not a forced or toothy grin. Keep both faces, and any beard or moustache, exactly as in their photos.';
