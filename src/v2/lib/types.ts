@@ -63,6 +63,8 @@ export interface TryOn {
 export interface TryOnGroup {
   dressId: string;
   dressName: string;
+  /** El título del producto en la web; el adaptador lo pone en dressName (ver listTryOns). */
+  dressWebName?: string | null;
   dressImageUrl: string;
   tryOns: TryOn[];
 }
@@ -71,6 +73,8 @@ export interface Favorite {
   id: string;
   dressId: string;
   dressName: string;
+  /** El título del producto en la web; el adaptador lo pone en dressName (ver listFavorites). */
+  webName?: string | null;
   /** La de maniquí que usa la IA para la prueba. */
   dressImageUrl: string | null;
   /** La primera foto del modelo en la web, como en Colección. */

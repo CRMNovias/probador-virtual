@@ -251,11 +251,25 @@ export const generateTryOn = async (dressId: string, { backgroundNote, partner, 
   );
   return res.data as unknown as TryOn;
 };
+/**
+ * Nombre para la clienta: el título de la web («Imhotep») si el CRM lo manda; si no, el del
+ * CRM sin su referencia («Benedict (475-016)» → «Benedict», «EMILE 818/008» → «EMILE»),
+ * como hace el CRM en el WhatsApp.
+ */
+const garmentName = (webName: string | null | undefined, crmName: string) =>
+  webName ||
+  crmName
+    .replace(/\s*\([^)]*\d[^)]*\)\s*$/u, '')
+    .replace(/\s+\S*\/\S+\s*$/u, '')
+    .trim() ||
+  crmName;
+
 /** El CRM pone el modelo en el grupo y no en cada prueba: se copia a cada una (Mis pruebas enlaza con él). */
 export const listTryOns = () =>
   call(() => apiClient.get(probador('tryons/user'))).then((res) =>
     (unwrap<{ tryOnsByDress?: TryOnGroup[] }>(res).tryOnsByDress ?? []).map((g) => ({
       ...g,
+      dressName: garmentName(g.dressWebName, g.dressName),
       tryOns: g.tryOns.map((t) => ({ ...t, dressId: g.dressId })),
     })),
   );
@@ -290,5 +304,9 @@ export const listAppointments = () =>
   });
 
 // Favoritos (los de la V1)
-export const listFavorites = () => call(() => favorites.getFavorites()) as Promise<Favorite[]>;
+/** Con el nombre de la web si el CRM lo manda, como en Mis pruebas. */
+export const listFavorites = () =>
+  (call(() => favorites.getFavorites()) as Promise<Favorite[]>).then((list) =>
+    list.map((f) => ({ ...f, dressName: garmentName(f.webName, f.dressName) })),
+  );
 export const toggleFavorite = (dressId: string) => call(() => favorites.toggleFavorite(dressId));
