@@ -66,7 +66,7 @@ export function BookingFlow() {
   const [shopChoice, setShopChoice] = useState<number | null>(null);
   const [changingShop, setChangingShop] = useState(false);
   const fallbackShop =
-    (editing && shops.find((s) => s.name === editing.location.name)) ??
+    (editing && shops.find((s) => s.id === editing.shopId || s.name === editing.location.name)) ??
     shops.find((s) => s.id === profile?.shopId) ??
     (shops.length === 1 ? shops[0] : undefined);
   const shop = shops.find((s) => s.id === shopChoice) ?? fallbackShop ?? null;
@@ -77,6 +77,7 @@ export function BookingFlow() {
   const [serviceChoice, setServiceChoice] = useState<number | null>(null);
   const service =
     services?.find((s) => s.id === serviceChoice) ??
+    (editing ? services?.find((s) => s.id === editing.serviceId) : undefined) ??
     services?.find((s) => matchesCategory(s, category)) ??
     (services?.length === 1 ? services[0] : undefined) ??
     null;
