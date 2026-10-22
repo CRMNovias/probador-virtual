@@ -19,7 +19,8 @@ export const BACKGROUNDS: Background[] = [
   {
     id: 'estudio',
     label: 'Estudio',
-    note: 'Un estudio fotográfico profesional con fondo continuo gris cálido claro y suelo del mismo tono, luz suave de softbox, sin objetos ni texto.',
+    // Sin nombrar focos ni softbox: si se nombran, la IA los dibuja en la foto.
+    note: 'Un fondo continuo de estudio fotográfico, gris cálido claro, con el suelo del mismo tono, luz suave y difusa; solo el fondo liso, sin focos, lámparas, objetos ni texto.',
     image: asset('/backgrounds/estudio.webp'),
   },
   {
