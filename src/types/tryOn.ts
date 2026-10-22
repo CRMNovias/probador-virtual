@@ -73,4 +73,6 @@ export interface GenerateTryOnRequest {
   deliverVideo?: boolean;
   /** Probador V2: con un fondo de exterior, primero la prueba en un estudio y luego solo el fondo (la persona cambia menos). */
   backgroundTwoStep?: boolean;
+  /** Probador V2: el CRM etiqueta cada imagen de la pareja (quién es y de quién es la prenda). */
+  imageLabels?: boolean;
 }
