@@ -31,8 +31,11 @@ const TABS: { id: Category; label: string }[] = [
   { id: 'groom', label: 'Novio' },
 ];
 
-/** Segundos que suele tardar la IA en vestir al avatar (imagen fija); con pareja, algo más. */
-const EXPECTED_SECONDS = { single: 30, couple: 45 };
+/**
+ * Segundos que suele tardar la IA en vestir al avatar (imagen fija); con pareja,
+ * algo más; con un fondo de exterior, un paso más (ver twoStep en generateTryOn).
+ */
+const EXPECTED_SECONDS = { single: 50, couple: 65, scene: 30 };
 
 /** Una prueba hecha en esta visita, con las opciones con que se hizo. */
 interface Made {
@@ -122,6 +125,7 @@ export function ProbadorScreen() {
     try {
       const tryOn = await generateTryOn(selected.dressId, {
         backgroundNote: backgroundNote(background),
+        twoStep: background.id !== DEFAULT_BACKGROUND.id,
         partner: partner ? { dressId: partner.dressId, image: partner.image } : null,
       });
       setGenerated((g) => ({ ...g, [selected.dressId]: { tryOn, options, couple: Boolean(partner) } }));
@@ -156,7 +160,8 @@ export function ProbadorScreen() {
   };
 
   const busy = working !== null;
-  const expected = partner ? EXPECTED_SECONDS.couple : EXPECTED_SECONDS.single;
+  const expected =
+    (partner ? EXPECTED_SECONDS.couple : EXPECTED_SECONDS.single) + (background.id !== DEFAULT_BACKGROUND.id ? EXPECTED_SECONDS.scene : 0);
   const preset = BACKGROUNDS.find((b) => b.id === background.id);
 
   return (

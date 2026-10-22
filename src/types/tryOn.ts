@@ -71,4 +71,6 @@ export interface GenerateTryOnRequest {
   partnerImage?: string;
   /** Probador V2: el CRM hace el 360 y, con la plantilla de vídeo, lo manda por WhatsApp en lugar de la foto. */
   deliverVideo?: boolean;
+  /** Probador V2: con un fondo de exterior, primero la prueba en un estudio y luego solo el fondo (la persona cambia menos). */
+  backgroundTwoStep?: boolean;
 }

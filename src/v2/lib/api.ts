@@ -232,10 +232,12 @@ export interface TryOnOptions {
   /** Pareja: lo que lleva y su foto como data URL (src/v2/lib/images.ts). */
   partner?: { dressId: string; image: string } | null;
   pose?: PoseId;
+  /** Fondo de exterior: el CRM viste primero en un estudio y luego cambia solo el fondo (la persona cambia menos). */
+  twoStep?: boolean;
 }
 
 /** La prueba, con el fondo elegido y, si se quiere, con la pareja (como la V1). */
-export const generateTryOn = async (dressId: string, { backgroundNote, partner, pose = 'studio' }: TryOnOptions = {}): Promise<TryOn> => {
+export const generateTryOn = async (dressId: string, { backgroundNote, partner, pose = 'studio', twoStep = false }: TryOnOptions = {}): Promise<TryOn> => {
   const res = await call(() =>
     tryOns.generateTryOn({
       dressId,
@@ -243,6 +245,7 @@ export const generateTryOn = async (dressId: string, { backgroundNote, partner, 
       // El CRM hace el 360 de la prueba y, con la plantilla de vídeo, lo manda por WhatsApp en lugar de la foto.
       deliverVideo: true,
       ...(backgroundNote ? { backgroundNote } : {}),
+      ...(backgroundNote && twoStep ? { backgroundTwoStep: true } : {}),
       ...(partner ? { partnerDressId: partner.dressId, partnerImage: partner.image } : {}),
     }),
   );
