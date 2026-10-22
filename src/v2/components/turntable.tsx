@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pause, Play, Rotate3d } from 'lucide-react';
+import { ArrowLeft, Maximize2, Pause, Play, Rotate3d } from 'lucide-react';
 
 /**
  * Visor 360: reproduce el giro en bucle y, al arrastrar, gira con el dedo.
@@ -8,6 +8,10 @@ import { Pause, Play, Rotate3d } from 'lucide-react';
  * que el arrastre sea fluido también en el iPhone. Si el vídeo no permite
  * extraerlos (CORS del almacenamiento), el arrastre mueve el propio vídeo.
  * Sin vídeo, enseña la imagen fija.
+ *
+ * Se puede ver en pantalla completa: el visor pasa a ocupar toda la pantalla
+ * (y, donde el navegador lo permite, también sin sus barras). «Volver», el
+ * gesto o botón de atrás del móvil y Esc lo cierran sin salir de la página.
  */
 
 const FRAME_COUNT = 36;
@@ -73,6 +77,42 @@ function TurntableView({ stillUrl, videoUrl, alt, pendingLabel, className = '' }
   const [paused, setPaused] = useState(prefersReducedMotion);
   const [touched, setTouched] = useState(false);
   const [index, setIndex] = useState(0);
+  const [full, setFull] = useState(false);
+
+  // Pantalla completa: se apunta en el historial para que «atrás» la cierre en vez de salir.
+  const openFull = () => {
+    setFull(true);
+    window.history.pushState({ ...(window.history.state as object | null), turntableFull: true }, '');
+    void document.documentElement.requestFullscreen?.().catch(() => undefined);
+  };
+  const closeFull = useCallback(() => {
+    if ((window.history.state as { turntableFull?: boolean } | null)?.turntableFull) window.history.back();
+    else setFull(false);
+  }, []);
+  useEffect(() => {
+    if (!full) return;
+    const onPop = () => {
+      setFull(false);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    };
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) closeFull();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeFull();
+    };
+    window.addEventListener('popstate', onPop);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    window.addEventListener('keydown', onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = overflow;
+    };
+  }, [full, closeFull]);
 
   useEffect(() => {
     if (!videoUrl || !boxRef.current) return;
@@ -173,73 +213,101 @@ function TurntableView({ stillUrl, videoUrl, alt, pendingLabel, className = '' }
   };
 
   const live = Boolean(videoUrl && videoReady);
+  // En pantalla completa se ve la imagen entera, sobre negro.
+  const fit = full ? 'object-contain' : 'object-cover';
 
   return (
-    <div
-      ref={boxRef}
-      className={`relative aspect-[9/16] w-full select-none overflow-hidden bg-studio ${live ? 'cursor-grab touch-pan-y active:cursor-grabbing' : ''} ${className}`}
-      role="img"
-      aria-label={live ? `${alt}. Vista 360: arrastra o usa las flechas para girar.` : alt}
-      tabIndex={live ? 0 : -1}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
-      onKeyDown={onKeyDown}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element -- imágenes del CRM (S3) sin optimizador */}
-      <img src={stillUrl} alt="" draggable={false} className="absolute inset-0 h-full w-full object-cover" />
+    <div className={full ? 'fixed inset-0 z-[70] bg-black' : 'contents'}>
+      <div
+        ref={boxRef}
+        className={`relative select-none overflow-hidden ${full ? 'h-full w-full bg-black' : `aspect-[9/16] w-full bg-studio ${className}`} ${live ? 'cursor-grab touch-pan-y active:cursor-grabbing' : ''}`}
+        role="img"
+        aria-label={live ? `${alt}. Vista 360: arrastra o usa las flechas para girar.` : alt}
+        tabIndex={live ? 0 : -1}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onKeyDown={onKeyDown}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- imágenes del CRM (S3) sin optimizador */}
+        <img src={stillUrl} alt="" draggable={false} className={`absolute inset-0 h-full w-full ${fit}`} />
 
-      {videoUrl ? (
-        <video
-          ref={videoRef}
-          key={videoUrl}
-          src={videoUrl}
-          muted
-          playsInline
-          loop
-          autoPlay={!prefersReducedMotion()}
-          preload="auto"
-          onCanPlay={() => setVideoReady(true)}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
+        {videoUrl ? (
+          <video
+            ref={videoRef}
+            key={videoUrl}
+            src={videoUrl}
+            muted
+            playsInline
+            loop
+            autoPlay={!prefersReducedMotion()}
+            preload="auto"
+            onCanPlay={() => setVideoReady(true)}
+            className={`absolute inset-0 h-full w-full ${fit} transition-opacity duration-700 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
+          />
+        ) : null}
+
+        <canvas
+          ref={canvasRef}
+          aria-hidden
+          className={`absolute inset-0 h-full w-full ${fit} ${scrubbing && framesReady ? 'opacity-100' : 'opacity-0'}`}
         />
-      ) : null}
 
-      <canvas
-        ref={canvasRef}
-        aria-hidden
-        className={`absolute inset-0 h-full w-full object-cover ${scrubbing && framesReady ? 'opacity-100' : 'opacity-0'}`}
-      />
-
-      {live ? (
-        <>
-          <span className="label-caps pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 bg-white/85 px-2 py-1 text-ink">
-            <Rotate3d className="size-4" strokeWidth={1.5} aria-hidden />
-            360°
-          </span>
+        {full ? (
           <button
             type="button"
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={togglePause}
-            className="absolute bottom-3 right-3 grid size-9 place-items-center bg-white/85 text-ink"
-            aria-label={paused ? 'Reanudar el giro' : 'Pausar el giro'}
+            onClick={closeFull}
+            className="label-caps absolute left-3 top-[max(0.75rem,env(safe-area-inset-top))] z-10 inline-flex h-10 items-center gap-2 bg-white/90 px-3 text-ink"
           >
-            {paused ? <Play className="size-4" strokeWidth={1.5} aria-hidden /> : <Pause className="size-4" strokeWidth={1.5} aria-hidden />}
+            <ArrowLeft className="size-4" strokeWidth={1.5} aria-hidden />
+            Volver
           </button>
-          {!touched ? (
-            <span className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
-              <span className="label-caps bg-white/85 px-2 py-1 text-ink/80">Desliza para girar</span>
+        ) : (
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={openFull}
+            className="absolute bottom-3 left-3 z-10 grid size-9 place-items-center bg-white/85 text-ink"
+            aria-label="Ver en pantalla completa"
+          >
+            <Maximize2 className="size-4" strokeWidth={1.5} aria-hidden />
+          </button>
+        )}
+
+        {live ? (
+          <>
+            {full ? null : (
+              <span className="label-caps pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 bg-white/85 px-2 py-1 text-ink">
+                <Rotate3d className="size-4" strokeWidth={1.5} aria-hidden />
+                360°
+              </span>
+            )}
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={togglePause}
+              className={`absolute right-3 grid size-9 place-items-center bg-white/85 text-ink ${full ? 'bottom-[max(0.75rem,env(safe-area-inset-bottom))]' : 'bottom-3'}`}
+              aria-label={paused ? 'Reanudar el giro' : 'Pausar el giro'}
+            >
+              {paused ? <Play className="size-4" strokeWidth={1.5} aria-hidden /> : <Pause className="size-4" strokeWidth={1.5} aria-hidden />}
+            </button>
+            {!touched ? (
+              <span className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
+                <span className="label-caps bg-white/85 px-2 py-1 text-ink/80">Desliza para girar</span>
+              </span>
+            ) : null}
+          </>
+        ) : pendingLabel ? (
+          <span className="absolute inset-x-0 top-3 flex justify-center">
+            <span className="label-caps flex items-center gap-2 bg-white/85 px-2 py-1 text-ink/80">
+              <span className="size-1.5 animate-pulse bg-ink" aria-hidden />
+              {pendingLabel}
             </span>
-          ) : null}
-        </>
-      ) : pendingLabel ? (
-        <span className="absolute inset-x-0 top-3 flex justify-center">
-          <span className="label-caps flex items-center gap-2 bg-white/85 px-2 py-1 text-ink/80">
-            <span className="size-1.5 animate-pulse bg-ink" aria-hidden />
-            {pendingLabel}
           </span>
-        </span>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }
