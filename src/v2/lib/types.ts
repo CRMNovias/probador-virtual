@@ -107,6 +107,9 @@ export interface Appointment {
   date: string;
   status: string;
   location: { name: string; address: string; city: string; phone: string };
+  /** Atelier y servicio con los que se cambia la cita (el CRM puede haberla movido de tienda). */
+  shopId?: number;
+  serviceId?: number | null;
 }
 
 export interface BookingInput {
