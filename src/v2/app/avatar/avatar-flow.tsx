@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowRight, Camera, Download, ImageUp, RefreshCw } from 'lucide-react';
+import { ArrowRight, Camera, ImageUp, RefreshCw } from 'lucide-react';
 import { TopBar } from '@v2/components/app-shell';
 import { AiWait } from '@v2/components/ai-wait';
 import { Backdrop } from '@v2/components/backdrop';
 import { Turntable } from '@v2/components/turntable';
 import { Button, Eyebrow, Notice } from '@v2/components/ui';
-import { avatarTurntable, generateAvatar, getAvatar, uploadPhoto } from '@v2/lib/api';
+import { generateAvatar, getAvatar, uploadPhoto } from '@v2/lib/api';
 import { brand } from '@v2/lib/brand';
 import { reviewPhoto, type PhotoReview } from '@v2/lib/photo-quality';
 import { useLoad } from '@v2/lib/use-load';
-import { turntableLabel, useTurntable } from '@v2/lib/use-turntable';
 import { asset } from '@v2/lib/base-path';
 
 const MAX_MB = 10;
@@ -57,8 +56,8 @@ export function AvatarFlow() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
 
+  // El avatar se enseña en foto: sin vídeo 360, que se paga y no hace falta (solo las pruebas lo llevan).
   const shown = avatarUrl ?? (step === 'intro' ? existing?.avatarUrl : null) ?? null;
-  const turntable = useTurntable(shown, avatarTurntable);
   // Se llega desde el probador o desde el perfil: se vuelve allí.
   const back = existing ? next : undefined;
   const doneLabel = next.startsWith('/perfil') ? 'Volver al perfil' : 'Ir al probador';
@@ -117,13 +116,7 @@ export function AvatarFlow() {
         backdrop={shown}
         stage={
           <div className="relative flex h-full justify-center">
-            <Turntable
-              className="h-full !w-auto"
-              stillUrl={shown}
-              videoUrl={turntable?.status === 'ready' ? turntable.videoUrl : null}
-              pendingLabel={turntableLabel(turntable)}
-              alt="Tu avatar"
-            />
+            <Turntable className="h-full !w-auto" stillUrl={shown} alt="Tu avatar" />
           </div>
         }
       >
@@ -148,16 +141,6 @@ export function AvatarFlow() {
             <RefreshCw className="size-4" strokeWidth={1.5} aria-hidden />
             Hacerlo con otra foto
           </Button>
-          {turntable?.status === 'ready' && turntable.videoUrl ? (
-            <a
-              href={`${turntable.videoUrl}?download=1&name=avatar`}
-              download
-              className="label-caps flex h-10 items-center justify-center gap-2 underline underline-offset-4"
-            >
-              <Download className="size-4" strokeWidth={1.5} aria-hidden />
-              Descargar el vídeo 360°
-            </a>
-          ) : null}
         </div>
         {inputs}
       </Layout>

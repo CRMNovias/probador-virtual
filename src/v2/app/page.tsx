@@ -8,7 +8,7 @@ import { asset } from '@v2/lib/base-path';
 const DEMO_VIDEO = asset('/demo/giro-360.mp4');
 const DEMO_STILL = asset('/demo/prueba.jpg');
 
-const STEPS = ['Tu foto', 'Tu avatar en 360°', 'Pruébate la colección'];
+const STEPS = ['Tu foto', 'Tu avatar', 'Pruébatelo en 360°'];
 
 export default function WelcomePage() {
   return (

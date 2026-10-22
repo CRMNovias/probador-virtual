@@ -7,7 +7,6 @@ import { Backdrop } from '@v2/components/backdrop';
 import { Turntable } from '@v2/components/turntable';
 import { Button, Notice } from '@v2/components/ui';
 import {
-  avatarTurntable,
   generateTryOn,
   getAvatar,
   getGarment,
@@ -111,10 +110,11 @@ export function ProbadorScreen() {
   const options = optionsKey(background, partner);
   const upToDate = result?.options === options;
 
-  // El escenario enseña la prueba si existe; si no, el avatar.
+  // El escenario enseña la prueba si existe; si no, el avatar. Solo las pruebas
+  // llevan vídeo 360: el avatar se queda en foto (el vídeo se paga y no hace falta).
   const showing = result ? { key: `t:${result.tryOn.id}`, still: result.tryOn.imageUrl } : avatar ? { key: 'avatar', still: avatar.avatarUrl } : null;
-  const turntable = useTurntable(showing?.key ?? null, (start) =>
-    result ? tryOnTurntable(result.tryOn.id, start, result.couple) : avatarTurntable(start),
+  const turntable = useTurntable(result ? `t:${result.tryOn.id}` : null, (start) =>
+    result ? tryOnTurntable(result.tryOn.id, start, result.couple) : Promise.resolve({ status: 'none' as const }),
   );
   const videoReady = turntable?.status === 'ready' && turntable.videoUrl ? turntable.videoUrl : null;
 
@@ -179,7 +179,7 @@ export function ProbadorScreen() {
                 className="h-full !w-auto"
                 stillUrl={showing.still}
                 videoUrl={turntable?.status === 'ready' ? turntable.videoUrl : null}
-                pendingLabel={busy ? null : turntableLabel(turntable)}
+                pendingLabel={busy || !result ? null : turntableLabel(turntable)}
                 alt={result && selected ? `Tu avatar con ${selected.name}` : 'Tu avatar'}
               />
             </div>

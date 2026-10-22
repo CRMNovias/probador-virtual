@@ -156,7 +156,7 @@ export const getAvatar = () =>
 export const generateAvatar = () =>
   call(() => avatars.generateAvatar(AVATAR_PROMPT)).then((res) => unwrap<{ avatarUrl: string }>(res));
 
-// Vídeo 360: lo genera el CRM (ver docs/crm-360.md)
+// Vídeo 360 de las pruebas: lo genera el CRM (ver docs/crm-360.md). El avatar va en foto, sin 360.
 const turntable = async (path: string, start: boolean): Promise<Turntable> => {
   try {
     const body = await call(() => (start ? apiClient.post(probador(path)) : apiClient.get(probador(path))));
@@ -166,7 +166,6 @@ const turntable = async (path: string, start: boolean): Promise<Turntable> => {
     throw e;
   }
 };
-export const avatarTurntable = (start = false) => turntable('avatar/turntable', start);
 /** `couple`: el CRM ya sabe si la prueba es de pareja; se mantiene por compatibilidad. */
 export const tryOnTurntable = (id: string, start = false, couple = false) =>
   turntable(`tryons/${id}/turntable${couple ? '?couple=1' : ''}`, start);

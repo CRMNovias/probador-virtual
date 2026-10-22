@@ -137,7 +137,7 @@ export function ProfileScreen() {
               </span>
               <span className="flex-1">
                 <span className="label-caps block">Mi avatar</span>
-                <span className="text-[13px] text-muted">{avatar ? 'Cambiarlo con otra foto o verlo en 360°' : 'Aún no lo has creado'}</span>
+                <span className="text-[13px] text-muted">{avatar ? 'Verlo o hacerlo con otra foto' : 'Aún no lo has creado'}</span>
               </span>
               <ChevronRight className="size-4 text-muted" strokeWidth={1.5} aria-hidden />
             </Link>
