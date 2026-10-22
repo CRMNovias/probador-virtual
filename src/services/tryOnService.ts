@@ -12,8 +12,11 @@ import { apiClient } from './apiClient.js';
 import { envConfig } from '../config/envConfig.js';
 import type { TryOnCategory, UploadTryOnResponse, GenerateTryOnRequest } from '../types/index.js';
 
-/** Gemini puede tardar; el timeout general de la API se queda corto. */
-const GENERATE_TIMEOUT_MS = 180_000;
+/**
+ * Gemini puede tardar; el timeout general de la API se queda corto. La foto de
+ * pareja de la V2 se hace por pasos y con un fondo de exterior pasa de 2 minutos.
+ */
+const GENERATE_TIMEOUT_MS = 300_000;
 
 interface StoredTryOn {
   id: string;

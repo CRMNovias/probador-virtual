@@ -9,7 +9,7 @@ import * as tryOns from '@/services/tryOnService';
 import * as users from '@/services/userService';
 import type { UserProfile as V1UserProfile } from '@/types/index';
 import { brand } from './brand';
-import { AVATAR_PROMPT, COUPLE_TRYON_PROMPT, tryOnPrompt, type PoseId } from './prompts';
+import { AVATAR_PROMPT, tryOnPrompt, type PoseId } from './prompts';
 import { signIn, signOut } from './session';
 import type {
   Appointment,
@@ -240,13 +240,15 @@ export const generateTryOn = async (dressId: string, { backgroundNote, partner, 
   const res = await call(() =>
     tryOns.generateTryOn({
       dressId,
-      prompt: partner ? COUPLE_TRYON_PROMPT : tryOnPrompt(pose),
+      // Con la pareja, el CRM viste a cada uno con este texto y luego los junta (coupleInSteps).
+      prompt: tryOnPrompt(pose),
+      // La IA ve la prenda sin la modelo de la foto de la web, que si no copiaba.
+      garmentOnly: true,
       // El CRM hace el 360 de la prueba y, con la plantilla de vídeo, lo manda por WhatsApp en lugar de la foto.
       deliverVideo: true,
       ...(backgroundNote ? { backgroundNote } : {}),
       ...(backgroundNote && twoStep ? { backgroundTwoStep: true } : {}),
-      // Con la pareja, el CRM pone delante de cada imagen quién es y de quién es la prenda.
-      ...(partner ? { partnerDressId: partner.dressId, partnerImage: partner.image, imageLabels: true } : {}),
+      ...(partner ? { partnerDressId: partner.dressId, partnerImage: partner.image, coupleInSteps: true } : {}),
     }),
   );
   return res.data as unknown as TryOn;
