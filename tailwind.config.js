@@ -37,6 +37,11 @@ export default {
         accent: '#000000',
         danger: '#b3261e',
       },
+      // Probador V2: pantalla ancha y apaisada (ordenador, tablet en horizontal).
+      // Una pantalla ancha pero vertical (tablet de pie) va como el móvil.
+      screens: {
+        wide: { raw: '(min-width: 1024px) and (orientation: landscape)' },
+      },
       transitionTimingFunction: {
         'out-soft': 'cubic-bezier(0.22, 1, 0.36, 1)',
       },

@@ -17,12 +17,14 @@ const FEATURES = [
 
 export default function WelcomePage() {
   return (
-    // Ordenador: el vídeo, vertical, solo ocupa su ancho y va junto al texto, los dos centrados.
-    <main className="flex h-dvh flex-col bg-white lg:flex-row lg:justify-center lg:gap-[clamp(3rem,6vw,8rem)] lg:px-[clamp(2rem,4vw,5rem)]">
+    // Móvil, tablet y pantallas verticales: el vídeo arriba, a media pantalla, y el texto debajo
+    // (se baja si no cabe). Pantalla apaisada (wide): el vídeo, vertical, junto al texto, los dos
+    // centrados; el vídeo no pasa de media pantalla para que el texto siempre quepa.
+    <main className="flex min-h-dvh flex-col bg-white wide:h-dvh wide:flex-row wide:justify-center wide:gap-[clamp(2.5rem,5vw,6rem)] wide:px-[clamp(1.5rem,4vw,5rem)]">
       {/* Escenario: la prueba girando, como en el probador */}
-      <div className="relative min-h-0 flex-1 bg-studio lg:aspect-[9/16] lg:h-full lg:flex-none">
+      <div className="relative h-[52dvh] shrink-0 bg-studio md:h-[56dvh] wide:h-full wide:w-[min(56.25dvh,50vw)]">
         <Backdrop src={DEMO_STILL} />
-        <Image src={DEMO_STILL} alt="" fill priority sizes="(min-width: 1024px) 60vh, 100vw" className="object-contain" />
+        <Image src={DEMO_STILL} alt="" fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-contain" />
         <video
           src={DEMO_VIDEO}
           poster={DEMO_STILL}
@@ -39,29 +41,28 @@ export default function WelcomePage() {
         <p className="label-caps absolute bottom-4 left-4 text-ink/70">360°</p>
       </div>
 
-      <div className="px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-6 md:mx-auto md:w-full md:max-w-md md:pb-10 lg:mx-0 lg:flex lg:w-full lg:max-w-[36rem] lg:flex-col lg:justify-center lg:px-0 lg:py-10">
-        <p className="label-caps text-muted lg:!text-[13px]">Probador virtual</p>
-        <h1 className="mt-2 text-[20px] font-light uppercase leading-tight tracking-[0.06em] lg:mt-3 lg:text-[34px] lg:leading-[1.12] xl:text-[42px]">
+      <div className="px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-6 md:mx-auto md:w-full md:max-w-xl md:px-8 md:pb-12 md:pt-10 wide:mx-0 wide:flex wide:max-w-[32rem] wide:flex-col wide:justify-center wide:px-0 wide:py-10">
+        <p className="label-caps text-muted">Probador virtual</p>
+        <h1 className="mt-2 text-[22px] font-light uppercase leading-[1.18] tracking-[0.06em] md:mt-3 md:text-[28px] wide:text-[30px]">
           ¡El primer paso hasta tu vestido o traje!
         </h1>
-        <p className="mt-2 text-[13px] leading-relaxed text-muted lg:mt-5 lg:text-[16px] xl:text-[17px]">
+        <p className="mt-3 text-[14px] leading-relaxed text-muted md:text-[16px] wide:mt-4 wide:text-[15px]">
           Descubre cómo te sientan tus diseños favoritos antes de venir a la tienda. Crea tu avatar y haz tu prueba en minutos.
         </p>
 
-        {/* Móvil: cada una en una línea. Ordenador: el título encima. */}
-        <ul className="mt-4 space-y-1.5 text-[12px] leading-snug lg:mt-8 lg:space-y-5 lg:text-[15px] xl:text-[16px]">
+        {/* Móvil: el título delante. Tablet y ordenador: el título encima. */}
+        <ul className="mt-4 space-y-2 text-[13px] leading-snug md:mt-7 md:space-y-4 md:text-[15px] wide:mt-6 wide:text-[14px]">
           {FEATURES.map((f) => (
             <li key={f.title}>
-              <span className="label-caps text-ink lg:block lg:!text-[13px]">{f.title}</span>{' '}
-              <span className="text-muted lg:mt-1 lg:block">{f.description}</span>
+              <span className="label-caps text-ink md:block">{f.title}</span> <span className="text-muted md:mt-1 md:block">{f.description}</span>
             </li>
           ))}
         </ul>
 
-        <LinkButton href="/entrar" block className="mt-6 lg:mt-10 lg:h-14 lg:!text-[13px]">
+        <LinkButton href="/entrar" block className="mt-6 md:mt-8">
           Empezar
         </LinkButton>
-        <p className="mt-3 text-center text-[11px] leading-relaxed text-muted lg:mt-4 lg:text-[12px]">
+        <p className="mt-3 text-center text-[11px] leading-relaxed text-muted md:text-[12px]">
           Recreación con IA; puede diferir del resultado real.{' '}
           <a href={brand.privacyUrl} className="underline underline-offset-2" target="_blank" rel="noopener">
             Privacidad
