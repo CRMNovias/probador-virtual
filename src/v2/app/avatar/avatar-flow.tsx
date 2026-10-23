@@ -73,6 +73,7 @@ export function AvatarFlow() {
     if (!chosen.type.startsWith('image/')) return setError('Elige una foto (JPG, PNG o HEIC).');
     if (chosen.size > MAX_MB * 1024 * 1024) return setError(`La foto pesa más de ${MAX_MB} MB. Prueba con otra o hazla de nuevo.`);
     setError(null);
+    setAvatarUrl(null);
     setFile(chosen);
     setPreview(URL.createObjectURL(chosen));
     setReview(await reviewPhoto(chosen));
@@ -94,10 +95,14 @@ export function AvatarFlow() {
     }
   };
 
-  const inputs = (
+  // Los selectores de foto van siempre en el mismo sitio, fuera de cada pantalla:
+  // si se cambiaba de pantalla al abrir la galería, React ponía otros y la foto
+  // elegida llegaba al viejo, que ya no estaba, y había que elegirla dos veces.
+  const withInputs = (screen: React.ReactNode) => (
     <>
       <input ref={cameraRef} type="file" accept="image/*" capture="user" className="sr-only" onChange={pick} tabIndex={-1} aria-hidden />
       <input ref={galleryRef} type="file" accept="image/*" className="sr-only" onChange={pick} tabIndex={-1} aria-hidden />
+      {screen}
     </>
   );
 
@@ -107,10 +112,10 @@ export function AvatarFlow() {
     </div>
   ) : null;
 
-  if (loading) return <Layout stage={<div className="h-full shimmer" aria-label="Cargando" />}>{null}</Layout>;
+  if (loading) return withInputs(<Layout stage={<div className="h-full shimmer" aria-label="Cargando" />}>{null}</Layout>);
 
   if (shown && (step === 'done' || step === 'intro')) {
-    return (
+    return withInputs(
       <Layout
         back={back}
         backdrop={shown}
@@ -129,26 +134,18 @@ export function AvatarFlow() {
           <Button block onClick={() => router.push(next)}>
             {doneLabel}
           </Button>
-          <Button
-            block
-            variant="secondary"
-            onClick={() => {
-              setAvatarUrl(null);
-              setStep('review');
-              galleryRef.current?.click();
-            }}
-          >
+          {/* La pantalla cambia cuando llega la foto (pick); si se cancela, sigue el avatar. */}
+          <Button block variant="secondary" onClick={() => galleryRef.current?.click()}>
             <RefreshCw className="size-4" strokeWidth={1.5} aria-hidden />
             Hacerlo con otra foto
           </Button>
         </div>
-        {inputs}
       </Layout>
     );
   }
 
   if (step === 'working') {
-    return (
+    return withInputs(
       <Layout
         stage={
           <>
@@ -173,7 +170,7 @@ export function AvatarFlow() {
   }
 
   if (step === 'review' && preview && review) {
-    return (
+    return withInputs(
       <Layout
         back={back}
         stage={
@@ -209,12 +206,11 @@ export function AvatarFlow() {
             Elegir otra foto
           </Button>
         </div>
-        {inputs}
       </Layout>
     );
   }
 
-  return (
+  return withInputs(
     <Layout
       back={back}
       backdrop={asset('/demo/avatar.jpg')}
@@ -262,7 +258,6 @@ export function AvatarFlow() {
           Elegir de la galería
         </Button>
       </div>
-      {inputs}
     </Layout>
   );
 }
