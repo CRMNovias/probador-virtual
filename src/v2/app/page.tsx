@@ -18,9 +18,9 @@ const FEATURES = [
 export default function WelcomePage() {
   return (
     // Móvil, tablet y pantallas verticales: el vídeo arriba, a media pantalla, y el texto debajo
-    // (se baja si no cabe). Pantalla apaisada (wide): el vídeo, vertical, junto al texto, los dos
-    // centrados; el vídeo no pasa de media pantalla para que el texto siempre quepa.
-    <main className="flex min-h-dvh flex-col bg-white wide:h-dvh wide:flex-row wide:justify-center wide:gap-[clamp(2.5rem,5vw,6rem)] wide:px-[clamp(1.5rem,4vw,5rem)]">
+    // (se baja si no cabe). Pantalla apaisada (wide): el vídeo, vertical, pegado a la izquierda y
+    // a su ancho (como mucho, media pantalla); el texto, centrado en el resto.
+    <main className="flex min-h-dvh flex-col bg-white wide:h-dvh wide:flex-row">
       {/* Escenario: la prueba girando, como en el probador */}
       <div className="relative h-[52dvh] shrink-0 bg-studio md:h-[56dvh] wide:h-full wide:w-[min(56.25dvh,50vw)]">
         <Backdrop src={DEMO_STILL} />
@@ -41,33 +41,35 @@ export default function WelcomePage() {
         <p className="label-caps absolute bottom-4 left-4 text-ink/70">360°</p>
       </div>
 
-      <div className="px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-6 md:mx-auto md:w-full md:max-w-xl md:px-8 md:pb-12 md:pt-10 wide:mx-0 wide:flex wide:max-w-[32rem] wide:flex-col wide:justify-center wide:px-0 wide:py-10">
-        <p className="label-caps text-muted">Probador virtual</p>
-        <h1 className="mt-2 text-[22px] font-light uppercase leading-[1.18] tracking-[0.06em] md:mt-3 md:text-[28px] wide:text-[30px]">
-          ¡El primer paso hasta tu vestido o traje!
-        </h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-muted md:text-[16px] wide:mt-4 wide:text-[15px]">
-          Descubre cómo te sientan tus diseños favoritos antes de venir a la tienda. Crea tu avatar y haz tu prueba en minutos.
-        </p>
+      <div className="px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-6 md:mx-auto md:w-full md:max-w-xl md:px-8 md:pb-12 md:pt-10 wide:mx-0 wide:flex wide:max-w-none wide:flex-1 wide:items-center wide:justify-center wide:px-[clamp(2.5rem,6vw,7rem)] wide:py-10">
+        <div className="wide:w-full wide:max-w-[clamp(32rem,30vw,38rem)]">
+          <p className="label-caps text-muted">Probador virtual</p>
+          <h1 className="mt-2 text-[22px] font-light uppercase leading-[1.18] tracking-[0.06em] md:mt-3 md:text-[28px] wide:text-[clamp(1.875rem,1.7vw,2.25rem)]">
+            ¡El primer paso hasta tu vestido o traje!
+          </h1>
+          <p className="mt-3 text-[14px] leading-relaxed text-muted md:text-[16px] wide:mt-4 wide:text-[clamp(0.9375rem,0.85vw,1.0625rem)]">
+            Descubre cómo te sientan tus diseños favoritos antes de venir a la tienda. Crea tu avatar y haz tu prueba en minutos.
+          </p>
 
-        {/* Móvil: el título delante. Tablet y ordenador: el título encima. */}
-        <ul className="mt-4 space-y-2 text-[13px] leading-snug md:mt-7 md:space-y-4 md:text-[15px] wide:mt-6 wide:text-[14px]">
-          {FEATURES.map((f) => (
-            <li key={f.title}>
-              <span className="label-caps text-ink md:block">{f.title}</span> <span className="text-muted md:mt-1 md:block">{f.description}</span>
-            </li>
-          ))}
-        </ul>
+          {/* Móvil: el título delante. Tablet y ordenador: el título encima. */}
+          <ul className="mt-4 space-y-2 text-[13px] leading-snug md:mt-7 md:space-y-4 md:text-[15px] wide:mt-6 wide:text-[clamp(0.875rem,0.8vw,1rem)]">
+            {FEATURES.map((f) => (
+              <li key={f.title}>
+                <span className="label-caps text-ink md:block">{f.title}</span> <span className="text-muted md:mt-1 md:block">{f.description}</span>
+              </li>
+            ))}
+          </ul>
 
-        <LinkButton href="/entrar" block className="mt-6 md:mt-8">
-          Empezar
-        </LinkButton>
-        <p className="mt-3 text-center text-[11px] leading-relaxed text-muted md:text-[12px]">
-          Recreación con IA; puede diferir del resultado real.{' '}
-          <a href={brand.privacyUrl} className="underline underline-offset-2" target="_blank" rel="noopener">
-            Privacidad
-          </a>
-        </p>
+          <LinkButton href="/entrar" block className="mt-6 md:mt-8">
+            Empezar
+          </LinkButton>
+          <p className="mt-3 text-center text-[11px] leading-relaxed text-muted md:text-[12px]">
+            Recreación con IA; puede diferir del resultado real.{' '}
+            <a href={brand.privacyUrl} className="underline underline-offset-2" target="_blank" rel="noopener">
+              Privacidad
+            </a>
+          </p>
+        </div>
       </div>
     </main>
   );
