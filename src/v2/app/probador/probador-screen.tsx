@@ -5,6 +5,7 @@ import { Check, Download, Heart, LoaderCircle, PenLine, RotateCcw, Share2, UserR
 import { BottomNav, TopBar } from '@v2/components/app-shell';
 import { Backdrop } from '@v2/components/backdrop';
 import { Turntable } from '@v2/components/turntable';
+import { ViewSwitch, type ViewOption } from '@v2/components/view-switch';
 import { Button, Notice } from '@v2/components/ui';
 import {
   generateTryOn,
@@ -35,6 +36,9 @@ const TABS: { id: Category; label: string }[] = [
  * algo más; con un fondo de exterior, un paso más (ver twoStep en generateTryOn).
  */
 const EXPECTED_SECONDS = { single: 50, couple: 85, scene: 30 };
+
+/** Vistas de una prueba: el giro 360, la foto de frente y las de detalle. */
+type View = 'turn' | 'front' | 'detail' | 'back';
 
 /** Una prueba hecha en esta visita, con las opciones con que se hizo. */
 interface Made {
@@ -118,6 +122,26 @@ export function ProbadorScreen() {
   );
   const videoReady = turntable?.status === 'ready' && turntable.videoUrl ? turntable.videoUrl : null;
 
+  // Vistas de la prueba: el 360 (con la foto mientras llega), la foto de frente y,
+  // cuando el CRM las tiene, las de detalle. Al cambiar de prueba, vuelve al 360.
+  const [viewChoice, setViewChoice] = useState<{ key: string | null; view: View }>({ key: null, view: 'turn' });
+  const detailFront = turntable?.details?.frontUrl ?? null;
+  const detailBack = turntable?.details?.backUrl ?? null;
+  const detailsPending = turntable?.details?.status === 'processing';
+  const viewOptions: ViewOption<View>[] = result
+    ? [
+        { id: 'turn', label: '360°', pending: !videoReady && (turntable === null || turntable.status === 'processing') },
+        { id: 'front', label: 'Frente' },
+        ...(detailFront || detailsPending ? [{ id: 'detail' as const, label: 'Detalle', pending: !detailFront }] : []),
+        ...(detailBack || detailsPending ? [{ id: 'back' as const, label: 'Espalda', pending: !detailBack }] : []),
+      ]
+    : [];
+  const chosen = result && viewChoice.key === showing?.key ? viewChoice.view : 'turn';
+  const viewUrl = { turn: result?.tryOn.imageUrl, front: result?.tryOn.imageUrl, detail: detailFront, back: detailBack }[chosen];
+  const view: View = viewUrl ? chosen : 'turn';
+  const stageStill = view === 'detail' || view === 'back' ? (viewUrl ?? null) : (showing?.still ?? null);
+  const showSwitch = Boolean(result) && working === null;
+
   const tryOn = async () => {
     if (!selected) return;
     setWorking(selected.dressId);
@@ -172,15 +196,36 @@ export function ProbadorScreen() {
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Escenario: el avatar o la prueba, girando sobre el gris de estudio */}
         <section className="relative min-h-0 flex-1 bg-studio" aria-label="Probador">
-          <Backdrop src={showing?.still ?? null} />
-          {showing ? (
+          <Backdrop src={stageStill} />
+          {showing && stageStill ? (
             <div className="relative flex h-full justify-center">
               <Turntable
                 className="h-full !w-auto"
-                stillUrl={showing.still}
-                videoUrl={turntable?.status === 'ready' ? turntable.videoUrl : null}
-                pendingLabel={busy || !result ? null : turntableLabel(turntable)}
-                alt={result && selected ? `Tu avatar con ${selected.name}` : 'Tu avatar'}
+                stillUrl={stageStill}
+                videoUrl={view === 'turn' && turntable?.status === 'ready' ? turntable.videoUrl : null}
+                pendingLabel={busy || !result || view !== 'turn' ? null : turntableLabel(turntable)}
+                badge={!showSwitch}
+                pendingPosition={showSwitch ? 'bottom-14' : 'top-3'}
+                overlay={
+                  showSwitch ? (
+                    <ViewSwitch
+                      options={viewOptions}
+                      value={view}
+                      onChange={(v) => {
+                        setViewChoice({ key: showing.key, view: v });
+                      }}
+                    />
+                  ) : null
+                }
+                alt={
+                  result && selected
+                    ? view === 'detail'
+                      ? `Detalle de ${selected.name}, por delante`
+                      : view === 'back'
+                        ? `Detalle de ${selected.name}, por detrás`
+                        : `Tu avatar con ${selected.name}`
+                    : 'Tu avatar'
+                }
               />
             </div>
           ) : (

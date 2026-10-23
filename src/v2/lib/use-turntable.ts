@@ -5,8 +5,8 @@ const POLL_MS = 4000;
 const GIVE_UP_MS = 6 * 60 * 1000;
 
 /**
- * Pide el vídeo 360 y consulta su estado hasta que está listo.
- * Si el CRM aún no ofrece el 360 (`none`), se queda con la imagen fija.
+ * Pide el vídeo 360 (y las fotos de detalle) y consulta su estado hasta que
+ * están listos. Si el CRM aún no ofrece el 360 (`none`), se queda con la imagen fija.
  */
 export function useTurntable(key: string | null, fetchTurntable: (start: boolean) => Promise<Turntable>) {
   const [state, setState] = useState<{ key: string | null; value: Turntable | null }>({ key: null, value: null });
@@ -22,7 +22,8 @@ export function useTurntable(key: string | null, fetchTurntable: (start: boolean
         const t = await fetchTurntable(start);
         if (cancelled) return;
         setState({ key, value: t });
-        if (t.status === 'processing' && Date.now() - started < GIVE_UP_MS) {
+        const pending = t.status === 'processing' || t.details?.status === 'processing';
+        if (pending && Date.now() - started < GIVE_UP_MS) {
           timer = window.setTimeout(() => void poll(false), POLL_MS);
         }
       } catch {

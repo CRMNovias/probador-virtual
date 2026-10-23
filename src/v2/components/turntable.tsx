@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, Maximize2, Pause, Play, Rotate3d } from 'lucide-react';
 
 /**
@@ -25,6 +25,12 @@ interface TurntableProps {
   alt: string;
   /** Texto sobre la imagen mientras se prepara el vídeo. */
   pendingLabel?: string | null;
+  /** La etiqueta «360°» arriba a la izquierda (sin ella si encima va el selector de vistas). */
+  badge?: boolean;
+  /** Dónde va el texto de «preparando» (abajo si arriba va el selector de vistas). */
+  pendingPosition?: string;
+  /** Algo más encima de la imagen, como el selector de vistas (no en pantalla completa). */
+  overlay?: ReactNode;
   className?: string;
 }
 
@@ -63,7 +69,7 @@ export function Turntable(props: TurntableProps) {
   return <TurntableView key={props.videoUrl ?? props.stillUrl} {...props} />;
 }
 
-function TurntableView({ stillUrl, videoUrl, alt, pendingLabel, className = '' }: TurntableProps) {
+function TurntableView({ stillUrl, videoUrl, alt, pendingLabel, badge = true, pendingPosition = 'top-3', overlay, className = '' }: TurntableProps) {
   const boxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -254,6 +260,8 @@ function TurntableView({ stillUrl, videoUrl, alt, pendingLabel, className = '' }
           className={`absolute inset-0 h-full w-full ${fit} ${scrubbing && framesReady ? 'opacity-100' : 'opacity-0'}`}
         />
 
+        {full ? null : overlay}
+
         {full ? (
           <button
             type="button"
@@ -278,7 +286,7 @@ function TurntableView({ stillUrl, videoUrl, alt, pendingLabel, className = '' }
 
         {live ? (
           <>
-            {full ? null : (
+            {full || !badge ? null : (
               <span className="label-caps pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 bg-white/85 px-2 py-1 text-ink">
                 <Rotate3d className="size-4" strokeWidth={1.5} aria-hidden />
                 360°
@@ -303,7 +311,7 @@ function TurntableView({ stillUrl, videoUrl, alt, pendingLabel, className = '' }
             ) : null}
           </>
         ) : pendingLabel ? (
-          <span className="absolute inset-x-0 top-3 flex justify-center">
+          <span className={`absolute inset-x-0 flex justify-center ${pendingPosition}`}>
             <span className="label-caps flex items-center gap-2 bg-white/85 px-2 py-1 text-ink/80">
               <span className="size-1.5 animate-pulse bg-ink" aria-hidden />
               {pendingLabel}
