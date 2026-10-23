@@ -16,6 +16,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.js';
+import { routes } from '../../constants/routes.js';
 
 export interface ProtectedRouteProps {
   /**
@@ -61,11 +62,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
    * Save the intended destination to redirect back after login
    */
   if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to={routes.AUTH} state={{ from: location }} replace />;
   }
 
   if (user && !user.name) {
-    return <Navigate to="/auth?step=registration" replace />;
+    return <Navigate to={`${routes.AUTH}?step=registration`} replace />;
   }
 
   if (requireAvatar && user && !user.hasAvatar) {

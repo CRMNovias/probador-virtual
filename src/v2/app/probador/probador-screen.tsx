@@ -189,17 +189,25 @@ export function ProbadorScreen() {
     setFavorites(next);
   };
 
+  // Dentro del marco de atelierdebodas.com el navegador no deja abrir el menú de
+  // compartir ni copiar: entonces se copia o, si tampoco, se abre WhatsApp con el enlace.
   const share = async () => {
     if (!result || !selected) return;
     const url = `${window.location.origin}${withBase(`/c/${result.tryOn.id}`)}?d=${selected.dressId}`;
-    try {
-      if (navigator.share) await navigator.share({ title: selected.name, text: `Así me queda ${selected.name} · ${brand.name}`, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        setNotice('Enlace copiado');
+    const text = `Así me queda ${selected.name} · ${brand.name}`;
+    if ('share' in navigator) {
+      try {
+        await navigator.share({ title: selected.name, text, url });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return; // menú cancelado
       }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setNotice('Enlace copiado');
     } catch {
-      // Menú de compartir cancelado.
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank', 'noopener');
     }
   };
 

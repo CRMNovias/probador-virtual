@@ -3,19 +3,22 @@
  *
  * React Router configuration with all application routes.
  *
- * Route Structure:
- * - / (HOME) - Redirects to /auth or /try-on based on auth state
- * - /auth (PUBLIC) - Authentication page
- * - /avatar-creation (PROTECTED) - Avatar creation page
- * - /try-on (PROTECTED, REQUIRES AVATAR) - Main try-on page
- * - /gallery (PROTECTED, REQUIRES AVATAR) - Gallery page
- * - /appointments (PROTECTED, REQUIRES AVATAR) - Appointments page
- * - /share/:id (PUBLIC) - Share page for viewing shared images
+ * La V2 (src/v2) va en la raíz y la V1 en /v1 (constants/routes.ts):
+ * - /v1 (HOME) - Redirects to /v1/auth or the collection based on auth state
+ * - /v1/auth (PUBLIC) - Authentication page
+ * - /v1/avatar-creation (PROTECTED) - Avatar creation page
+ * - /v1/try-on (PROTECTED, REQUIRES AVATAR) - Main try-on page
+ * - /v1/gallery (PROTECTED, REQUIRES AVATAR) - Gallery page
+ * - /v1/appointments (PROTECTED, REQUIRES AVATAR) - Appointments page
+ * - /v1/share/:id (PUBLIC) - Share page for viewing shared images
+ * Las direcciones de antes (la V1 sin /v1, la V2 con /v2) llevan a su pantalla
+ * de la V2 (components/routing/LegacyRedirect).
  */
 
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/routing/ProtectedRoute.js';
+import { LEGACY_V1_PATHS, LegacyShareRedirect, LegacyV1Redirect, LegacyV2Redirect } from './components/routing/LegacyRedirect.js';
 import { useAuth } from './context/AuthContext.js';
 import { useApp } from './context/AppContext.js';
 import { routes } from './constants/routes.js';
@@ -35,7 +38,7 @@ import { FavoritesPage } from './pages/FavoritesPage.js';
 import { SharePage } from './pages/SharePage.js';
 import { CoupleTryOnPage } from './pages/CoupleTryOnPage.js';
 
-// Probador V2 (src/v2): todas sus pantallas bajo /v2, cargadas solo al entrar ahí.
+// Probador V2 (src/v2): en la raíz, con su código y estilos aparte.
 const V2App = lazy(() => import('./v2/routes.js'));
 
 /**
@@ -177,19 +180,16 @@ export const AppRouter: React.FC = () => {
         }
       />
 
-      {/* Probador V2 */}
-      <Route
-        path="/v2/*"
-        element={
-          <Suspense fallback={<div className="min-h-screen bg-white" />}>
-            <V2App />
-          </Suspense>
-        }
-      />
+      {/* Direcciones de antes: la V1 sin /v1 y la V2 con /v2 */}
+      {LEGACY_V1_PATHS.map((path) => (
+        <Route key={path} path={path} element={<LegacyV1Redirect />} />
+      ))}
+      <Route path="/share/:id" element={<LegacyShareRedirect />} />
+      <Route path="/v2/*" element={<LegacyV2Redirect />} />
 
-      {/* 404 - Catch all */}
+      {/* 404 de la V1 */}
       <Route
-        path="*"
+        path={`${routes.HOME}/*`}
         element={
           <div className="min-h-screen flex items-center justify-center bg-[#faf9f7] p-4">
             <div className="text-center">
@@ -203,6 +203,16 @@ export const AppRouter: React.FC = () => {
               </a>
             </div>
           </div>
+        }
+      />
+
+      {/* Probador V2, en la raíz (su * lleva a la portada) */}
+      <Route
+        path="/*"
+        element={
+          <Suspense fallback={<div className="min-h-screen bg-white" />}>
+            <V2App />
+          </Suspense>
         }
       />
     </Routes>

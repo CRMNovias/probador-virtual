@@ -4,7 +4,7 @@ import { withBase, withoutBase } from '@v2/lib/base-path';
 
 /**
  * `next/navigation` para la V2 dentro de la V1, con React Router. Las rutas se
- * escriben sin el prefijo (como en la V2) y aquí se le añade /v2.
+ * escriben sin el prefijo (como en la V2) y aquí se le añade el suyo (base-path).
  */
 
 interface NavigateOptions {
@@ -34,7 +34,7 @@ export function useSearchParams(): URLSearchParams {
   return useRouterSearchParams()[0];
 }
 
-/** Ruta actual sin el prefijo /v2. */
+/** Ruta actual sin el prefijo de la V2. */
 export function usePathname(): string {
   return withoutBase(useLocation().pathname);
 }

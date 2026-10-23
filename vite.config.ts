@@ -18,7 +18,7 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/utils'),
       '@constants': path.resolve(__dirname, './src/constants'),
       '@assets': path.resolve(__dirname, './src/assets'),
-      // Probador V2 (src/v2, en /v2): sus importaciones de Next van a equivalentes con React Router.
+      // Probador V2 (src/v2, en la raíz): sus importaciones de Next van a equivalentes con React Router.
       '@v2': path.resolve(__dirname, './src/v2'),
       'next/link': path.resolve(__dirname, './src/v2/next/link.tsx'),
       'next/navigation': path.resolve(__dirname, './src/v2/next/navigation.ts'),
