@@ -50,6 +50,14 @@ export interface Turntable {
   videoUrl?: string;
   posterUrl?: string;
   error?: string;
+  /** Fotos de detalle de la prueba (de cerca por delante y por detrás), que el CRM hace junto al 360. */
+  details?: TryOnDetails;
+}
+
+export interface TryOnDetails {
+  status: 'none' | 'processing' | 'ready' | 'failed';
+  frontUrl?: string | null;
+  backUrl?: string | null;
 }
 
 export interface TryOn {
