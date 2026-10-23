@@ -4,11 +4,16 @@ import { LinkButton } from '@v2/components/ui';
 import { brand } from '@v2/lib/brand';
 import { asset } from '@v2/lib/base-path';
 
-/** Giro real generado con IA: el avatar de la clienta de ejemplo con un vestido de la colección. */
-const DEMO_VIDEO = asset('/demo/giro-360.mp4');
-const DEMO_STILL = asset('/demo/prueba.jpg');
+/** Giro 360 generado con IA de una pareja inventada (no son clientas) con prendas de la colección. */
+const DEMO_VIDEO = asset('/demo/giro-360-pareja.mp4');
+const DEMO_STILL = asset('/demo/pareja.jpg');
 
-const STEPS = ['Tu foto', 'Tu avatar', 'Pruébatelo en 360°'];
+/** Los textos de la portada de la V1, que gustaban. */
+const FEATURES = [
+  { title: 'Pruébatelo', description: 'Genera tu avatar realista y visualiza los modelos.' },
+  { title: 'Inspírate', description: 'Descubre los modelos que más te gusten.' },
+  { title: 'Decídete', description: `Reserva tu cita y vive la experiencia al completo en ${brand.name}.` },
+];
 
 export default function WelcomePage() {
   return (
@@ -24,7 +29,7 @@ export default function WelcomePage() {
           muted
           loop
           playsInline
-          aria-label="Ejemplo: avatar con un vestido de novia girando 360°"
+          aria-label="Ejemplo: una pareja con un vestido de novia y un traje de la colección girando 360°"
           className="absolute inset-0 h-full w-full object-contain motion-reduce:hidden"
         />
         <header className="absolute inset-x-0 top-0 flex justify-center pt-[max(env(safe-area-inset-top),1rem)]">
@@ -35,17 +40,21 @@ export default function WelcomePage() {
 
       <div className="px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-6 md:mx-auto md:w-full md:max-w-md md:pb-10 lg:mx-0 lg:flex lg:w-[28rem] lg:max-w-none lg:flex-col lg:justify-center lg:px-12">
         <p className="label-caps text-muted">Probador virtual</p>
-        <h1 className="mt-2 text-[22px] font-light uppercase leading-tight tracking-[0.06em] lg:text-[28px]">
-          Pruébatelo antes de venir
+        <h1 className="mt-2 text-[20px] font-light uppercase leading-tight tracking-[0.06em] lg:text-[28px]">
+          ¡El primer paso hasta tu vestido o traje!
         </h1>
+        <p className="mt-2 text-[13px] leading-relaxed text-muted lg:mt-3">
+          Descubre cómo te sientan tus diseños favoritos antes de venir a la tienda. Crea tu avatar y haz tu prueba en minutos.
+        </p>
 
-        <ol className="mt-4 flex gap-4 text-[11px] uppercase tracking-[0.1em] text-muted lg:flex-col lg:gap-2">
-          {STEPS.map((step, i) => (
-            <li key={step}>
-              <span className="text-ink">{String(i + 1).padStart(2, '0')}</span> {step}
+        {/* Móvil: cada una en una línea. Ordenador: el título encima. */}
+        <ul className="mt-4 space-y-1.5 text-[12px] leading-snug lg:mt-6 lg:space-y-4">
+          {FEATURES.map((f) => (
+            <li key={f.title}>
+              <span className="label-caps text-ink lg:block">{f.title}</span> <span className="text-muted lg:mt-0.5 lg:block">{f.description}</span>
             </li>
           ))}
-        </ol>
+        </ul>
 
         <LinkButton href="/entrar" block className="mt-6">
           Empezar
