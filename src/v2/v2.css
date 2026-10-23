@@ -62,3 +62,25 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Prenda elegida en grande, donde el navegador no tiene View Transitions. */
+.v2-root .zoom-in {
+  animation: v2-zoom-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes v2-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* La transición de la prenda: algo más lenta que la que pone el navegador. */
+::view-transition-group(prenda-elegida) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}

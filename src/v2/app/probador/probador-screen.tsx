@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, Download, Heart, LoaderCircle, PenLine, RotateCcw, Share2, UserRound, Users } from 'lucide-react';
@@ -23,6 +24,7 @@ import type { Category, CollectionItem, TryOn } from '@v2/lib/types';
 import { useLoad } from '@v2/lib/use-load';
 import { turntableLabel, useTurntable } from '@v2/lib/use-turntable';
 import { BackgroundSheet } from './background-sheet';
+import { FOCUS_TRANSITION, GarmentFocus } from './garment-focus';
 import { PartnerSheet, type Partner } from './partner-sheet';
 import { withBase } from '@v2/lib/base-path';
 
@@ -73,6 +75,8 @@ export function ProbadorScreen() {
   const [tabChoice, setTab] = useState<Category | null>(wantedCategory === 'groom' || wantedCategory === 'bride' ? wantedCategory : null);
   const wantedId = params.get('d');
   const [selectedId, setSelectedId] = useState<string | null>(wantedId);
+  // La prenda elegida se ve en grande en lugar de la lista, hasta «Ver otros modelos».
+  const [focused, setFocused] = useState(Boolean(wantedId));
   const [generated, setGenerated] = useState<Record<string, Made>>({});
   const [background, setBackground] = useState<BackgroundChoice>({ id: DEFAULT_BACKGROUND.id });
   const [partner, setPartner] = useState<Partner | null>(null);
@@ -141,6 +145,22 @@ export function ProbadorScreen() {
   const view: View = viewUrl ? chosen : 'turn';
   const stageStill = view === 'detail' || view === 'back' ? (viewUrl ?? null) : (showing?.still ?? null);
   const showSwitch = Boolean(result) && working === null;
+
+  // Zoom entre la lista y la prenda en grande (View Transitions donde el navegador las tiene).
+  const zoom = (update: () => void) => {
+    if ('startViewTransition' in document && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.startViewTransition(() => {
+        flushSync(update);
+      });
+    } else {
+      update();
+    }
+  };
+
+  // Al volver a la lista, la prenda elegida queda a la vista.
+  useEffect(() => {
+    if (!focused && selectedId) document.getElementById(`prenda-${selectedId}`)?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }, [focused, selectedId]);
 
   const tryOn = async () => {
     if (!selected) return;
@@ -255,7 +275,10 @@ export function ProbadorScreen() {
                   role="tab"
                   type="button"
                   aria-selected={tab === t.id}
-                  onClick={() => setTab(t.id)}
+                  onClick={() => {
+                    setTab(t.id);
+                    setFocused(false);
+                  }}
                   className={`label-caps h-8 ${tab === t.id ? 'border-b border-ink text-ink' : 'text-neutral-400'}`}
                 >
                   {t.label}
@@ -267,43 +290,62 @@ export function ProbadorScreen() {
             </Link>
           </div>
 
-          <ul
-            className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-3 md:gap-3 md:px-6 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-3 lg:content-start lg:gap-x-2 lg:gap-y-4 lg:overflow-y-auto lg:overflow-x-hidden lg:py-4"
-            aria-label="Elige qué probarte"
-          >
-            {(garments ?? Array.from({ length: 6 }, () => null)).map((g, i) => (
-              <li key={g?.dressId ?? i} className="shrink-0">
-                {g ? (
-                  <button
-                    type="button"
-                    aria-pressed={selectedId === g.dressId}
-                    onClick={() => {
-                      setSelectedId(g.dressId);
-                      setError(null);
-                    }}
-                    disabled={busy}
-                    className="block w-[76px] text-left md:w-[96px] lg:w-full"
-                  >
-                    <span className={`relative block aspect-[3/4] w-full bg-studio ${selectedId === g.dressId ? 'outline outline-1 outline-offset-2 outline-ink' : ''}`}>
-                      {/* eslint-disable-next-line @next/next/no-img-element -- imagen del catálogo */}
-                      <img src={g.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
-                      {triedIds.has(g.dressId) ? (
-                        <span className="absolute bottom-1 right-1 grid size-4 place-items-center bg-white" title="Ya probado">
-                          <Check className="size-3" aria-hidden />
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="mt-1.5 block truncate text-[11px] uppercase tracking-[0.08em]">{g.name}</span>
-                  </button>
-                ) : (
-                  <span className="block aspect-[3/4] w-[76px] shimmer md:w-[96px] lg:w-full" />
-                )}
-              </li>
-            ))}
-          </ul>
+          {focused && selected ? (
+            <GarmentFocus
+              garment={selected}
+              tried={triedIds.has(selected.dressId)}
+              onBack={() => {
+                zoom(() => {
+                  setFocused(false);
+                });
+              }}
+            />
+          ) : (
+            <ul
+              className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-3 md:gap-3 md:px-6 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-3 lg:content-start lg:gap-x-2 lg:gap-y-4 lg:overflow-y-auto lg:overflow-x-hidden lg:py-4"
+              aria-label="Elige qué probarte"
+            >
+              {(garments ?? Array.from({ length: 6 }, () => null)).map((g, i) => (
+                <li key={g?.dressId ?? i} className="shrink-0">
+                  {g ? (
+                    <button
+                      type="button"
+                      id={`prenda-${g.dressId}`}
+                      aria-pressed={selectedId === g.dressId}
+                      onClick={() => {
+                        zoom(() => {
+                          setSelectedId(g.dressId);
+                          setError(null);
+                          setFocused(true);
+                        });
+                      }}
+                      disabled={busy}
+                      className="block w-[76px] text-left md:w-[96px] lg:w-full"
+                    >
+                      <span
+                        className={`relative block aspect-[3/4] w-full bg-studio ${selectedId === g.dressId ? 'outline outline-1 outline-offset-2 outline-ink' : ''}`}
+                        style={selectedId === g.dressId ? { viewTransitionName: FOCUS_TRANSITION } : undefined}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- imagen del catálogo */}
+                        <img src={g.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
+                        {triedIds.has(g.dressId) ? (
+                          <span className="absolute bottom-1 right-1 grid size-4 place-items-center bg-white" title="Ya probado">
+                            <Check className="size-3" aria-hidden />
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="mt-1.5 block truncate text-[11px] uppercase tracking-[0.08em]">{g.name}</span>
+                    </button>
+                  ) : (
+                    <span className="block aspect-[3/4] w-[76px] shimmer md:w-[96px] lg:w-full" />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
 
           <div className="px-4 pb-3 md:px-6 lg:border-t lg:border-line lg:py-4">
-            {selected ? <p className="label-caps mb-3 hidden truncate lg:block">{selected.name}</p> : null}
+            {selected && !focused ? <p className="label-caps mb-3 hidden truncate lg:block">{selected.name}</p> : null}
             {error ? (
               <div className="mb-2">
                 <Notice tone="danger">{error}</Notice>
