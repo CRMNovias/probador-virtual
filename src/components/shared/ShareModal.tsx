@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { buildShareRoute } from '../../constants/routes.js';
 
 export interface ShareModalProps {
   /**
@@ -42,7 +43,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const [isMobile, setIsMobile] = useState(false);
 
   // Build full share URL with dressId
-  const shareUrl = `${window.location.origin}/share/${tryOnId}?dressId=${dressId}`;
+  const shareUrl = `${window.location.origin}${buildShareRoute(tryOnId)}?dressId=${dressId}`;
 
   // Detect mobile
   useEffect(() => {

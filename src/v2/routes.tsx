@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { probadorFor } from '@/components/routing/LegacyRedirect';
 import AvatarPage from '@v2/app/avatar/page';
 import SharePage from '@v2/app/c/page';
 import NuevaCitaPage from '@v2/app/cita/nueva/page';
@@ -13,12 +14,13 @@ import MisPruebasPage from '@v2/app/mis-pruebas/page';
 import WelcomePage from '@v2/app/page';
 import PerfilPage from '@v2/app/perfil/page';
 import ProbadorPage from '@v2/app/probador/page';
+import { withBase, withoutBase } from '@v2/lib/base-path';
 import { brand } from '@v2/lib/brand';
 import { connectSession } from '@v2/lib/session';
 import './v2.css';
 
 /**
- * La V2 dentro de la app de la V1: todas sus pantallas bajo /v2, con la misma
+ * La V2 dentro de la app de la V1: sus pantallas en la raíz (la V1, en /v1), con la misma
  * sesión que la V1. Hace lo que en la V2 hacían su layout (título, estilos) y
  * su proxy.ts (sin sesión, las pantallas privadas mandan a /entrar; con
  * sesión, la portada lleva al probador).
@@ -38,17 +40,23 @@ function Private({ children }: { children: ReactNode }) {
   const location = useLocation();
   if (isLoading) return null;
   if (!isAuthenticated) {
-    const next = `${location.pathname.replace(/^\/v2/, '') || '/'}${location.search}`;
-    return <Navigate to={`/v2/entrar?next=${encodeURIComponent(next)}`} replace />;
+    const next = `${withoutBase(location.pathname)}${location.search}`;
+    return <Navigate to={`${withBase('/entrar')}?next=${encodeURIComponent(next)}`} replace />;
   }
   return <>{children}</>;
 }
 
-/** Portada: con sesión, directo al probador. */
+/**
+ * Portada: con sesión, directo al probador. Con una prenda en la dirección (los
+ * enlaces de la V1, `?dressId=&category=`), a esa prenda: sin sesión, después de entrar.
+ */
 function Home() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { search } = useLocation();
   if (isLoading) return null;
-  return isAuthenticated ? <Navigate to="/v2/probador" replace /> : <WelcomePage />;
+  const query = new URLSearchParams(search);
+  if (query.get('dressId')) return <Navigate to={withBase(probadorFor(query))} replace />;
+  return isAuthenticated ? <Navigate to={withBase('/probador')} replace /> : <WelcomePage />;
 }
 
 const PRIVATE: { path: string; title: string; page: () => ReactNode }[] = [
@@ -107,7 +115,7 @@ export default function V2App() {
             }
           />
         ))}
-        <Route path="*" element={<Navigate to="/v2" replace />} />
+        <Route path="*" element={<Navigate to={withBase('/')} replace />} />
       </Routes>
     </div>
   );

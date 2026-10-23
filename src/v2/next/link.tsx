@@ -4,7 +4,7 @@ import { withBase } from '@v2/lib/base-path';
 
 /**
  * `next/link` para la V2 dentro de la V1: el mismo componente con React Router.
- * Las rutas de la V2 (`/probador`, `/coleccion`…) llevan el prefijo /v2; las
+ * Las rutas de la V2 (`/probador`, `/coleccion`…) llevan su prefijo (base-path); las
  * externas (`https:`, `tel:`, `mailto:`) se dejan tal cual.
  */
 type LinkProps = Omit<ComponentProps<typeof RouterLink>, 'to'> & { href: string };

@@ -14,6 +14,7 @@ import axios from 'axios';
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { apiConfig } from '../config/apiConfig.js';
 import { STORAGE_KEYS } from '../constants/storageKeys.js';
+import { V1_BASE } from '../constants/routes.js';
 import { envConfig } from '../config/envConfig.js';
 
 /**
@@ -147,8 +148,8 @@ apiClient.interceptors.response.use(
         localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
         localStorage.removeItem(STORAGE_KEYS.AVATAR_URL);
-        // La V2 (/v2) tiene su propia entrada.
-        window.location.href = window.location.pathname.startsWith('/v2') ? '/v2/entrar' : '/';
+        // La V2 (en la raíz) tiene su propia entrada; la V1 está en /v1.
+        window.location.href = window.location.pathname.startsWith(V1_BASE) ? V1_BASE : '/entrar';
       } else {
         if (envConfig.enableLogs) {
           console.warn('[API] 401 Unauthorized during auth flow - letting component handle error');

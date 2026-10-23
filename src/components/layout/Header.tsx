@@ -16,7 +16,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.js';
 import { useApp } from '../../context/AppContext.js';
-import { routes } from '../../constants/routes.js';
+import { routes, V1_BASE } from '../../constants/routes.js';
 import logo from '../../assets/images/logo/logo-atelier-de-bodas.webp';
 
 /**
@@ -77,9 +77,9 @@ export const Header: React.FC = () => {
    * Build navigation path with dressId if available
    */
   const isTabActive = (path: string): boolean => {
-    if (path === routes.COLLECTIONS_BRIDE) return location.pathname.startsWith('/colecciones');
+    if (path === routes.COLLECTIONS_BRIDE) return location.pathname.startsWith(`${V1_BASE}/colecciones`);
     if (path === routes.APPOINTMENTS) {
-      return location.pathname.startsWith('/appointments') || location.pathname.startsWith('/citas');
+      return location.pathname.startsWith(routes.APPOINTMENTS) || location.pathname.startsWith(`${V1_BASE}/citas`);
     }
     if (path === routes.GALLERY) return location.pathname === routes.GALLERY;
     return location.pathname === path;
