@@ -1,5 +1,9 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { brand } from '@v2/lib/brand';
+
+/** Sedka: esquinas redondeadas y título dorado, como las fichas de su V1. */
+const sedka = brand.id === 'sedka';
 
 /**
  * Panel de opciones: hoja inferior en móvil y ventana centrada en tablet y
@@ -21,10 +25,10 @@ export function Sheet({ title, open, onClose, children }: { title: string; open:
       aria-label={title}
       onClose={onClose}
       onClick={(e) => e.target === e.currentTarget && onClose()}
-      className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[88dvh] w-full max-w-none overflow-y-auto bg-white p-0 text-ink backdrop:bg-black/40 md:inset-0 md:m-auto md:max-h-[85dvh] md:max-w-lg"
+      className={`fixed inset-x-0 bottom-0 top-auto m-0 max-h-[88dvh] w-full max-w-none overflow-y-auto bg-white p-0 text-ink backdrop:bg-black/40 md:inset-0 md:m-auto md:max-h-[85dvh] md:max-w-lg ${sedka ? 'rounded-t-2xl md:rounded-lg' : ''}`}
     >
       <div className="sticky top-0 z-10 flex h-12 items-center justify-between border-b border-line bg-white px-4">
-        <h2 className="label-caps">{title}</h2>
+        <h2 className={`label-caps ${sedka ? '!font-semibold text-accent' : ''}`}>{title}</h2>
         <button type="button" onClick={onClose} className="-mr-2 grid size-11 place-items-center" aria-label="Cerrar">
           <X className="size-5" strokeWidth={1.5} aria-hidden />
         </button>

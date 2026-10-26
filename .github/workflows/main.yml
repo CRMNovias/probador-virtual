@@ -21,3 +21,7 @@ jobs:
             git pull origin main
             npm install
             npm run build
+            # Sedka: esta misma V2 en la raíz de probador-sedka.crmnovias.com, en
+            # cuanto su V1 está en /v1 (repo ARS-BRIDAL/probador-virtual-sedka).
+            SEDKA=/home/probador/probador-sedka.crmnovias.com/public_html/dist
+            if [ -d "$SEDKA/v1" ]; then sh scripts/sedka-v2.sh dist "$SEDKA"; fi

@@ -77,7 +77,7 @@ export default function SharePage() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md px-5 pb-12 pt-[max(env(safe-area-inset-top),1.25rem)] md:max-w-4xl md:px-8">
-      <Image src={brand.logo} alt={brand.name} width={576} height={120} className="h-8 w-auto" />
+      <Image src={brand.logo} alt={brand.name} width={576} height={120} className={`${brand.logoClass} w-auto`} />
       {shared ? <SharedTryOn shared={shared} /> : <div className="mt-6 aspect-[9/16] w-full shimmer" />}
     </main>
   );

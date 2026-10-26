@@ -1,4 +1,5 @@
 import type { WeddingMoment, WeddingStyle } from './types';
+import { brand } from './brand';
 
 /** Datos de contacto que se piden al registrarse y se cambian en el perfil. */
 export type ContactValues = { name: string; email: string; postcode: string; shopId: string };
@@ -9,7 +10,7 @@ export const validateContact = (v: ContactValues): ContactErrors => {
   if (v.name.trim().length < 2) errors.name = 'Escribe tu nombre.';
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v.email.trim())) errors.email = 'Revisa el email: falta algo, por ejemplo «.com».';
   if (!/^\d{4,5}$/.test(v.postcode.trim())) errors.postcode = 'Escribe tu código postal de 5 cifras.';
-  if (!v.shopId) errors.shopId = 'Elige el atelier al que irías.';
+  if (!v.shopId) errors.shopId = `Elige ${brand.shop.toWhich} irías.`;
   return errors;
 };
 

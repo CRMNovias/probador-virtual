@@ -1,11 +1,20 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { BottomNav, TopBar } from '@v2/components/app-shell';
+import { brand } from '@v2/lib/brand';
+import { SedkaAppointments } from '@v2/sedka/booking';
 import { Appointments } from './appointments';
 
 export const metadata: Metadata = { title: 'Mis citas' };
 
 export default function CitasPage() {
+  if (brand.id === 'sedka') {
+    return (
+      <Suspense>
+        <SedkaAppointments />
+      </Suspense>
+    );
+  }
   return (
     <>
       <TopBar />

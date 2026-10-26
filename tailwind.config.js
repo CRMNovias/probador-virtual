@@ -27,14 +27,19 @@ export default {
         white: '#FFFFFF',
         error: '#EF4444',
         success: '#10B981',
-        // Probador V2 (src/v2): blanco, negro puro y gris de estudio.
-        ivory: '#ffffff',
-        studio: '#eceae7',
-        sand: '#eceae7',
-        line: '#e2e2e2',
-        ink: '#000000',
-        muted: '#6b6b6b',
-        accent: '#000000',
+        // Probador V2 (src/v2): los colores de cada marca, en variables de
+        // src/v2/v2.css (por defecto, los de Atelier: blanco, negro y gris de estudio).
+        ivory: 'rgb(var(--v2-ivory, 255 255 255) / <alpha-value>)',
+        studio: 'rgb(var(--v2-studio, 236 234 231) / <alpha-value>)',
+        sand: 'rgb(var(--v2-studio, 236 234 231) / <alpha-value>)',
+        line: 'rgb(var(--v2-line, 226 226 226) / <alpha-value>)',
+        ink: 'rgb(var(--v2-ink, 0 0 0) / <alpha-value>)',
+        muted: 'rgb(var(--v2-muted, 107 107 107) / <alpha-value>)',
+        // Botones y lo elegido: negro en Atelier, dorado en Sedka.
+        accent: {
+          DEFAULT: 'rgb(var(--v2-accent, 0 0 0) / <alpha-value>)',
+          dark: 'rgb(var(--v2-accent-dark, 38 38 38) / <alpha-value>)',
+        },
         danger: '#b3261e',
       },
       // Probador V2: pantalla ancha y apaisada (ordenador, tablet en horizontal).

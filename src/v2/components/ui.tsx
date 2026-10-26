@@ -5,13 +5,13 @@ import { LoaderCircle } from 'lucide-react';
 type Variant = 'primary' | 'secondary' | 'ghost';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-ink text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:text-white',
+  primary: 'bg-accent text-white hover:bg-accent-dark disabled:bg-neutral-300 disabled:text-white',
   secondary: 'border border-ink bg-white text-ink hover:bg-neutral-50 disabled:border-neutral-300 disabled:text-neutral-400',
   ghost: 'bg-transparent text-ink underline underline-offset-4 disabled:opacity-40',
 };
 
 const base =
-  'inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.12em] transition-colors disabled:cursor-not-allowed';
+  'v2-btn inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.12em] transition-colors disabled:cursor-not-allowed';
 
 interface ButtonProps extends ComponentProps<'button'> {
   variant?: Variant;

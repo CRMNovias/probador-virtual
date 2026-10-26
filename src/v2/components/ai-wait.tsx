@@ -32,7 +32,7 @@ export function AiWait({ steps, expectedSeconds, note }: AiWaitProps) {
           <li key={step} className="flex items-center gap-3 text-[15px]">
             <span
               className={`grid size-6 shrink-0 place-items-center text-xs font-semibold ${
-                i < current ? 'bg-ink text-white' : i === current ? 'border-2 border-ink text-ink' : 'border border-line text-muted'
+                i < current ? 'bg-accent text-white' : i === current ? 'border-2 border-accent text-ink' : 'border border-line text-muted'
               }`}
               aria-hidden
             >

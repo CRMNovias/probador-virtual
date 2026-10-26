@@ -12,6 +12,7 @@ import { brand } from '@v2/lib/brand';
 import { reviewPhoto, type PhotoReview } from '@v2/lib/photo-quality';
 import { useLoad } from '@v2/lib/use-load';
 import { asset } from '@v2/lib/base-path';
+import { SedkaCardHead, SedkaCardScreen } from '@v2/sedka/shell';
 
 const MAX_MB = 10;
 const VERDICT = { good: 'La foto sirve', weak: 'Se puede mejorar', poor: 'Mejor con otra foto' } as const;
@@ -23,6 +24,23 @@ type Step = 'intro' | 'review' | 'working' | 'done';
  * abajo; en ordenador, escenario a la izquierda y panel a la derecha.
  */
 function Layout({ stage, backdrop = null, children, back }: { stage: ReactNode; backdrop?: string | null; children: ReactNode; back?: string | undefined }) {
+  // Sedka: la tarjeta centrada de su V1, con la foto arriba.
+  if (brand.id === 'sedka') {
+    return (
+      <SedkaCardScreen wide>
+        {back ? (
+          <button type="button" onClick={() => history.back()} className="mb-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-dark hover:underline">
+            ← Volver
+          </button>
+        ) : null}
+        <div className="relative mx-auto mb-7 aspect-[9/16] w-full max-w-[240px] overflow-hidden rounded-[10px] border border-line bg-studio">
+          <Backdrop src={backdrop} />
+          {stage}
+        </div>
+        {children}
+      </SedkaCardScreen>
+    );
+  }
   return (
     <div className="flex min-h-dvh flex-col lg:h-dvh">
       <TopBar back={back} title="Tu avatar" />
@@ -41,9 +59,21 @@ function Layout({ stage, backdrop = null, children, back }: { stage: ReactNode; 
 
 const pageTitle = 'text-[20px] font-light uppercase leading-tight tracking-[0.06em]';
 
+/** Antetítulo y título de cada paso (Sedka: centrados, como en su V1). */
+function Head({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
+  if (brand.id === 'sedka') return <SedkaCardHead eyebrow={eyebrow} title={title} lead={children} />;
+  return (
+    <>
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h1 className={`mt-1 ${pageTitle}`}>{title}</h1>
+      {children}
+    </>
+  );
+}
+
 export function AvatarFlow() {
   const router = useRouter();
-  const next = useSearchParams().get('next') ?? '/probador';
+  const next = useSearchParams().get('next') ?? brand.home;
   const { data: existing, loading } = useLoad(getAvatar);
 
   const [step, setStep] = useState<Step>('intro');
@@ -60,7 +90,7 @@ export function AvatarFlow() {
   const shown = avatarUrl ?? (step === 'intro' ? existing?.avatarUrl : null) ?? null;
   // Se llega desde el probador o desde el perfil: se vuelve allí.
   const back = existing ? next : undefined;
-  const doneLabel = next.startsWith('/perfil') ? 'Volver al perfil' : 'Ir al probador';
+  const doneLabel = next.startsWith('/perfil') ? 'Volver al perfil' : next.startsWith('/coleccion') ? 'Ir a la colección' : 'Ir al probador';
 
   useEffect(() => () => {
     if (preview) URL.revokeObjectURL(preview);
@@ -125,11 +155,11 @@ export function AvatarFlow() {
           </div>
         }
       >
-        <Eyebrow>{step === 'done' ? 'Listo' : 'Tu avatar'}</Eyebrow>
-        <h1 className={`mt-1 ${pageTitle}`}>{step === 'done' ? 'Ya tienes tu avatar' : 'Este eres tú'}</h1>
-        <p className="mt-2 text-[13px] leading-relaxed text-muted">
-          Con él te probarás cada vestido o traje. Si no te reconoces, hazlo de nuevo con otra foto.
-        </p>
+        <Head eyebrow={step === 'done' ? 'Listo' : 'Tu avatar'} title={step === 'done' ? 'Ya tienes tu avatar' : 'Este eres tú'}>
+          <p className="mt-2 text-[13px] leading-relaxed text-muted">
+            Con él te probarás cada vestido o traje. Si no te reconoces, hazlo de nuevo con otra foto.
+          </p>
+        </Head>
         <div className="mt-5 space-y-2">
           <Button block onClick={() => router.push(next)}>
             {doneLabel}
@@ -155,7 +185,7 @@ export function AvatarFlow() {
             ) : null}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <p className="label-caps">Creando tu avatar</p>
-              <span className="mt-3 size-1.5 animate-pulse bg-ink" aria-hidden />
+              <span className="mt-3 size-1.5 animate-pulse bg-accent" aria-hidden />
             </div>
           </>
         }
@@ -178,16 +208,16 @@ export function AvatarFlow() {
           <img src={preview} alt="Tu foto" className="absolute inset-0 h-full w-full object-contain" />
         }
       >
-        <Eyebrow>Tu foto</Eyebrow>
-        <h1 className={`mt-1 ${pageTitle}`}>{VERDICT[review.verdict]}</h1>
-        <ul className="mt-2 space-y-1 text-[13px] leading-snug text-muted">
-          {review.notes.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-        </ul>
+        <Head eyebrow="Tu foto" title={VERDICT[review.verdict]}>
+          <ul className="mt-2 space-y-1 text-[13px] leading-snug text-muted">
+            {review.notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        </Head>
 
         <label className="mt-5 flex items-start gap-3 border-t border-line pt-4 text-[13px] leading-snug">
-          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-ink" />
+          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-accent" />
           <span>
             Acepto que {brand.name} use esta foto para crear mi avatar con inteligencia artificial. Puedo borrarlo cuando quiera.{' '}
             <a href={brand.privacyUrl} target="_blank" rel="noopener" className="underline underline-offset-2">
@@ -240,11 +270,11 @@ export function AvatarFlow() {
         </>
       }
     >
-      <Eyebrow>Paso 1 de 2</Eyebrow>
-      <h1 className={`mt-1 ${pageTitle}`}>Empieza con una foto tuya</h1>
-      <p className="mt-2 text-[13px] leading-relaxed text-muted">
-        Con un selfie creamos tu avatar de cuerpo entero. Sale mejor de frente, con luz de día y sin gafas de sol.
-      </p>
+      <Head eyebrow={brand.id === 'sedka' ? 'Tu avatar' : 'Paso 1 de 2'} title={brand.id === 'sedka' ? 'Crea tu avatar' : 'Empieza con una foto tuya'}>
+        <p className="mt-2 text-[13px] leading-relaxed text-muted">
+          Con un selfie creamos tu avatar de cuerpo entero. Sale mejor de frente, con luz de día y sin gafas de sol.
+        </p>
+      </Head>
 
       {errorNotice}
 

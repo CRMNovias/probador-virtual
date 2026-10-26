@@ -1,58 +1,18 @@
-import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { Button, Eyebrow, Field, LinkButton, Notice } from '@v2/components/ui';
-import { ApiError, getAvatar, getProfile, listAppointments, listShops, logout, updateProfile } from '@v2/lib/api';
 import { brand } from '@v2/lib/brand';
 import { formatLong, formatTime } from '@v2/lib/dates';
-import { validateContact, WEDDING_MOMENTS, WEDDING_STYLES, type ContactErrors, type ContactValues } from '@v2/lib/profile';
-import type { UserProfile, WeddingMoment, WeddingStyle } from '@v2/lib/types';
-import { useLoad } from '@v2/lib/use-load';
-
-type Values = ContactValues & {
-  whatsapp: boolean;
-  weddingDate: string;
-  weddingPlace: string;
-  weddingStyle: WeddingStyle | '';
-  weddingMoment: WeddingMoment | '';
-};
-
-const fromProfile = (p: UserProfile): Values => ({
-  name: p.name ?? '',
-  email: p.email ?? '',
-  postcode: p.postcode ?? '',
-  shopId: p.shopId ? String(p.shopId) : '',
-  whatsapp: p.sendPhotosWhatsApp ?? true,
-  weddingDate: p.wedding?.date?.slice(0, 10) ?? '',
-  weddingPlace: p.wedding?.place ?? '',
-  weddingStyle: p.wedding?.style ?? '',
-  weddingMoment: p.wedding?.moment ?? '',
-});
-
-const selectClass = (invalid: boolean) =>
-  `h-11 w-full border-0 border-b bg-transparent px-0 text-base outline-none focus:border-ink ${invalid ? 'border-danger' : 'border-neutral-300'}`;
+import { WEDDING_MOMENTS, WEDDING_STYLES } from '@v2/lib/profile';
+import type { WeddingStyle } from '@v2/lib/types';
+import { selectClass, useProfileScreen } from './use-profile-screen';
 
 /**
  * Perfil: los datos del registro (y los de la boda, como en la V1) se pueden
  * cambiar aquí. En móvil también reúne las citas, que no caben en la barra.
  */
 export function ProfileScreen() {
-  const router = useRouter();
-  const { data, error: loadError, reload, setData } = useLoad(() =>
-    Promise.all([getProfile(), listShops(), getAvatar(), listAppointments().catch(() => null)]),
-  );
-  const [profile, shops, avatar, appointments] = data ?? [null, [], null, null];
-  const next = appointments?.upcoming[0] ?? null;
-
-  // Borrador sobre los datos del CRM: hasta que la clienta edita, manda el perfil.
-  const [draft, setDraft] = useState<Values | null>(null);
-  const values = draft ?? (profile ? fromProfile(profile) : null);
-  const [touched, setTouched] = useState(false);
-  const [serverErrors, setServerErrors] = useState<ContactErrors>({});
-  const [busy, setBusy] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { profile, shops, avatar, next, values, draft, set, shown, save, signOut, busy, saved, error, loadError, reload } = useProfileScreen();
 
   if (loadError) {
     return (
@@ -67,56 +27,6 @@ export function ProfileScreen() {
     );
   }
   if (!profile || !values) return <div className="mt-6 h-96 shimmer" />;
-
-  const errors: ContactErrors = {
-    ...validateContact(values),
-    ...Object.fromEntries(Object.entries(serverErrors).filter(([, m]) => m)),
-  };
-  const shown = (key: keyof ContactErrors) => (touched ? errors[key] : undefined);
-  const set = <K extends keyof Values>(key: K, value: Values[K]) => {
-    setDraft({ ...values, [key]: value });
-    setServerErrors((s) => ({ ...s, [key]: undefined }));
-    setSaved(false);
-  };
-
-  const save = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setTouched(true);
-    if (Object.keys(validateContact(values)).length) return;
-    setBusy(true);
-    setError(null);
-    const input = {
-      name: values.name.trim(),
-      email: values.email.trim().toLowerCase(),
-      postcode: values.postcode.trim(),
-      shopId: Number(values.shopId),
-      sendPhotosWhatsApp: values.whatsapp,
-      weddingDate: values.weddingDate || null,
-      weddingPlace: values.weddingPlace.trim() || null,
-      weddingStyle: values.weddingStyle || null,
-      weddingMoment: values.weddingMoment || null,
-    };
-    try {
-      await updateProfile(input);
-      // Se pinta ya lo guardado y se vuelve a leer del CRM por detrás.
-      const wedding = { date: input.weddingDate, place: input.weddingPlace, style: input.weddingStyle, moment: input.weddingMoment };
-      setData([{ ...profile, ...input, wedding }, shops, avatar, appointments]);
-      reload();
-      setDraft(null);
-      setTouched(false);
-      setSaved(true);
-    } catch (err) {
-      if (err instanceof ApiError && Object.keys(err.fieldErrors).length) setServerErrors(err.fieldErrors);
-      else setError(err instanceof Error ? err.message : 'No se pudieron guardar los cambios.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const signOut = async () => {
-    await logout().catch(() => undefined);
-    router.replace('/');
-  };
 
   return (
     <div className="lg:mt-2 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-start lg:gap-16">
@@ -188,7 +98,7 @@ export function ProfileScreen() {
           />
           <div>
             <label htmlFor="shopId" className="label-caps mb-1 block text-muted">
-              Tu atelier
+              Tu {brand.shop.one}
             </label>
             <select
               id="shopId"
@@ -197,7 +107,7 @@ export function ProfileScreen() {
               aria-invalid={Boolean(shown('shopId'))}
               className={selectClass(Boolean(shown('shopId')))}
             >
-              <option value="">Elige un atelier</option>
+              <option value="">Elige {brand.shop.a}</option>
               {shops.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -207,7 +117,7 @@ export function ProfileScreen() {
             {shown('shopId') ? <p className="mt-2 text-[13px] text-danger">{shown('shopId')}</p> : null}
           </div>
           <label className="flex items-start gap-3 text-[13px] leading-snug">
-            <input type="checkbox" checked={values.whatsapp} onChange={(e) => set('whatsapp', e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-ink" />
+            <input type="checkbox" checked={values.whatsapp} onChange={(e) => set('whatsapp', e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-accent" />
             Quiero recibir mis pruebas por WhatsApp.
           </label>
         </div>
@@ -244,7 +154,7 @@ export function ProfileScreen() {
                   type="button"
                   aria-pressed={values.weddingMoment === m.value}
                   onClick={() => set('weddingMoment', values.weddingMoment === m.value ? '' : m.value)}
-                  className={`h-10 flex-1 border text-[11px] uppercase tracking-[0.1em] ${values.weddingMoment === m.value ? 'border-ink bg-ink text-white' : 'border-line'}`}
+                  className={`h-10 flex-1 border text-[11px] uppercase tracking-[0.1em] ${values.weddingMoment === m.value ? 'border-accent bg-accent text-white' : 'border-line'}`}
                 >
                   {m.label}
                 </button>

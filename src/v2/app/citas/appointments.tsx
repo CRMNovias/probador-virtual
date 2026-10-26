@@ -6,6 +6,7 @@ import { cancelAppointment, listAppointments } from '@v2/lib/api';
 import { formatLong, formatTime, mapsUrl, saveCalendarFile } from '@v2/lib/dates';
 import type { Appointment } from '@v2/lib/types';
 import { useLoad } from '@v2/lib/use-load';
+import { brand } from '@v2/lib/brand';
 
 /** Próximas citas con cambiar, cancelar, calendario y mapa; las pasadas, debajo y en pequeño. */
 export function Appointments() {
@@ -93,7 +94,7 @@ function AppointmentItem({ appointment: a, onCancelled }: { appointment: Appoint
       await cancelAppointment(a.id);
       onCancelled();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cancelar. Llama al atelier.');
+      setError(err instanceof Error ? err.message : `No se pudo cancelar. Llama ${brand.shop.to}.`);
       setBusy(false);
     }
   };
@@ -115,7 +116,7 @@ function AppointmentItem({ appointment: a, onCancelled }: { appointment: Appoint
               start,
               title: `Cita en ${a.location.name}`,
               location: address,
-              description: `Teléfono del atelier: ${a.location.phone}`,
+              description: `Teléfono ${brand.shop.of}: ${a.location.phone}`,
             })
           }
           className="label-caps inline-flex h-8 items-center gap-1.5"
@@ -160,7 +161,7 @@ function AppointmentItem({ appointment: a, onCancelled }: { appointment: Appoint
         </div>
       )}
       <p className="mt-3 text-[11px] text-muted">
-        ¿Dudas? Llama al atelier:{' '}
+        ¿Dudas? Llama {brand.shop.to}:{' '}
         <Link href={`tel:${a.location.phone.replace(/\s/g, '')}`} className="underline underline-offset-2">
           {a.location.phone}
         </Link>

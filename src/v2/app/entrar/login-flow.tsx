@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { Button, Eyebrow, Notice } from '@v2/components/ui';
 import { sendCode, verifyCode } from '@v2/lib/api';
+import { brand } from '@v2/lib/brand';
+import { SedkaCardHead } from '@v2/sedka/shell';
 
 /** Prefijos más habituales entre las clientas; España por defecto. */
 const PREFIXES = [
@@ -74,7 +76,7 @@ export function LoginFlow() {
     setError(null);
     try {
       const session = await verifyCode(phone, value);
-      const target = next ?? '/probador';
+      const target = next ?? brand.home;
       if (!session.hasProfile) router.replace(`/datos?next=${encodeURIComponent(target)}`);
       else if (!session.hasAvatar) router.replace(`/avatar?next=${encodeURIComponent(target)}`);
       else router.replace(target);
@@ -93,18 +95,36 @@ export function LoginFlow() {
     if (clean.length === 6) void confirm(clean);
   };
 
+  const sedka = brand.id === 'sedka';
+  const shownPhone = `${prefix} ${prefix === '+34' ? formatSpanish(digits) : digits}`;
+
   if (step === 'code') {
     return (
       <>
-        <button type="button" onClick={() => setStep('phone')} className="-ml-2 mb-6 grid size-11 place-items-center" aria-label="Cambiar el número">
-          <ArrowLeft className="size-5" strokeWidth={1.5} aria-hidden />
-        </button>
-        <Eyebrow>Paso 2 de 2</Eyebrow>
-        <h1 className="mt-2 text-[22px] font-light uppercase tracking-[0.06em]">Te hemos enviado un código</h1>
-        <p className="mt-3 inline-flex items-center gap-2 text-[13px] text-muted">
-          <MessageCircle className="size-4" aria-hidden />
-          Por WhatsApp a {prefix} {prefix === '+34' ? formatSpanish(digits) : digits}
-        </p>
+        {sedka ? (
+          <SedkaCardHead
+            logo
+            eyebrow="Verificación"
+            title="Introduce el código"
+            lead={
+              <>
+                Enviado por WhatsApp a <b className="font-semibold text-ink">{shownPhone}</b>
+              </>
+            }
+          />
+        ) : (
+          <>
+            <button type="button" onClick={() => setStep('phone')} className="-ml-2 mb-6 grid size-11 place-items-center" aria-label="Cambiar el número">
+              <ArrowLeft className="size-5" strokeWidth={1.5} aria-hidden />
+            </button>
+            <Eyebrow>Paso 2 de 2</Eyebrow>
+            <h1 className="mt-2 text-[22px] font-light uppercase tracking-[0.06em]">Te hemos enviado un código</h1>
+            <p className="mt-3 inline-flex items-center gap-2 text-[13px] text-muted">
+              <MessageCircle className="size-4" aria-hidden />
+              Por WhatsApp a {shownPhone}
+            </p>
+          </>
+        )}
         {simulated ? (
           <div className="mt-4">
             <Notice>
@@ -114,7 +134,7 @@ export function LoginFlow() {
         ) : null}
 
         <form
-          className="mt-8 space-y-4"
+          className={`${sedka ? '' : 'mt-8'} space-y-4`}
           onSubmit={(e) => {
             e.preventDefault();
             if (code.length === 6) void confirm(code);
@@ -150,6 +170,11 @@ export function LoginFlow() {
               Enviar otro código
             </Button>
           )}
+          {sedka ? (
+            <button type="button" onClick={() => setStep('phone')} className="mt-2 text-[13px] text-accent underline underline-offset-2">
+              Cambiar número
+            </button>
+          ) : null}
         </div>
       </>
     );
@@ -157,19 +182,36 @@ export function LoginFlow() {
 
   return (
     <>
-      <Link href="/" className="-ml-2 mb-6 grid size-11 place-items-center" aria-label="Volver al inicio">
-        <ArrowLeft className="size-5" strokeWidth={1.5} aria-hidden />
-      </Link>
-      <Eyebrow>Paso 1 de 2</Eyebrow>
-      <h1 className="mt-2 text-[22px] font-light uppercase tracking-[0.06em]">Tu teléfono</h1>
-      <p className="mt-3 text-[13px] leading-relaxed text-muted">
-        Te enviamos un código por WhatsApp. Sirve tanto para crear tu cuenta como para volver a entrar.
-      </p>
+      {sedka ? (
+        <SedkaCardHead
+          logo
+          eyebrow="Acceso"
+          title="Probador Virtual"
+          lead={
+            <>
+              Pruébate nuestros diseños desde casa.
+              <br />
+              Te enviamos un código por WhatsApp.
+            </>
+          }
+        />
+      ) : (
+        <>
+          <Link href="/" className="-ml-2 mb-6 grid size-11 place-items-center" aria-label="Volver al inicio">
+            <ArrowLeft className="size-5" strokeWidth={1.5} aria-hidden />
+          </Link>
+          <Eyebrow>Paso 1 de 2</Eyebrow>
+          <h1 className="mt-2 text-[22px] font-light uppercase tracking-[0.06em]">Tu teléfono</h1>
+          <p className="mt-3 text-[13px] leading-relaxed text-muted">
+            Te enviamos un código por WhatsApp. Sirve tanto para crear tu cuenta como para volver a entrar.
+          </p>
+        </>
+      )}
 
-      <form className="mt-8 space-y-4" onSubmit={requestCode} noValidate>
+      <form className={`${sedka ? '' : 'mt-8'} space-y-4`} onSubmit={requestCode} noValidate>
         <div>
           <label htmlFor="phone" className="label-caps mb-1 block text-muted">
-            Número de móvil
+            {sedka ? 'Teléfono' : 'Número de móvil'}
           </label>
           <div className="flex gap-2">
             <select
@@ -211,6 +253,13 @@ export function LoginFlow() {
           Recibir código por WhatsApp
         </Button>
       </form>
+      {sedka ? (
+        <p className="mt-6 text-center">
+          <Link href="/" className="text-[13px] text-accent underline underline-offset-2">
+            Volver al inicio
+          </Link>
+        </p>
+      ) : null}
     </>
   );
 }

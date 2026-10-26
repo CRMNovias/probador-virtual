@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Eyebrow, Field, Notice } from '@v2/components/ui';
 import { ApiError, createProfile, getProfile, listShops } from '@v2/lib/api';
 import { brand } from '@v2/lib/brand';
+import { SedkaCardHead } from '@v2/sedka/shell';
 import { validateContact, type ContactErrors, type ContactValues } from '@v2/lib/profile';
 import { useLoad } from '@v2/lib/use-load';
 
@@ -12,7 +13,7 @@ const validate = validateContact;
 
 export function ProfileForm() {
   const router = useRouter();
-  const next = useSearchParams().get('next') ?? '/probador';
+  const next = useSearchParams().get('next') ?? brand.home;
   const { data } = useLoad(() => Promise.all([getProfile(), listShops()]));
   const [profile, shops] = data ?? [null, []];
 
@@ -23,6 +24,7 @@ export function ProfileForm() {
   const [whatsapp, setWhatsapp] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const sedka = brand.id === 'sedka';
 
   // Los errores del CRM solo cuentan mientras existen: un campo editado vuelve a la validación local.
   const errors: Errors = {
@@ -61,14 +63,20 @@ export function ProfileForm() {
 
   return (
     <>
-      <Eyebrow className="mt-8">Antes de empezar</Eyebrow>
-      <h1 className="mt-2 text-[22px] font-light uppercase tracking-[0.06em]">Cuéntanos quién eres</h1>
-      <p className="mt-3 text-[13px] leading-relaxed text-muted">
-        Lo usamos para guardar tus pruebas y, si pides cita, para que tu atelier te reciba con lo que has guardado.
-      </p>
+      {sedka ? (
+        <SedkaCardHead eyebrow="Tu perfil" title="Completa tu perfil" lead="Solo una vez, para personalizar tu experiencia." />
+      ) : (
+        <>
+          <Eyebrow className="mt-8">Antes de empezar</Eyebrow>
+          <h1 className="mt-2 text-[22px] font-light uppercase tracking-[0.06em]">Cuéntanos quién eres</h1>
+          <p className="mt-3 text-[13px] leading-relaxed text-muted">
+            Lo usamos para guardar tus pruebas y, si pides cita, para que tu {brand.shop.one} te reciba con lo que has guardado.
+          </p>
+        </>
+      )}
 
-      <form className="mt-8 space-y-5" onSubmit={submit} noValidate>
-        <Field label="Nombre" name="name" autoComplete="name" value={values.name} onChange={set('name')} onBlur={blur('name')} error={shown('name')} />
+      <form className={`${sedka ? '' : 'mt-8'} space-y-5`} onSubmit={submit} noValidate>
+        <Field label={sedka ? 'Nombre y apellidos' : 'Nombre'} name="name" autoComplete="name" value={values.name} onChange={set('name')} onBlur={blur('name')} error={shown('name')} />
         <Field
           label="Email"
           name="email"
@@ -93,7 +101,7 @@ export function ProfileForm() {
         />
         <div>
           <label htmlFor="shopId" className="label-caps mb-1 block text-muted">
-            Tu atelier
+            {sedka ? 'Tienda Sedka más cercana' : `Tu ${brand.shop.one}`}
           </label>
           <select
             id="shopId"
@@ -103,7 +111,7 @@ export function ProfileForm() {
             aria-invalid={Boolean(shown('shopId'))}
             className={`h-11 w-full border-0 border-b bg-transparent px-0 text-base outline-none focus:border-ink ${shown('shopId') ? 'border-danger' : 'border-neutral-300'}`}
           >
-            <option value="">{shops.length ? 'Elige un atelier' : 'Cargando ateliers…'}</option>
+            <option value="">{shops.length ? `Elige ${brand.shop.a}` : `Cargando ${brand.shop.many}…`}</option>
             {shops.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -114,14 +122,14 @@ export function ProfileForm() {
         </div>
 
         <label className="flex items-start gap-3 border-t border-line pt-4 text-[13px] leading-snug">
-          <input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-ink" />
+          <input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-accent" />
           Quiero recibir mis pruebas por WhatsApp.
         </label>
 
         {error ? <Notice tone="danger">{error}</Notice> : null}
 
         <Button type="submit" block loading={busy}>
-          Continuar
+          {sedka ? 'Guardar y continuar' : 'Continuar'}
         </Button>
         <p className="text-center text-xs leading-relaxed text-muted">
           {brand.name} trata tus datos para gestionar el probador y tus citas.{' '}

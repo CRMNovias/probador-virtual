@@ -47,7 +47,7 @@ function Private({ children }: { children: ReactNode }) {
 }
 
 /**
- * Portada: con sesión, directo al probador. Con una prenda en la dirección (los
+ * Portada: con sesión, directo al probador (Sedka: a la colección). Con una prenda en la dirección (los
  * enlaces de la V1, `?dressId=&category=`), a esa prenda: sin sesión, después de entrar.
  */
 function Home() {
@@ -56,7 +56,7 @@ function Home() {
   if (isLoading) return null;
   const query = new URLSearchParams(search);
   if (query.get('dressId')) return <Navigate to={withBase(probadorFor(query))} replace />;
-  return isAuthenticated ? <Navigate to={withBase('/probador')} replace /> : <WelcomePage />;
+  return isAuthenticated ? <Navigate to={withBase(brand.home)} replace /> : <WelcomePage />;
 }
 
 const PRIVATE: { path: string; title: string; page: () => ReactNode }[] = [
@@ -76,7 +76,8 @@ export default function V2App() {
   useEffect(() => connectSession({ login, logout }), [login, logout]);
 
   return (
-    <div className="v2-root">
+    // data-brand: los colores y la letra de la marca (src/v2/v2.css).
+    <div className="v2-root" data-brand={brand.id}>
       <Routes>
         <Route
           index
