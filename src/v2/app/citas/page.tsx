@@ -3,17 +3,14 @@ import type { Metadata } from 'next';
 import { BottomNav, TopBar } from '@v2/components/app-shell';
 import { brand } from '@v2/lib/brand';
 import { SedkaAppointments } from '@v2/sedka/booking';
+import { OutletAppointments } from '@v2/outlet/booking';
 import { Appointments } from './appointments';
 
 export const metadata: Metadata = { title: 'Mis citas' };
 
 export default function CitasPage() {
-  if (brand.id === 'sedka') {
-    return (
-      <Suspense>
-        <SedkaAppointments />
-      </Suspense>
-    );
+  if (brand.id === 'sedka' || brand.id === 'outlet') {
+    return <Suspense>{brand.id === 'sedka' ? <SedkaAppointments /> : <OutletAppointments />}</Suspense>;
   }
   return (
     <>

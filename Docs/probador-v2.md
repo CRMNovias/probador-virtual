@@ -5,8 +5,8 @@ La V2 (diseño tipo Zara, pruebas en 360°, fondos, pareja) vive dentro de esta 
 `probador.crmnovias.com/v1`. Es la misma app, el mismo build y el mismo despliegue: no hay
 proceso ni configuración de servidor aparte.
 
-La misma V2 sirve también `probador-sedka.crmnovias.com`, con la disposición y los textos
-de Sedka (ver «Sedka»). Outlet Nupcial sigue con su probador aparte.
+La misma V2 sirve también `probador-sedka.crmnovias.com` y `probador-outlet.crmnovias.com`,
+cada una con la disposición y los textos de su V1 (ver «Sedka» y «Outlet»).
 
 ## Cómo encaja
 
@@ -73,16 +73,36 @@ web.
 - **Colores y letra**: variables de `v2.css` por `data-brand` (dorado y Montserrat en Sedka).
 - **Fondos**: los suyos (`src/v2/lib/backgrounds.ts`, miniaturas en
   `public/probador-v2/backgrounds/sedka`), con su estudio azul marino por defecto.
-- **Rutas** (`src/router.tsx`, `SedkaRouter`): solo la V2. Su V1 es otra web (repo
+- **Rutas** (`src/router.tsx`, `OwnV1Router`): solo la V2. Su V1 es otra web (repo
   `ARS-BRIDAL/probador-virtual-sedka`, en `/v1`); las direcciones de antes de su V1 sin
   `/v1` llevan a la V2 como las de Atelier.
 - **Despliegue**: la web de Sedka está en el mismo servidor, en
   `/home/probador/probador-sedka.crmnovias.com/public_html/dist`. Su repo construye su V1
-  en `dist/v1`; `scripts/sedka-v2.sh` copia esta V2 en la raíz sin tocar `dist/v1` y deja
-  el `index.html` con el título, el icono y la vista previa de Sedka
-  (`scripts/sedka-index.mjs`). Lo llaman los dos despliegues: el de este repo, en cuanto
-  existe `dist/v1`, y el de Sedka, si la V2 del servidor ya trae Sedka.
+  en `dist/v1`; `scripts/marca-v2.sh sedka` (o `scripts/sedka-v2.sh`, que es lo mismo)
+  copia esta V2 en la raíz sin tocar `dist/v1` y deja el `index.html` con el título, el
+  icono y la vista previa de Sedka (`scripts/marca-index.mjs`). Lo llaman los dos
+  despliegues: el de este repo, en cuanto existe `dist/v1`, y el de Sedka, si la V2 del
+  servidor ya trae Sedka.
 - **En local**: `sedka.localhost:5174` con `npm run dev`.
+
+## Outlet
+
+Igual que Sedka, con lo suyo:
+- **Marca**: con «outlet» en el dominio (en local, `outlet.localhost`). Al entrar se llega al
+  probador, como en su V1.
+- **Aspecto**: sus pantallas están en `src/v2/outlet` y siguen su V1: blanco y negro, el
+  logo en dos líneas, el menú en mayúsculas espaciadas bajo una raya negra, títulos gruesos
+  con su número delante (01 Novia, 02 Novio, 03 Galería, 04 Citas, 05 Perfil), esquinas
+  rectas, «Elige por dónde empezar» en el probador y la reserva paso a paso («01 / 05»).
+  Entrar, tus datos y el avatar usan la columna centrada (`components/brand-card.tsx`, que
+  elige la de Sedka o la de Outlet).
+- **Fondos**: los suyos (`public/probador-v2/backgrounds/outlet`), con su estudio oscuro por
+  defecto.
+- **Despliegue**: la carpeta del servidor se llama `probador-oulet.crmnovias.com` (así,
+  sin la «t»): `/home/probador/probador-oulet.crmnovias.com/public_html/dist`. Su repo
+  (`ARS-BRIDAL/probador-virtual-outlet`) construye su V1 en `dist/v1` con rutas relativas
+  (también sirve en `/probador-outlet` del CRM) y llama a `scripts/marca-v2.sh outlet`.
+- **En local**: `outlet.localhost:5174` con `npm run dev`.
 
 ## Lo que hace el CRM
 

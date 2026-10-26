@@ -14,8 +14,9 @@
  * Las direcciones de antes (la V1 sin /v1, la V2 con /v2) llevan a su pantalla
  * de la V2 (components/routing/LegacyRedirect).
  *
- * En probador-sedka.crmnovias.com (SedkaRouter) va solo la V2: la V1 de Sedka es
- * otra web (repo ARS-BRIDAL/probador-virtual-sedka) que el servidor sirve en /v1.
+ * En probador-sedka.crmnovias.com y probador-outlet.crmnovias.com (OwnV1Router)
+ * va solo la V2: la V1 de cada una es otra web (repos ARS-BRIDAL/probador-virtual-sedka
+ * y ARS-BRIDAL/probador-virtual-outlet) que el servidor sirve en /v1.
  */
 
 import React, { Suspense, lazy, useEffect } from 'react';
@@ -78,11 +79,11 @@ const HomeRoute: React.FC = () => {
 };
 
 /**
- * Sedka: una dirección de /v1 solo llega aquí al recargar dentro de su V1 (el
- * servidor sirve su entrada, /v1/, y para el resto da esta página). Se vuelve a
- * esa entrada; si es la propia entrada, su V1 no está y se va a la V2.
+ * Sedka y Outlet: una dirección de /v1 solo llega aquí al recargar dentro de su
+ * V1 (el servidor sirve su entrada, /v1/, y para el resto da esta página). Se
+ * vuelve a esa entrada; si es la propia entrada, su V1 no está y se va a la V2.
  */
-const SedkaV1: React.FC = () => {
+const OwnV1: React.FC = () => {
   const { pathname } = useLocation();
   const entry = /^\/v1\/?$/.test(pathname);
   useEffect(() => {
@@ -91,7 +92,7 @@ const SedkaV1: React.FC = () => {
   return entry ? <Navigate to="/" replace /> : null;
 };
 
-const SedkaRouter: React.FC = () => (
+const OwnV1Router: React.FC = () => (
   <Routes>
     {/* Direcciones de antes: las de su V1 sin /v1 y la V2 con /v2 */}
     {LEGACY_V1_PATHS.map((path) => (
@@ -99,7 +100,7 @@ const SedkaRouter: React.FC = () => (
     ))}
     <Route path="/share/:id" element={<LegacyShareRedirect />} />
     <Route path="/v2/*" element={<LegacyV2Redirect />} />
-    <Route path="/v1/*" element={<SedkaV1 />} />
+    <Route path="/v1/*" element={<OwnV1 />} />
 
     <Route
       path="/*"
@@ -118,7 +119,7 @@ const SedkaRouter: React.FC = () => (
  * Main router configuration for the application
  */
 export const AppRouter: React.FC = () => {
-  if (brand.id === 'sedka') return <SedkaRouter />;
+  if (brand.id !== 'atelier') return <OwnV1Router />;
   return (
     <Routes>
       {/* Home - Smart redirect based on auth state */}

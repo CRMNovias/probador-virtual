@@ -2,14 +2,20 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Eyebrow, Field, Notice } from '@v2/components/ui';
 import { ApiError, createProfile, getProfile, listShops } from '@v2/lib/api';
-import { brand } from '@v2/lib/brand';
-import { SedkaCardHead } from '@v2/sedka/shell';
+import { brand, type BrandId } from '@v2/lib/brand';
+import { CardHead, cardScreens } from '@v2/components/brand-card';
 import { validateContact, type ContactErrors, type ContactValues } from '@v2/lib/profile';
 import { useLoad } from '@v2/lib/use-load';
 
 type Values = ContactValues;
 type Errors = ContactErrors;
 const validate = validateContact;
+
+/** Cómo se pide la tienda en cada marca (Atelier: «Tu atelier»). */
+const SHOP_LABEL: Partial<Record<BrandId, string>> = {
+  sedka: 'Tienda Sedka más cercana',
+  outlet: 'Tienda Outlet Nupcial más cercana',
+};
 
 export function ProfileForm() {
   const router = useRouter();
@@ -24,7 +30,7 @@ export function ProfileForm() {
   const [whatsapp, setWhatsapp] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const sedka = brand.id === 'sedka';
+  const card = cardScreens;
 
   // Los errores del CRM solo cuentan mientras existen: un campo editado vuelve a la validación local.
   const errors: Errors = {
@@ -63,8 +69,8 @@ export function ProfileForm() {
 
   return (
     <>
-      {sedka ? (
-        <SedkaCardHead eyebrow="Tu perfil" title="Completa tu perfil" lead="Solo una vez, para personalizar tu experiencia." />
+      {card ? (
+        <CardHead eyebrow="Tu perfil" title="Completa tu perfil" lead="Solo una vez, para personalizar tu experiencia." />
       ) : (
         <>
           <Eyebrow className="mt-8">Antes de empezar</Eyebrow>
@@ -75,8 +81,8 @@ export function ProfileForm() {
         </>
       )}
 
-      <form className={`${sedka ? '' : 'mt-8'} space-y-5`} onSubmit={submit} noValidate>
-        <Field label={sedka ? 'Nombre y apellidos' : 'Nombre'} name="name" autoComplete="name" value={values.name} onChange={set('name')} onBlur={blur('name')} error={shown('name')} />
+      <form className={`${card ? '' : 'mt-8'} space-y-5`} onSubmit={submit} noValidate>
+        <Field label={card ? 'Nombre y apellidos' : 'Nombre'} name="name" autoComplete="name" value={values.name} onChange={set('name')} onBlur={blur('name')} error={shown('name')} />
         <Field
           label="Email"
           name="email"
@@ -101,7 +107,7 @@ export function ProfileForm() {
         />
         <div>
           <label htmlFor="shopId" className="label-caps mb-1 block text-muted">
-            {sedka ? 'Tienda Sedka más cercana' : `Tu ${brand.shop.one}`}
+            {SHOP_LABEL[brand.id] ?? `Tu ${brand.shop.one}`}
           </label>
           <select
             id="shopId"
@@ -129,7 +135,7 @@ export function ProfileForm() {
         {error ? <Notice tone="danger">{error}</Notice> : null}
 
         <Button type="submit" block loading={busy}>
-          {sedka ? 'Guardar y continuar' : 'Continuar'}
+          {card ? 'Guardar y continuar' : 'Continuar'}
         </Button>
         <p className="text-center text-xs leading-relaxed text-muted">
           {brand.name} trata tus datos para gestionar el probador y tus citas.{' '}

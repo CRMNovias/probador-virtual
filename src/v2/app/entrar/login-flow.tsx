@@ -5,7 +5,7 @@ import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { Button, Eyebrow, Notice } from '@v2/components/ui';
 import { sendCode, verifyCode } from '@v2/lib/api';
 import { brand } from '@v2/lib/brand';
-import { SedkaCardHead } from '@v2/sedka/shell';
+import { CardHead, cardScreens } from '@v2/components/brand-card';
 
 /** Prefijos más habituales entre las clientas; España por defecto. */
 const PREFIXES = [
@@ -95,15 +95,16 @@ export function LoginFlow() {
     if (clean.length === 6) void confirm(clean);
   };
 
-  const sedka = brand.id === 'sedka';
+  const card = cardScreens;
   const shownPhone = `${prefix} ${prefix === '+34' ? formatSpanish(digits) : digits}`;
 
   if (step === 'code') {
     return (
       <>
-        {sedka ? (
-          <SedkaCardHead
+        {card ? (
+          <CardHead
             logo
+            step="02 / 02"
             eyebrow="Verificación"
             title="Introduce el código"
             lead={
@@ -134,7 +135,7 @@ export function LoginFlow() {
         ) : null}
 
         <form
-          className={`${sedka ? '' : 'mt-8'} space-y-4`}
+          className={`${card ? '' : 'mt-8'} space-y-4`}
           onSubmit={(e) => {
             e.preventDefault();
             if (code.length === 6) void confirm(code);
@@ -170,7 +171,7 @@ export function LoginFlow() {
               Enviar otro código
             </Button>
           )}
-          {sedka ? (
+          {card ? (
             <button type="button" onClick={() => setStep('phone')} className="mt-2 text-[13px] text-accent underline underline-offset-2">
               Cambiar número
             </button>
@@ -182,9 +183,10 @@ export function LoginFlow() {
 
   return (
     <>
-      {sedka ? (
-        <SedkaCardHead
+      {card ? (
+        <CardHead
           logo
+          step="01 / 02"
           eyebrow="Acceso"
           title="Probador Virtual"
           lead={
@@ -208,10 +210,10 @@ export function LoginFlow() {
         </>
       )}
 
-      <form className={`${sedka ? '' : 'mt-8'} space-y-4`} onSubmit={requestCode} noValidate>
+      <form className={`${card ? '' : 'mt-8'} space-y-4`} onSubmit={requestCode} noValidate>
         <div>
           <label htmlFor="phone" className="label-caps mb-1 block text-muted">
-            {sedka ? 'Teléfono' : 'Número de móvil'}
+            {card ? 'Teléfono' : 'Número de móvil'}
           </label>
           <div className="flex gap-2">
             <select
@@ -253,7 +255,7 @@ export function LoginFlow() {
           Recibir código por WhatsApp
         </Button>
       </form>
-      {sedka ? (
+      {card ? (
         <p className="mt-6 text-center">
           <Link href="/" className="text-[13px] text-accent underline underline-offset-2">
             Volver al inicio

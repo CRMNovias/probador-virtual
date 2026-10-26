@@ -12,7 +12,7 @@ import { brand } from '@v2/lib/brand';
 import { reviewPhoto, type PhotoReview } from '@v2/lib/photo-quality';
 import { useLoad } from '@v2/lib/use-load';
 import { asset } from '@v2/lib/base-path';
-import { SedkaCardHead, SedkaCardScreen } from '@v2/sedka/shell';
+import { CardHead, CardScreen, cardScreens } from '@v2/components/brand-card';
 
 const MAX_MB = 10;
 const VERDICT = { good: 'La foto sirve', weak: 'Se puede mejorar', poor: 'Mejor con otra foto' } as const;
@@ -24,21 +24,23 @@ type Step = 'intro' | 'review' | 'working' | 'done';
  * abajo; en ordenador, escenario a la izquierda y panel a la derecha.
  */
 function Layout({ stage, backdrop = null, children, back }: { stage: ReactNode; backdrop?: string | null; children: ReactNode; back?: string | undefined }) {
-  // Sedka: la tarjeta centrada de su V1, con la foto arriba.
-  if (brand.id === 'sedka') {
+  // Sedka y Outlet: la columna centrada de sus V1, con la foto arriba.
+  if (cardScreens) {
     return (
-      <SedkaCardScreen wide>
+      <CardScreen wide>
         {back ? (
           <button type="button" onClick={() => history.back()} className="mb-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-dark hover:underline">
             ← Volver
           </button>
         ) : null}
-        <div className="relative mx-auto mb-7 aspect-[9/16] w-full max-w-[240px] overflow-hidden rounded-[10px] border border-line bg-studio">
+        <div
+          className={`relative mx-auto mb-7 aspect-[9/16] w-full max-w-[240px] overflow-hidden border bg-studio ${brand.id === 'sedka' ? 'rounded-[10px] border-line' : 'border-ink'}`}
+        >
           <Backdrop src={backdrop} />
           {stage}
         </div>
         {children}
-      </SedkaCardScreen>
+      </CardScreen>
     );
   }
   return (
@@ -59,9 +61,9 @@ function Layout({ stage, backdrop = null, children, back }: { stage: ReactNode; 
 
 const pageTitle = 'text-[20px] font-light uppercase leading-tight tracking-[0.06em]';
 
-/** Antetítulo y título de cada paso (Sedka: centrados, como en su V1). */
+/** Antetítulo y título de cada paso (Sedka y Outlet: centrados, como en sus V1). */
 function Head({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
-  if (brand.id === 'sedka') return <SedkaCardHead eyebrow={eyebrow} title={title} lead={children} />;
+  if (cardScreens) return <CardHead eyebrow={eyebrow} title={title} lead={children} />;
   return (
     <>
       <Eyebrow>{eyebrow}</Eyebrow>
@@ -270,7 +272,7 @@ export function AvatarFlow() {
         </>
       }
     >
-      <Head eyebrow={brand.id === 'sedka' ? 'Tu avatar' : 'Paso 1 de 2'} title={brand.id === 'sedka' ? 'Crea tu avatar' : 'Empieza con una foto tuya'}>
+      <Head eyebrow={cardScreens ? 'Tu avatar' : 'Paso 1 de 2'} title={cardScreens ? 'Crea tu avatar' : 'Empieza con una foto tuya'}>
         <p className="mt-2 text-[13px] leading-relaxed text-muted">
           Con un selfie creamos tu avatar de cuerpo entero. Sale mejor de frente, con luz de día y sin gafas de sol.
         </p>
