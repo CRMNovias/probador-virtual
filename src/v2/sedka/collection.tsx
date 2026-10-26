@@ -52,7 +52,7 @@ export function SedkaCollection() {
               type="button"
               aria-selected={category === t.id}
               onClick={() => showCategory(t.id)}
-              className={`border border-accent px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.26em] transition-colors first:border-r-0 min-[400px]:px-[30px] ${
+              className={`border border-accent px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.26em] transition-colors first:border-r-0 sm:px-[30px] ${
                 category === t.id ? 'bg-accent text-white' : 'bg-white text-accent hover:bg-accent/10'
               }`}
             >

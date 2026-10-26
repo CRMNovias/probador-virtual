@@ -36,7 +36,8 @@
 }
 .v2-root[data-brand='sedka'] .v2-btn {
   font-weight: 600;
-  letter-spacing: 0.2em;
+  /* En móvil, más junto: «Recibir código por WhatsApp» cabe en una línea. */
+  letter-spacing: 0.14em;
 }
 @media (min-width: 40rem) {
   .v2-root[data-brand='sedka'] .v2-btn {
