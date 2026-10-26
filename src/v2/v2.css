@@ -3,7 +3,7 @@
  * para no cambiar nada de la V1. Los colores, la curva ease-out-soft y
  * label-caps están en tailwind.config.js.
  */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@200;300;400;500;600&family=Roboto+Slab:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@200;300;400;500;600;700;800&family=Roboto+Slab:wght@400&display=swap');
 
 /*
  * Cada marca con sus colores y su letra (src/v2/lib/brand.ts pone data-brand).
@@ -57,6 +57,56 @@
 .v2-root[data-brand='sedka'] textarea:focus {
   border-color: rgb(var(--v2-accent));
 }
+/*
+ * Outlet: blanco y negro de alto contraste, Montserrat gruesa en los títulos y
+ * cifras en letra de máquina (como su V1, probador-outlet.crmnovias.com/v1).
+ */
+.v2-root[data-brand='outlet'] {
+  --v2-studio: 246 246 246;
+  --v2-line: 229 229 229;
+  --v2-ink: 10 10 10;
+  --v2-muted: 112 112 112;
+  --v2-accent: 0 0 0;
+  --v2-accent-dark: 31 31 31;
+  --v2-font: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+}
+.v2-root[data-brand='outlet'] .label-caps {
+  letter-spacing: 0.3em;
+}
+.v2-root[data-brand='outlet'] .v2-btn {
+  font-weight: 700;
+  /* En móvil, más junto: «Recibir código por WhatsApp» cabe en una línea. */
+  letter-spacing: 0.08em;
+}
+@media (min-width: 40rem) {
+  .v2-root[data-brand='outlet'] .v2-btn {
+    letter-spacing: 0.22em;
+  }
+}
+/* El botón negro sin poder pulsarse, gris medio (como en la V1). */
+.v2-root[data-brand='outlet'] .v2-btn.bg-accent:disabled {
+  background-color: rgb(var(--v2-ink) / 0.4);
+}
+/* Outlet: los campos de las pantallas comunes (subrayados en Atelier) en caja de borde fino, como en su V1. */
+.v2-root[data-brand='outlet'] :is(input, select).border-b:not([type='checkbox'], [type='search']) {
+  border-width: 1px;
+  border-radius: 6px;
+  background-color: #fff;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.v2-root[data-brand='outlet'] :is(input, select).border-neutral-300 {
+  border-color: rgb(var(--v2-ink) / 0.3);
+}
+.v2-root[data-brand='outlet'] label + :is(input, select).border-b {
+  margin-top: 0.375rem;
+}
+.v2-root[data-brand='outlet'] input:not([type='checkbox']):focus,
+.v2-root[data-brand='outlet'] select:focus,
+.v2-root[data-brand='outlet'] textarea:focus {
+  border-color: rgb(var(--v2-ink));
+}
+
 /* Sedka: la Roboto Slab de su V1 (los pasos 01, 02, 03, el mes del calendario, las fechas de las citas). */
 .v2-slab {
   font-family: 'Roboto Slab', Georgia, serif;

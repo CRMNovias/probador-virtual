@@ -3,17 +3,14 @@ import type { Metadata } from 'next';
 import { BottomNav, TopBar } from '@v2/components/app-shell';
 import { brand } from '@v2/lib/brand';
 import { SedkaProfile } from '@v2/sedka/profile';
+import { OutletProfile } from '@v2/outlet/profile';
 import { ProfileScreen } from './profile-screen';
 
 export const metadata: Metadata = { title: 'Perfil' };
 
 export default function PerfilPage() {
-  if (brand.id === 'sedka') {
-    return (
-      <Suspense>
-        <SedkaProfile />
-      </Suspense>
-    );
+  if (brand.id === 'sedka' || brand.id === 'outlet') {
+    return <Suspense>{brand.id === 'sedka' ? <SedkaProfile /> : <OutletProfile />}</Suspense>;
   }
   return (
     <>

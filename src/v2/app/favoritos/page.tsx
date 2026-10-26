@@ -3,17 +3,14 @@ import type { Metadata } from 'next';
 import { BottomNav, TopBar } from '@v2/components/app-shell';
 import { brand } from '@v2/lib/brand';
 import { SedkaFavorites } from '@v2/sedka/lists';
+import { OutletFavorites } from '@v2/outlet/lists';
 import { Favorites } from './favorites';
 
 export const metadata: Metadata = { title: 'Favoritos' };
 
 export default function FavoritosPage() {
-  if (brand.id === 'sedka') {
-    return (
-      <Suspense>
-        <SedkaFavorites />
-      </Suspense>
-    );
+  if (brand.id === 'sedka' || brand.id === 'outlet') {
+    return <Suspense>{brand.id === 'sedka' ? <SedkaFavorites /> : <OutletFavorites />}</Suspense>;
   }
   return (
     <>

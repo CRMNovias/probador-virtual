@@ -21,7 +21,10 @@ jobs:
             git pull origin main
             npm install
             npm run build
-            # Sedka: esta misma V2 en la raíz de probador-sedka.crmnovias.com, en
-            # cuanto su V1 está en /v1 (repo ARS-BRIDAL/probador-virtual-sedka).
+            # Sedka y Outlet: esta misma V2 en la raíz de su probador, en cuanto su V1
+            # está en /v1 (repos ARS-BRIDAL/probador-virtual-sedka y -outlet). La
+            # carpeta de Outlet en el servidor se llama así, «oulet».
             SEDKA=/home/probador/probador-sedka.crmnovias.com/public_html/dist
-            if [ -d "$SEDKA/v1" ]; then sh scripts/sedka-v2.sh dist "$SEDKA"; fi
+            if [ -d "$SEDKA/v1" ]; then sh scripts/marca-v2.sh sedka dist "$SEDKA"; fi
+            OUTLET=/home/probador/probador-oulet.crmnovias.com/public_html/dist
+            if [ -d "$OUTLET/v1" ]; then sh scripts/marca-v2.sh outlet dist "$OUTLET"; fi

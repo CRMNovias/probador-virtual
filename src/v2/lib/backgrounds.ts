@@ -6,7 +6,8 @@ import { brand } from './brand';
  * V1): la IA genera a la persona dentro de la escena, con su luz y sus
  * sombras, en vez de pegarla sobre una lámina. «Estudio» también va descrito
  * para que el estudio sea real y no la lámina de marca. Cada marca tiene los
- * suyos: los de Sedka van con su estudio azul marino y escenas propias.
+ * suyos: los de Sedka, con su estudio azul marino; los de Outlet, con su
+ * estudio oscuro y escenas de ciudad.
  */
 
 export interface Background {
@@ -97,7 +98,47 @@ const SEDKA_BACKGROUNDS: Background[] = [
   },
 ];
 
-export const BACKGROUNDS = brand.id === 'sedka' ? SEDKA_BACKGROUNDS : ATELIER_BACKGROUNDS;
+const OUTLET_BACKGROUNDS: Background[] = [
+  {
+    id: 'estudio',
+    label: 'Estudio',
+    // Oscuro, como el estudio de la V1 (los vestidos claros resaltan); sin nombrar focos.
+    note: 'Un fondo continuo de estudio fotográfico gris antracita oscuro, con el suelo del mismo tono y un halo de luz suave en el centro; solo el fondo liso, sin focos, objetos ni texto.',
+    image: asset('/backgrounds/outlet/estudio.webp'),
+  },
+  {
+    id: 'blanco',
+    label: 'Estudio blanco',
+    note: 'Un fondo continuo de estudio fotográfico blanco, con el suelo blanco y una sombra muy suave; solo el fondo liso, sin focos, lámparas, objetos ni texto.',
+    image: asset('/backgrounds/outlet/blanco.webp'),
+  },
+  {
+    id: 'loft',
+    label: 'Loft',
+    note: 'Un loft industrial amplio con paredes de ladrillo pintadas de blanco, grandes ventanales de hierro negro y suelo de hormigón pulido, luz natural, sin gente ni texto.',
+    image: asset('/backgrounds/outlet/loft.webp'),
+  },
+  {
+    id: 'azotea',
+    label: 'Azotea',
+    note: 'Una azotea urbana al atardecer con vistas a los tejados y cúpulas de Madrid, suelo de madera y barandilla de cristal, cielo cálido, sin gente ni texto.',
+    image: asset('/backgrounds/outlet/azotea.webp'),
+  },
+  {
+    id: 'galeria',
+    label: 'Galería',
+    note: 'Una galería de arte minimalista y vacía, paredes blancas sin cuadros, suelo de hormigón claro y luz cenital suave, sin gente ni texto.',
+    image: asset('/backgrounds/outlet/galeria.webp'),
+  },
+  {
+    id: 'escalinata',
+    label: 'Escalinata',
+    note: 'Una escalinata monumental de piedra clara ante la fachada de un edificio clásico con columnas, luz suave de mañana, sin gente ni texto.',
+    image: asset('/backgrounds/outlet/escalinata.webp'),
+  },
+];
+
+export const BACKGROUNDS = brand.id === 'sedka' ? SEDKA_BACKGROUNDS : brand.id === 'outlet' ? OUTLET_BACKGROUNDS : ATELIER_BACKGROUNDS;
 
 export const DEFAULT_BACKGROUND = BACKGROUNDS[0]!;
 export const CUSTOM_BACKGROUND_MAX = 180;
