@@ -5,8 +5,8 @@ La V2 (diseño tipo Zara, pruebas en 360°, fondos, pareja) vive dentro de esta 
 `probador.crmnovias.com/v1`. Es la misma app, el mismo build y el mismo despliegue: no hay
 proceso ni configuración de servidor aparte.
 
-Solo es Atelier de Bodas: Outlet Nupcial y Sedka tienen sus propios probadores dentro del
-CRM y no cambian.
+La misma V2 sirve también `probador-sedka.crmnovias.com`, con la disposición y los textos
+de Sedka (ver «Sedka»). Outlet Nupcial sigue con su probador aparte.
 
 ## Cómo encaja
 
@@ -56,6 +56,33 @@ bloquea, copia el enlace y, si tampoco puede, abre WhatsApp con él
 (`probador-screen.tsx`). La sesión del iframe es aparte de la de
 `probador.crmnovias.com` abierto directamente: el navegador guarda por separado lo de cada
 web.
+
+## Sedka
+
+- **Marca**: `src/v2/lib/brand.ts` la saca del dominio (con «sedka» en él es Sedka; en local,
+  `sedka.localhost`). Lleva los datos de cada marca: logo, web, cómo llama a sus tiendas,
+  filtros de novio y adónde se llega al entrar (Sedka, a la colección).
+- **Aspecto**: Sedka no es Atelier con otros colores. Sus pantallas están en `src/v2/sedka`
+  y siguen la disposición de su V1: cabecera con el logo grande y el menú en texto, portada
+  sobre la foto de la boutique, colección tipo Pinterest, el probador con la prueba grande y
+  un solo panel, tarjetas centradas sobre crema para entrar, la cita en su caja dorada… Las
+  `page.tsx` eligen las de Sedka o las de Atelier.
+- **Lo que hacen**: es lo mismo en las dos marcas. Está en hooks compartidos
+  (`use-probador`, `use-collection`, `use-booking`, `use-profile-screen`); cada marca solo
+  pone la vista.
+- **Colores y letra**: variables de `v2.css` por `data-brand` (dorado y Montserrat en Sedka).
+- **Fondos**: los suyos (`src/v2/lib/backgrounds.ts`, miniaturas en
+  `public/probador-v2/backgrounds/sedka`), con su estudio azul marino por defecto.
+- **Rutas** (`src/router.tsx`, `SedkaRouter`): solo la V2. Su V1 es otra web (repo
+  `ARS-BRIDAL/probador-virtual-sedka`, en `/v1`); las direcciones de antes de su V1 sin
+  `/v1` llevan a la V2 como las de Atelier.
+- **Despliegue**: la web de Sedka está en el mismo servidor, en
+  `/home/probador/probador-sedka.crmnovias.com/public_html/dist`. Su repo construye su V1
+  en `dist/v1`; `scripts/sedka-v2.sh` copia esta V2 en la raíz sin tocar `dist/v1` y deja
+  el `index.html` con el título, el icono y la vista previa de Sedka
+  (`scripts/sedka-index.mjs`). Lo llaman los dos despliegues: el de este repo, en cuanto
+  existe `dist/v1`, y el de Sedka, si la V2 del servidor ya trae Sedka.
+- **En local**: `sedka.localhost:5174` con `npm run dev`.
 
 ## Lo que hace el CRM
 

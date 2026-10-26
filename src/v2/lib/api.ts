@@ -1,9 +1,7 @@
 import axios from 'axios';
 import { apiClient } from '@/services/apiClient';
 import * as appointments from '@/services/appointmentService';
-import * as auth from '@/services/authService';
 import * as avatars from '@/services/avatarService';
-import * as dresses from '@/services/dressService';
 import * as favorites from '@/services/favoriteService';
 import * as tryOns from '@/services/tryOnService';
 import * as users from '@/services/userService';
@@ -92,13 +90,31 @@ const call = async <T>(run: () => Promise<T>): Promise<T> => {
 const unwrap = <T>(body: unknown): T =>
   (body && typeof body === 'object' && 'data' in body ? (body as { data: T }).data : body) as T;
 
+/**
+ * Rutas del CRM de la marca (src/v2/lib/brand.ts): el catálogo, las citas, las
+ * tiendas y la entrada llevan su prefijo. El resto (perfil, avatar, pruebas,
+ * favoritos) es común: el CRM saca la marca del token, que es de la marca con
+ * la que se entró.
+ */
 const probador = (path: string) => `/probador/${brand.id}/${path}`;
+const BOOKING = probador('booking');
+
+interface VerifyCodeBody {
+  data: {
+    token: string;
+    user: { id: string | number; name?: string | null; email?: string | null; phone?: string; createdAt: string };
+    hasProfile?: boolean;
+    hasAvatar?: boolean;
+  };
+}
 
 // Acceso (la sesión es la de la V1: ver session.ts)
 export const sendCode = (phone: string) =>
-  call(() => auth.sendCode(phone)).then((res) => ({ simulated: Boolean((res as { simulated?: boolean }).simulated) }));
+  call(() => apiClient.post(`/auth/${brand.id}/send-code`, { phone })).then((res) => ({
+    simulated: Boolean((res as { simulated?: boolean }).simulated),
+  }));
 export const verifyCode = async (phone: string, code: string) => {
-  const res = await call(() => auth.verifyCode(phone, code));
+  const res = (await call(() => apiClient.post(`/auth/${brand.id}/verify-code`, { phone, code }))) as unknown as VerifyCodeBody;
   const { token, user, hasProfile, hasAvatar } = res.data;
   const profile: V1UserProfile = {
     id: String(user.id),
@@ -117,7 +133,8 @@ export const logout = async () => {
 
 // Perfil
 export const getProfile = () => call(() => users.getProfile()) as Promise<UserProfile>;
-export const listShops = () => call(() => users.listPublicShops()) as Promise<Shop[]>;
+export const listShops = () =>
+  call(() => apiClient.get(`/${brand.id}/shops`)).then((res) => (Array.isArray(res) ? res : (unwrap<Shop[] | undefined>(res) ?? [])) as Shop[]);
 export interface ProfileInput {
   phone: string;
   name: string;
@@ -179,17 +196,29 @@ export interface GarmentFilters {
   suitType?: string | undefined;
 }
 
-/** Filtros del catálogo, los mismos que la V1: marca y corte en novia; estilo y color en novio. */
-export const FACETS = {
+interface Facet {
+  key: keyof GarmentFilters;
+  label: string;
+  path: string;
+}
+
+/**
+ * Filtros del catálogo, los mismos que la V1: marca y corte en novia; estilo y
+ * color en novio. En Sedka los trajes no traen estilo ni color: se filtran por marca.
+ */
+export const FACETS: Record<Category, readonly Facet[]> = {
   bride: [
     { key: 'brand', label: 'Marca', path: 'collections/brands' },
     { key: 'cut', label: 'Corte', path: 'collections/bride-cuts' },
   ],
-  groom: [
-    { key: 'suitType', label: 'Estilo', path: 'collections/groom-suit-types' },
-    { key: 'color', label: 'Color', path: 'collections/groom-colors' },
-  ],
-} as const satisfies Record<Category, readonly { key: keyof GarmentFilters; label: string; path: string }[]>;
+  groom:
+    brand.groomFilters === 'brand'
+      ? [{ key: 'brand', label: 'Marca', path: 'collections/groom-brands' }]
+      : [
+          { key: 'suitType', label: 'Estilo', path: 'collections/groom-suit-types' },
+          { key: 'color', label: 'Color', path: 'collections/groom-colors' },
+        ],
+};
 
 export interface GarmentList {
   items: CollectionItem[];
@@ -203,26 +232,37 @@ const clean = <T extends Record<string, unknown>>(params: T) =>
     [K in keyof T]?: Exclude<T[K], undefined>;
   };
 
+/**
+ * El nombre del modelo sin lo que repite la web de Sedka: «Vestidos de novia
+ * ROXANA - SEDKA NOVIAS» → «ROXANA» (la marca ya va aparte).
+ */
+const shortName = (name: string) =>
+  name
+    .replace(/^(vestidos?|trajes?)\s+de\s+(novia|novio)\s+/iu, '')
+    .replace(/\s+-\s+[^-]+$/u, '')
+    .trim() || name;
+const withShortName = (item: CollectionItem): CollectionItem => ({ ...item, name: shortName(item.name) });
+
 /** Una página del catálogo (el CRM sirve 30 por página, los más recientes primero). */
 export const listGarments = async (category: Category, filters: GarmentFilters = {}, page = 1): Promise<GarmentList> => {
-  const res = await call(() =>
+  const params = clean(
     category === 'bride'
-      ? dresses.listBrides(clean({ page, q: filters.q, brand: filters.brand, cut: filters.cut }))
-      : dresses.listGrooms(clean({ page, q: filters.q, color: filters.color, suitType: filters.suitType })),
+      ? { page, q: filters.q, brand: filters.brand, cut: filters.cut }
+      : { page, q: filters.q, brand: filters.brand, color: filters.color, suitType: filters.suitType },
   );
-  return { items: res.data as CollectionItem[], total: res.meta.total, hasMore: res.meta.hasMore };
+  const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString();
+  const res = (await call(() => apiClient.get(probador(`collections/${category === 'bride' ? 'brides' : 'grooms'}?${query}`)))) as unknown as {
+    data?: CollectionItem[];
+    meta?: { total?: number; hasMore?: boolean };
+  };
+  return { items: (res.data ?? []).map(withShortName), total: res.meta?.total ?? 0, hasMore: Boolean(res.meta?.hasMore) };
 };
 export const getGarment = (dressId: string) =>
   call(() => apiClient.get(probador(`collections/item?dressId=${encodeURIComponent(dressId)}`))).then((res) =>
-    unwrap<CollectionItem>(res),
+    withShortName(unwrap<CollectionItem>(res)),
   );
-const FACET_LOADERS: Record<string, () => Promise<CollectionFacet[]>> = {
-  'collections/brands': dresses.listBrideBrands,
-  'collections/bride-cuts': dresses.listBrideCuts,
-  'collections/groom-suit-types': dresses.listGroomSuitTypes,
-  'collections/groom-colors': dresses.listGroomColors,
-};
-export const listFacet = (path: string) => call(() => (FACET_LOADERS[path] ?? (async () => []))());
+export const listFacet = (path: string) =>
+  call(() => apiClient.get(probador(path))).then((res) => unwrap<CollectionFacet[] | undefined>(res) ?? []);
 
 // Pruebas
 export interface TryOnOptions {
@@ -259,12 +299,14 @@ export const generateTryOn = async (dressId: string, { backgroundNote, partner, 
  * como hace el CRM en el WhatsApp.
  */
 const garmentName = (webName: string | null | undefined, crmName: string) =>
-  webName ||
-  crmName
-    .replace(/\s*\([^)]*\d[^)]*\)\s*$/u, '')
-    .replace(/\s+\S*\/\S+\s*$/u, '')
-    .trim() ||
-  crmName;
+  shortName(
+    webName ||
+      crmName
+        .replace(/\s*\([^)]*\d[^)]*\)\s*$/u, '')
+        .replace(/\s+\S*\/\S+\s*$/u, '')
+        .trim() ||
+      crmName,
+  );
 
 /** El CRM pone el modelo en el grupo y no en cada prueba: se copia a cada una (Mis pruebas enlaza con él). */
 export const listTryOns = () =>
@@ -277,28 +319,29 @@ export const listTryOns = () =>
   );
 export const deleteTryOn = (id: string) => call(() => tryOns.deleteTryOn(id));
 
-// Citas (los servicios de la V1)
-export const listBookingShops = () => call(() => appointments.listBookingShops()) as Promise<BookingShop[]>;
-export const listBookingServices = (shopId: number) => call(() => appointments.listBookingServices(shopId)) as Promise<BookingService[]>;
+// Citas (los servicios de la V1, con las rutas de la marca)
+export const listBookingShops = () => call(() => appointments.listBookingShops(BOOKING)) as Promise<BookingShop[]>;
+export const listBookingServices = (shopId: number) =>
+  call(() => appointments.listBookingServices(shopId, BOOKING)) as Promise<BookingService[]>;
 
 /** Días cerrados de la tienda para un servicio, como claves YYYY-MM-DD. */
 export const listClosedDays = async (shopId: number, serviceId: number): Promise<Set<string>> =>
-  new Set(await call(() => appointments.listClosedDays(shopId, serviceId)));
+  new Set(await call(() => appointments.listClosedDays(shopId, serviceId, BOOKING)));
 
 /** Primer día con calendario abierto (tiendas recién abiertas). */
 export const getOpeningDate = async (shopId: number): Promise<string | null> =>
-  (await call(() => appointments.getBookingOpeningDate(shopId))).suggestedStartDate;
+  (await call(() => appointments.getBookingOpeningDate(shopId, BOOKING))).suggestedStartDate;
 
 /** Horas libres de un día. Lista vacía si la tienda cierra o no queda hueco. */
 export const listHours = async (input: Omit<BookingInput, 'hour'>): Promise<string[]> => {
-  const res = await call(() => appointments.listAvailability(input));
+  const res = await call(() => appointments.listAvailability(input, BOOKING));
   return res.closed ? [] : res.slots.map((s) => s.hour);
 };
 
-export const bookAppointment = (input: BookingInput) => call(() => appointments.bookAppointment(input));
+export const bookAppointment = (input: BookingInput) => call(() => appointments.bookAppointment(input, BOOKING));
 export const updateAppointment = (input: BookingInput & { appointmentId: number }) =>
-  call(() => appointments.updateAppointmentBooking(input));
-export const cancelAppointment = (appointmentId: number) => call(() => appointments.cancelAppointmentBooking(appointmentId));
+  call(() => appointments.updateAppointmentBooking(input, BOOKING));
+export const cancelAppointment = (appointmentId: number) => call(() => appointments.cancelAppointmentBooking(appointmentId, BOOKING));
 export const listAppointments = () =>
   call(() => appointments.getUserAppointments()).then((res) => {
     const d = unwrap<{ today?: Appointment[]; upcoming?: Appointment[]; past?: Appointment[] }>(res);

@@ -8,11 +8,14 @@ export function FavoriteButton({
   initial,
   onChange,
   className = '',
+  onClass = 'fill-ink',
 }: {
   dressId: string;
   initial: boolean;
   onChange?: (favorited: boolean) => void;
   className?: string;
+  /** Cómo se ve el corazón marcado (Sedka: dorado). */
+  onClass?: string;
 }) {
   // Los favoritos llegan después que la lista: hasta que la clienta toca, manda `initial`.
   const [override, setOverride] = useState<boolean | null>(null);
@@ -43,7 +46,7 @@ export function FavoriteButton({
       aria-label={on ? 'Quitar de favoritos' : 'Añadir a favoritos'}
       className={`grid size-10 place-items-center ${className}`}
     >
-      <Heart className={`size-[18px] ${on ? 'fill-ink' : ''}`} strokeWidth={1.25} aria-hidden />
+      <Heart className={`size-[18px] ${on ? onClass : ''}`} strokeWidth={1.25} aria-hidden />
     </button>
   );
 }

@@ -1,3 +1,5 @@
+import { brand } from './brand';
+
 /** Fechas de la reserva. Todo en hora local: los días son claves YYYY-MM-DD. */
 
 export const toDateKey = (d: Date): string =>
@@ -54,7 +56,7 @@ export const calendarFile = (event: { start: Date; title: string; location: stri
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Atelier de Bodas//Probador virtual//ES',
+    `PRODID:-//${brand.name}//Probador virtual//ES`,
     'BEGIN:VEVENT',
     `UID:${event.start.getTime()}@probador.atelierdebodas.com`,
     `DTSTAMP:${icsStamp(new Date())}`,
@@ -74,7 +76,7 @@ export const saveCalendarFile = (event: Parameters<typeof calendarFile>[0]) => {
   const url = URL.createObjectURL(calendarFile(event));
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'cita-atelier-de-bodas.ics';
+  link.download = `cita-${brand.id}.ics`;
   link.click();
   URL.revokeObjectURL(url);
 };

@@ -13,15 +13,19 @@
  * - /v1/share/:id (PUBLIC) - Share page for viewing shared images
  * Las direcciones de antes (la V1 sin /v1, la V2 con /v2) llevan a su pantalla
  * de la V2 (components/routing/LegacyRedirect).
+ *
+ * En probador-sedka.crmnovias.com (SedkaRouter) va solo la V2: la V1 de Sedka es
+ * otra web (repo ARS-BRIDAL/probador-virtual-sedka) que el servidor sirve en /v1.
  */
 
-import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ProtectedRoute } from './components/routing/ProtectedRoute.js';
 import { LEGACY_V1_PATHS, LegacyShareRedirect, LegacyV1Redirect, LegacyV2Redirect } from './components/routing/LegacyRedirect.js';
 import { useAuth } from './context/AuthContext.js';
 import { useApp } from './context/AppContext.js';
 import { routes } from './constants/routes.js';
+import { brand } from './v2/lib/brand.js';
 
 // Page imports
 import { AuthPage } from './pages/AuthPage.js';
@@ -74,11 +78,47 @@ const HomeRoute: React.FC = () => {
 };
 
 /**
+ * Sedka: una dirección de /v1 solo llega aquí al recargar dentro de su V1 (el
+ * servidor sirve su entrada, /v1/, y para el resto da esta página). Se vuelve a
+ * esa entrada; si es la propia entrada, su V1 no está y se va a la V2.
+ */
+const SedkaV1: React.FC = () => {
+  const { pathname } = useLocation();
+  const entry = /^\/v1\/?$/.test(pathname);
+  useEffect(() => {
+    if (!entry) window.location.replace('/v1/');
+  }, [entry]);
+  return entry ? <Navigate to="/" replace /> : null;
+};
+
+const SedkaRouter: React.FC = () => (
+  <Routes>
+    {/* Direcciones de antes: las de su V1 sin /v1 y la V2 con /v2 */}
+    {LEGACY_V1_PATHS.map((path) => (
+      <Route key={path} path={path} element={<LegacyV1Redirect />} />
+    ))}
+    <Route path="/share/:id" element={<LegacyShareRedirect />} />
+    <Route path="/v2/*" element={<LegacyV2Redirect />} />
+    <Route path="/v1/*" element={<SedkaV1 />} />
+
+    <Route
+      path="/*"
+      element={
+        <Suspense fallback={<div className="min-h-screen bg-white" />}>
+          <V2App />
+        </Suspense>
+      }
+    />
+  </Routes>
+);
+
+/**
  * AppRouter Component
  *
  * Main router configuration for the application
  */
 export const AppRouter: React.FC = () => {
+  if (brand.id === 'sedka') return <SedkaRouter />;
   return (
     <Routes>
       {/* Home - Smart redirect based on auth state */}

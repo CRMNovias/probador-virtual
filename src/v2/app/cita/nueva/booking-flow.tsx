@@ -1,144 +1,44 @@
-import { useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { CalendarPlus, Check, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { TopBar } from '@v2/components/app-shell';
 import { Button, Eyebrow, LinkButton, Notice } from '@v2/components/ui';
-import {
-  bookAppointment,
-  getOpeningDate,
-  getProfile,
-  listAppointments,
-  listBookingServices,
-  listBookingShops,
-  listClosedDays,
-  listFavorites,
-  listHours,
-  updateAppointment,
-} from '@v2/lib/api';
-import { brand } from '@v2/lib/brand';
-import {
-  addDays,
-  formatLong,
-  formatMonth,
-  formatShort,
-  fromDateKey,
-  mapsUrl,
-  monthGrid,
-  saveCalendarFile,
-  startOfToday,
-  toDateKey,
-} from '@v2/lib/dates';
-import type { BookingService, BookingShop } from '@v2/lib/types';
+import { listFavorites } from '@v2/lib/api';
+import { brand, capitalize } from '@v2/lib/brand';
+import { formatLong, formatMonth, formatShort, fromDateKey, mapsUrl, monthGrid, saveCalendarFile, toDateKey } from '@v2/lib/dates';
 import { useLoad } from '@v2/lib/use-load';
+import { useBooking, type Booked } from './use-booking';
 
 const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
-/** Servicio que encaja con lo que se estaba probando (vestido o traje). */
-const matchesCategory = (s: BookingService, category: string | null) => {
-  const text = `${s.name} ${s.label}`.toLowerCase();
-  if (category === 'groom') return /novio|traje/.test(text);
-  if (category === 'bride') return /novia|vestido/.test(text);
-  return false;
-};
-
-interface Booked {
-  shop: BookingShop;
-  service: BookingService;
-  date: string;
-  hour: string;
-}
-
 export function BookingFlow() {
-  const params = useSearchParams();
-  const editId = params.get('edit');
-  const category = params.get('c');
-
-  const { data: base, error: baseError } = useLoad(
-    () => Promise.all([listBookingShops(), getProfile(), editId ? listAppointments() : null]),
-    editId ?? '',
-  );
-  const [shops, profile, appointments] = base ?? [[], null, null];
-  const editing = appointments?.upcoming.find((a) => String(a.id) === editId) ?? null;
-  const editingStart = editing ? new Date(editing.date) : null;
-
-  // Atelier: el que elija la clienta; si no, el de la cita que modifica, el de su perfil o el único que hay.
-  const [shopChoice, setShopChoice] = useState<number | null>(null);
-  const [changingShop, setChangingShop] = useState(false);
-  const fallbackShop =
-    (editing && shops.find((s) => s.id === editing.shopId || s.name === editing.location.name)) ??
-    shops.find((s) => s.id === profile?.shopId) ??
-    (shops.length === 1 ? shops[0] : undefined);
-  const shop = shops.find((s) => s.id === shopChoice) ?? fallbackShop ?? null;
-  const shopKey = String(shop?.id ?? '');
-
-  // Los servicios dependen solo del atelier: al cambiarlo se recargan (en la V1 se vaciaban por error).
-  const { data: services, loading: servicesLoading } = useLoad(() => (shop ? listBookingServices(shop.id) : Promise.resolve([])), shopKey);
-  const [serviceChoice, setServiceChoice] = useState<number | null>(null);
-  const service =
-    services?.find((s) => s.id === serviceChoice) ??
-    (editing ? services?.find((s) => s.id === editing.serviceId) : undefined) ??
-    services?.find((s) => matchesCategory(s, category)) ??
-    (services?.length === 1 ? services[0] : undefined) ??
-    null;
-  const serviceKey = `${shopKey}|${service?.id ?? ''}`;
-
-  const { data: closed } = useLoad(
-    () => (shop && service ? listClosedDays(shop.id, service.id) : Promise.resolve(new Set<string>())),
-    serviceKey,
-  );
-  const { data: opening } = useLoad(() => (shop ? getOpeningDate(shop.id) : Promise.resolve(null)), shopKey);
-
-  const today = startOfToday();
-  const earliestByService = addDays(today, Math.max(1, service?.minDays ?? 1));
-  const openingDay = opening ? fromDateKey(opening) : null;
-  const minDay = openingDay && openingDay > earliestByService ? openingDay : earliestByService;
-  const maxDay = addDays(today, Math.max(1, service?.maxDays ?? 30));
-
-  const [month, setMonth] = useState<Date | null>(null);
-  const shownMonth = month ?? new Date(minDay.getFullYear(), minDay.getMonth(), 1);
-  const canPrev = shownMonth > new Date(minDay.getFullYear(), minDay.getMonth(), 1);
-  const canNext = new Date(shownMonth.getFullYear(), shownMonth.getMonth() + 1, 1) <= maxDay;
-
-  // Días que ya se comprobó que no tienen horas: se desactivan en el calendario.
-  const [fullDays, setFullDays] = useState<Set<string>>(new Set());
-  const isBookable = (d: Date) => d >= minDay && d <= maxDay && !closed?.has(toDateKey(d)) && !fullDays.has(`${serviceKey}|${toDateKey(d)}`);
-
-  const [dateChoice, setDateChoice] = useState<string | null>(null);
-  const candidate = dateChoice ?? (editingStart ? toDateKey(editingStart) : null);
-  const date = candidate && isBookable(fromDateKey(candidate)) ? candidate : null;
-
-  const { data: hours, loading: hoursLoading } = useLoad(async () => {
-    if (!shop || !service || !date) return null;
-    const free = await listHours({ shopId: shop.id, serviceId: service.id, date });
-    if (!free.length) setFullDays((s) => new Set(s).add(`${serviceKey}|${date}`));
-    return free;
-  }, `${serviceKey}|${date ?? ''}`);
-
-  const [hourChoice, setHourChoice] = useState<string | null>(null);
-  const editingHour = editingStart ? `${String(editingStart.getHours()).padStart(2, '0')}:${String(editingStart.getMinutes()).padStart(2, '0')}` : null;
-  const hour = [hourChoice, editingHour].find((h) => h && hours?.includes(h)) ?? null;
-
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [booked, setBooked] = useState<Booked | null>(null);
-
-  const confirm = async () => {
-    if (!shop || !service || !date || !hour) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const input = { shopId: shop.id, serviceId: service.id, date, hour };
-      if (editing) await updateAppointment({ ...input, appointmentId: editing.id });
-      else await bookAppointment(input);
-      setBooked({ shop, service, date, hour });
-      window.scrollTo({ top: 0 });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo reservar la cita. Inténtalo de nuevo.');
-    } finally {
-      setBusy(false);
-    }
-  };
+  const {
+    editing,
+    shops,
+    baseError,
+    shop,
+    setShopChoice,
+    changingShop,
+    setChangingShop,
+    services,
+    servicesLoading,
+    service,
+    setServiceChoice,
+    shownMonth,
+    setMonth,
+    canPrev,
+    canNext,
+    isBookable,
+    date,
+    setDateChoice,
+    hours,
+    hoursLoading,
+    hour,
+    setHourChoice,
+    busy,
+    error,
+    booked,
+    confirm,
+  } = useBooking();
 
   if (booked) return <BookedView booked={booked} edited={Boolean(editing)} />;
 
@@ -152,7 +52,7 @@ export function BookingFlow() {
         <div className="lg:max-w-lg">
           <h1 className="text-[20px] font-light uppercase leading-tight tracking-[0.06em]">{editing ? 'Elige el nuevo día' : 'Ven a probártelo'}</h1>
           <p className="mt-2 text-[13px] leading-relaxed text-muted">
-            Una asesora te esperará en tu atelier. La cita es gratuita y dura alrededor de una hora.
+            Una asesora te esperará en tu {brand.shop.one}. La cita es gratuita y dura alrededor de una hora.
           </p>
           {baseError ? (
             <div className="mt-4">
@@ -162,7 +62,7 @@ export function BookingFlow() {
 
           <section className="mt-8" aria-labelledby="atelier">
             <h2 id="atelier" className={heading}>
-              Atelier
+              {capitalize(brand.shop.one)}
             </h2>
             {shop && !changingShop ? (
               <div className="mt-2 flex items-start gap-3 border-y border-line py-4">
@@ -194,7 +94,7 @@ export function BookingFlow() {
                       }}
                       className="flex w-full items-start gap-3 py-4 text-left"
                     >
-                      <span className={`mt-1 size-3 shrink-0 border border-ink ${shop?.id === s.id ? 'bg-ink' : ''}`} aria-hidden />
+                      <span className={`mt-1 size-3 shrink-0 border border-ink ${shop?.id === s.id ? 'border-accent bg-accent' : ''}`} aria-hidden />
                       <span>
                         <span className="block text-[13px] font-medium uppercase tracking-[0.06em]">{s.name}</span>
                         <span className="mt-0.5 block text-[13px] text-muted">
@@ -226,7 +126,7 @@ export function BookingFlow() {
                         setServiceChoice(s.id);
                         setHourChoice(null);
                       }}
-                      className={`h-10 border px-4 text-[11px] font-medium uppercase tracking-[0.1em] ${service?.id === s.id ? 'border-ink bg-ink text-white' : 'border-line'}`}
+                      className={`h-10 border px-4 text-[11px] font-medium uppercase tracking-[0.1em] ${service?.id === s.id ? 'border-accent bg-accent text-white' : 'border-line'}`}
                     >
                       {s.label || s.name}
                     </button>
@@ -234,7 +134,7 @@ export function BookingFlow() {
                 </div>
               ) : (
                 <p className="mt-2 text-[13px] text-muted">
-                  Este atelier no tiene citas por internet ahora mismo. Llámanos al {shop.phone} y te buscamos hueco.
+                  {capitalize(brand.shop.this)} no tiene citas por internet ahora mismo. Llámanos al {shop.phone} y te buscamos hueco.
                 </p>
               )}
             </section>
@@ -296,7 +196,7 @@ export function BookingFlow() {
                           setHourChoice(null);
                         }}
                         className={`mx-auto grid size-10 place-items-center text-[13px] tabular-nums ${
-                          selected ? 'bg-ink text-white' : bookable ? 'text-ink hover:bg-studio' : 'text-neutral-300'
+                          selected ? 'bg-accent text-white' : bookable ? 'text-ink hover:bg-studio' : 'text-neutral-300'
                         }`}
                       >
                         {d.getDate()}
@@ -328,7 +228,7 @@ export function BookingFlow() {
                       type="button"
                       aria-pressed={hour === h}
                       onClick={() => setHourChoice(h)}
-                      className={`h-10 border text-[13px] tabular-nums ${hour === h ? 'border-ink bg-ink text-white' : 'border-line'}`}
+                      className={`h-10 border text-[13px] tabular-nums ${hour === h ? 'border-accent bg-accent text-white' : 'border-line'}`}
                     >
                       {h}
                     </button>
@@ -353,7 +253,7 @@ export function BookingFlow() {
             <p className="label-caps mb-3 hidden lg:block">Tu cita</p>
             <dl className="mb-5 hidden space-y-3 text-[13px] lg:block">
               {[
-                ['Atelier', shop?.name],
+                [capitalize(brand.shop.one), shop?.name],
                 ['Para', service ? service.label || service.name : null],
                 ['Día', date ? formatLong(fromDateKey(date)) : null],
                 ['Hora', hour],
@@ -389,7 +289,7 @@ function BookedView({ booked, edited }: { booked: Booked; edited: boolean }) {
       start,
       title: `Cita en ${booked.shop.name}`,
       location: address,
-      description: `${booked.service.label || booked.service.name}. Teléfono del atelier: ${booked.shop.phone}`,
+      description: `${booked.service.label || booked.service.name}. Teléfono ${brand.shop.of}: ${booked.shop.phone}`,
     });
 
   return (

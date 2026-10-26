@@ -1,11 +1,20 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { BottomNav, TopBar } from '@v2/components/app-shell';
+import { brand } from '@v2/lib/brand';
+import { SedkaProfile } from '@v2/sedka/profile';
 import { ProfileScreen } from './profile-screen';
 
 export const metadata: Metadata = { title: 'Perfil' };
 
 export default function PerfilPage() {
+  if (brand.id === 'sedka') {
+    return (
+      <Suspense>
+        <SedkaProfile />
+      </Suspense>
+    );
+  }
   return (
     <>
       <TopBar />

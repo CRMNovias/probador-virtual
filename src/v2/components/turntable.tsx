@@ -313,7 +313,7 @@ function TurntableView({ stillUrl, videoUrl, alt, pendingLabel, badge = true, pe
         ) : pendingLabel ? (
           <span className={`absolute inset-x-0 flex justify-center ${pendingPosition}`}>
             <span className="label-caps flex items-center gap-2 bg-white/85 px-2 py-1 text-ink/80">
-              <span className="size-1.5 animate-pulse bg-ink" aria-hidden />
+              <span className="size-1.5 animate-pulse bg-accent" aria-hidden />
               {pendingLabel}
             </span>
           </span>

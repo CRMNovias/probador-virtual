@@ -38,9 +38,15 @@ const unwrap = <T,>(res: unknown): T => {
   return res as T;
 };
 
+/**
+ * Rutas de reserva de Atelier. El probador V2 pasa las de su marca
+ * (`/probador/sedka/booking`…) como último parámetro de cada función.
+ */
+const BOOKING = '/probador/booking';
+
 /** GET /probador/booking/shops */
-export const listBookingShops = async (): Promise<BookingShop[]> => {
-  const res = await apiClient.get('/probador/booking/shops');
+export const listBookingShops = async (base = BOOKING): Promise<BookingShop[]> => {
+  const res = await apiClient.get(`${base}/shops`);
   return unwrap<BookingShop[]>(res) ?? [];
 };
 
@@ -48,8 +54,8 @@ export const listBookingShops = async (): Promise<BookingShop[]> => {
  * GET /probador/booking/services?shopId=
  * Igual que el plugin: catálogo online de ESA tienda (Córdoba ≠ Madrid).
  */
-export const listBookingServices = async (shopId: number): Promise<BookingService[]> => {
-  const res = await apiClient.get('/probador/booking/services', {
+export const listBookingServices = async (shopId: number, base = BOOKING): Promise<BookingService[]> => {
+  const res = await apiClient.get(`${base}/services`, {
     params: { shopId },
   });
   return unwrap<BookingService[]>(res) ?? [];
@@ -61,8 +67,8 @@ export interface BookingOpeningDate {
 }
 
 /** POST /probador/booking/opening-date — como key-shop-oppening-date del plugin. */
-export const getBookingOpeningDate = async (shopId: number): Promise<BookingOpeningDate> => {
-  const res = (await apiClient.post('/probador/booking/opening-date', { shopId })) as unknown as {
+export const getBookingOpeningDate = async (shopId: number, base = BOOKING): Promise<BookingOpeningDate> => {
+  const res = (await apiClient.post(`${base}/opening-date`, { shopId })) as unknown as {
     opening_date?: string;
     suggested_calendar_start_date?: string;
   };
@@ -77,13 +83,13 @@ export const getBookingOpeningDate = async (shopId: number): Promise<BookingOpen
  * Días cerrados del atelier (+ días sin horas bookables).
  * El plugin pasa también service_id.
  */
-export const listClosedDays = async (shopId: number, serviceId?: number): Promise<string[]> => {
+export const listClosedDays = async (shopId: number, serviceId?: number, base = BOOKING): Promise<string[]> => {
   const body: { shopId: number; serviceId?: number } = { shopId };
   if (serviceId) {
     body.serviceId = serviceId;
   }
 
-  const res = (await apiClient.post('/probador/booking/closed-days', body)) as unknown as {
+  const res = (await apiClient.post(`${base}/closed-days`, body)) as unknown as {
     closed_days?: Array<string | { year?: number; month?: number; day?: number }>;
     datestring?: string[];
   };
@@ -111,12 +117,15 @@ export const listClosedDays = async (shopId: number, serviceId?: number): Promis
 /**
  * Slots disponibles para un (shop, service, fecha).
  */
-export const listAvailability = async (params: {
-  shopId: number;
-  serviceId: number;
-  date: string; // YYYY-MM-DD
-}): Promise<{ closed: boolean; slots: BookingSlot[] }> => {
-  const res = (await apiClient.post('/probador/booking/availability', params)) as unknown as {
+export const listAvailability = async (
+  params: {
+    shopId: number;
+    serviceId: number;
+    date: string; // YYYY-MM-DD
+  },
+  base = BOOKING,
+): Promise<{ closed: boolean; slots: BookingSlot[] }> => {
+  const res = (await apiClient.post(`${base}/availability`, params)) as unknown as {
     closed?: 'true' | 'false' | boolean;
     available_hours?: Record<string, string | number> | unknown;
     success?: Record<string, { available_hours?: Record<string, string | number> }>;
@@ -147,16 +156,17 @@ export const listAvailability = async (params: {
 };
 
 /** POST /probador/booking/book — crea la cita real en el CRM. */
-export const bookAppointment = async (payload: BookAppointmentPayload): Promise<unknown> => {
-  return apiClient.post('/probador/booking/book', payload);
+export const bookAppointment = async (payload: BookAppointmentPayload, base = BOOKING): Promise<unknown> => {
+  return apiClient.post(`${base}/book`, payload);
 };
 
 export const updateAppointmentBooking = async (
   payload: BookAppointmentPayload & { appointmentId: number },
+  base = BOOKING,
 ): Promise<unknown> => {
-  return apiClient.post('/probador/booking/update', payload);
+  return apiClient.post(`${base}/update`, payload);
 };
 
-export const cancelAppointmentBooking = async (appointmentId: number): Promise<unknown> => {
-  return apiClient.post('/probador/booking/cancel', { appointmentId });
+export const cancelAppointmentBooking = async (appointmentId: number, base = BOOKING): Promise<unknown> => {
+  return apiClient.post(`${base}/cancel`, { appointmentId });
 };

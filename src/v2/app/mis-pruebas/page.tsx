@@ -1,11 +1,20 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { BottomNav, TopBar } from '@v2/components/app-shell';
+import { brand } from '@v2/lib/brand';
+import { SedkaTryOns } from '@v2/sedka/lists';
 import { MyTryOns } from './my-try-ons';
 
 export const metadata: Metadata = { title: 'Mis pruebas' };
 
 export default function MisPruebasPage() {
+  if (brand.id === 'sedka') {
+    return (
+      <Suspense>
+        <SedkaTryOns />
+      </Suspense>
+    );
+  }
   return (
     <>
       <TopBar />

@@ -3,6 +3,10 @@ import { Check } from 'lucide-react';
 import { Sheet } from '@v2/components/sheet';
 import { Button } from '@v2/components/ui';
 import { BACKGROUNDS, CUSTOM_BACKGROUND_MAX, type BackgroundChoice } from '@v2/lib/backgrounds';
+import { brand } from '@v2/lib/brand';
+
+/** Sedka: miniaturas redondeadas y la elegida en dorado. */
+const sedka = brand.id === 'sedka';
 
 /** Elegir dónde te ves: cinco escenas de boda, el estudio o la que describas. */
 export function BackgroundSheet({
@@ -33,16 +37,16 @@ export function BackgroundSheet({
           return (
             <li key={b.id}>
               <button type="button" aria-pressed={on} onClick={() => choose({ id: b.id })} className="block w-full text-left">
-                <span className={`relative block aspect-[3/4] overflow-hidden bg-studio ${on ? 'outline outline-1 outline-offset-2 outline-ink' : ''}`}>
+                <span className={`relative block aspect-[3/4] overflow-hidden bg-studio ${sedka ? 'rounded-lg' : ''} ${on ? `outline outline-1 outline-offset-2 ${sedka ? 'outline-accent' : 'outline-ink'}` : ''}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- miniatura local ya optimizada */}
                   <img src={b.image} alt="" loading="lazy" className="h-full w-full object-cover" />
                   {on ? (
-                    <span className="absolute right-1 top-1 grid size-5 place-items-center bg-white">
+                    <span className={`absolute right-1 top-1 grid size-5 place-items-center bg-white ${sedka ? 'rounded-full text-accent' : ''}`}>
                       <Check className="size-3.5" aria-hidden />
                     </span>
                   ) : null}
                 </span>
-                <span className="mt-1.5 block text-[11px] uppercase tracking-[0.08em]">{b.label}</span>
+                <span className="mt-1.5 block truncate text-[11px] uppercase tracking-[0.08em]">{b.label}</span>
               </button>
             </li>
           );

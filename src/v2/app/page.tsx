@@ -3,6 +3,7 @@ import { Backdrop } from '@v2/components/backdrop';
 import { LinkButton } from '@v2/components/ui';
 import { brand } from '@v2/lib/brand';
 import { asset } from '@v2/lib/base-path';
+import { SedkaWelcome } from '@v2/sedka/welcome';
 
 /** Giro 360 generado con IA de una pareja inventada (no son clientas) con prendas de la colección. */
 const DEMO_VIDEO = asset('/demo/giro-360-pareja.mp4');
@@ -16,6 +17,7 @@ const FEATURES = [
 ];
 
 export default function WelcomePage() {
+  if (brand.id === 'sedka') return <SedkaWelcome />;
   return (
     // Móvil, tablet y pantallas verticales: el vídeo arriba, a media pantalla, y el texto debajo
     // (se baja si no cabe). Pantalla apaisada (wide): el vídeo, vertical, pegado a la izquierda y

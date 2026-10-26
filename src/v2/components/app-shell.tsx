@@ -68,7 +68,7 @@ export function TopBar({
             <h1 className="label-caps max-w-[60%] truncate">{title}</h1>
           ) : (
             <Link href="/probador" aria-label={`${brand.name}, ir al probador`} className="pointer-events-auto">
-              <Image src={brand.logo} alt={brand.name} width={576} height={120} className="h-6 w-auto lg:h-7" priority />
+              <Image src={brand.logo} alt={brand.name} width={576} height={120} className={`${brand.logoClass} w-auto`} priority />
             </Link>
           )}
         </div>

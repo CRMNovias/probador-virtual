@@ -41,7 +41,7 @@ export function ViewSwitch<T extends string>({ options, value, onChange }: ViewS
                 onChange(o.id);
               }}
               className={`label-caps inline-flex h-8 items-center gap-1.5 px-2.5 text-left !text-[10px] !tracking-[0.1em] ${
-                selected ? 'bg-ink text-white' : o.pending ? 'text-ink/35' : 'text-ink'
+                selected ? 'bg-accent text-white' : o.pending ? 'text-ink/35' : 'text-ink'
               }`}
             >
               {o.pending ? <span className="size-1 animate-pulse bg-current" aria-hidden /> : null}
