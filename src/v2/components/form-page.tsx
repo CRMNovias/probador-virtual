@@ -5,11 +5,12 @@ import { asset } from '@v2/lib/base-path';
 import { brand } from '@v2/lib/brand';
 import { SedkaCardScreen } from '@v2/sedka/shell';
 
-const DEMO = asset('/demo/prueba.jpg');
+/** La pareja de la portada (inventada con IA, no son clientas). */
+const DEMO = asset('/demo/pareja.jpg');
 
 /**
  * Pantallas de formulario (entrar, datos). En móvil, una columna; en tablet, la
- * columna centrada; en ordenador, una prueba de ejemplo a la izquierda.
+ * columna centrada; en ordenador, la pareja de la portada a la izquierda.
  * Sedka: la tarjeta blanca centrada sobre crema de su V1.
  */
 export function FormPage({ children }: { children: ReactNode }) {
