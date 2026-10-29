@@ -37,7 +37,7 @@ export interface Brand {
   bookingUrl: string;
   /** Cómo llama la marca a sus tiendas («atelier» o «tienda»), con sus artículos. */
   shop: ShopWords;
-  /** Filtros de novio: estilo y color, o marca (los trajes de Sedka no traen estilo ni color). */
+  /** Filtros de novio: estilo y color, o marca y color (Sedka no trae estilo de traje). */
   groomFilters: 'style' | 'brand';
   /** Adónde se llega al entrar: el probador (Atelier y Outlet) o la colección (Sedka, como en su V1). */
   home: string;

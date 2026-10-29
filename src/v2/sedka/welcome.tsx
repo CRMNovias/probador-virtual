@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import Image from 'next/image';
-import { LinkButton } from '@v2/components/ui';
+import { useRouter } from 'next/navigation';
+import { Button, LinkButton, Notice } from '@v2/components/ui';
+import { startGuest } from '@v2/lib/api';
 import { asset } from '@v2/lib/base-path';
 import { brand } from '@v2/lib/brand';
 
@@ -16,6 +19,22 @@ const shadow = '[text-shadow:0_1px_12px_rgba(0,0,0,0.8)]';
 
 /** Portada de Sedka: la de su V1, centrada sobre la foto de la boutique, con sus textos. */
 export function SedkaWelcome() {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const begin = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const session = await startGuest();
+      router.replace(session.hasAvatar ? brand.home : '/avatar?next=' + encodeURIComponent(brand.home));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se ha podido entrar. Inténtalo de nuevo.');
+      setBusy(false);
+    }
+  };
+
   return (
     <main className="relative flex min-h-dvh flex-col bg-[#1a1a1a] bg-cover bg-center" style={{ backgroundImage: `url(${HERO})` }}>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,10,7,0.62)_0%,rgba(14,10,7,0.86)_100%)]" aria-hidden />
@@ -40,13 +59,18 @@ export function SedkaWelcome() {
             en persona.
           </p>
           <div className="mx-auto flex max-w-[340px] flex-col gap-3">
-            <LinkButton href="/entrar" block className="!h-auto py-5 !text-[15px] shadow-[0_10px_28px_rgba(0,0,0,0.5)]">
+            <Button block loading={busy} onClick={() => void begin()} className="!h-auto py-5 !text-[15px] shadow-[0_10px_28px_rgba(0,0,0,0.5)]">
               Comenzar
-            </LinkButton>
+            </Button>
             <LinkButton href="/entrar" block variant="secondary" className="!h-auto border-white !bg-transparent py-4 !text-white hover:!bg-white/10">
               Ya tengo cuenta
             </LinkButton>
           </div>
+          {error ? (
+            <div className="mx-auto mt-4 max-w-[340px]">
+              <Notice tone="danger">{error}</Notice>
+            </div>
+          ) : null}
 
           <ol className="mx-auto mt-[38px] flex max-w-[920px] flex-col md:mt-[58px] md:flex-row">
             {STEPS.map((s, i) => (
