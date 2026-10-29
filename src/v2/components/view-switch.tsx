@@ -1,8 +1,7 @@
 /**
- * Selector de vistas de una prueba, en columna arriba a la izquierda de la
- * imagen (arriba a la derecha va el logo; abajo, los botones del visor): el
- * 360, la foto de frente y las fotos de detalle. Las que se están preparando
- * salen apagadas, con un punto que parpadea.
+ * Selector de vistas de una prueba, en columna al lado de la imagen (no encima:
+ * tapaba el resultado): el 360, la foto de frente y las fotos de detalle. Las
+ * que se están preparando salen apagadas, con un punto que parpadea.
  */
 
 export interface ViewOption<T extends string> {
@@ -22,7 +21,7 @@ export function ViewSwitch<T extends string>({ options, value, onChange }: ViewS
   return (
     // Tocar el selector no hace girar el 360 de debajo.
     <div
-      className="absolute left-3 top-3 z-20"
+      className="z-20 shrink-0"
       onPointerDown={(e) => {
         e.stopPropagation();
       }}
