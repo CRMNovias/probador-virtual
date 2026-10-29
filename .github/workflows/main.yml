@@ -28,3 +28,6 @@ jobs:
             if [ -d "$SEDKA/v1" ]; then sh scripts/marca-v2.sh sedka dist "$SEDKA"; fi
             OUTLET=/home/probador/probador-oulet.crmnovias.com/public_html/dist
             if [ -d "$OUTLET/v1" ]; then sh scripts/marca-v2.sh outlet dist "$OUTLET"; fi
+            # El HTML no se cachea. Si el navegador pide un JS de una versión
+            # anterior, recarga la página nueva en vez de quedarse en blanco.
+            sh scripts/html-nocache.sh
