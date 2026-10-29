@@ -3,9 +3,11 @@ import { flushSync } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { ViewOption } from '@v2/components/view-switch';
 import {
+  ApiError,
   generateTryOn,
   getAvatar,
   getGarment,
+  getProfile,
   listFavorites,
   listGarments,
   listTryOns,
@@ -76,10 +78,12 @@ export function useProbador() {
   const [working, setWorking] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [phoneLocked, setPhoneLocked] = useState(false);
   const [favorites, setFavorites] = useState<Set<string> | null>(null);
   const elapsed = useElapsed(working !== null);
 
   const { data: base } = useLoad(() => Promise.all([getAvatar(), listTryOns(), listFavorites()]));
+  const { data: profile } = useLoad(() => (brand.id === 'sedka' ? getProfile().catch(() => null) : Promise.resolve(null)));
   const [avatar, groups, favoriteList] = base ?? [null, [], []];
   const { data: catalog } = useLoad(() => Promise.all([listGarments('bride'), listGarments('groom')]));
   // El modelo que llega por enlace (favoritos, mis pruebas) puede no estar en la primera página.
@@ -154,18 +158,30 @@ export function useProbador() {
     if (!focused && selectedId) document.getElementById(`prenda-${selectedId}`)?.scrollIntoView({ block: 'nearest', inline: 'center' });
   }, [focused, selectedId]);
 
+  const needsPhone = brand.id === 'sedka' && (phoneLocked || Boolean(profile?.freeTryOnUsed));
+
+  const askForPhone = () => {
+    const next = `/probador${params.toString() ? `?${params.toString()}` : ''}`;
+    router.push(`/entrar?claim=1&next=${encodeURIComponent(next)}`);
+  };
+
   const tryOn = async () => {
-    if (!selected) return;
+    if (!selected || needsPhone) return;
     setWorking(selected.dressId);
     setError(null);
     try {
-      const tryOn = await generateTryOn(selected.dressId, {
+      const madeTryOn = await generateTryOn(selected.dressId, {
         backgroundNote: backgroundNote(background),
         twoStep: background.id !== DEFAULT_BACKGROUND.id,
         partner: partner ? { dressId: partner.dressId, image: partner.image } : null,
       });
-      setGenerated((g) => ({ ...g, [selected.dressId]: { tryOn, options, couple: Boolean(partner) } }));
+      setGenerated((g) => ({ ...g, [selected.dressId]: { tryOn: madeTryOn, options, couple: Boolean(partner) } }));
+      if (madeTryOn.phoneRequiredNext) setPhoneLocked(true);
     } catch (err) {
+      if (err instanceof ApiError && err.code === 'phone_required') {
+        setPhoneLocked(true);
+        return;
+      }
       setError(err instanceof Error ? err.message : 'No se pudo hacer la prueba.');
     } finally {
       setWorking(null);
@@ -250,6 +266,8 @@ export function useProbador() {
     showSwitch,
     zoom,
     tryOn,
+    needsPhone,
+    askForPhone,
     toggle,
     share,
     busy,

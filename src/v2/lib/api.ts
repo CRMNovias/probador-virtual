@@ -39,6 +39,7 @@ export class ApiError extends Error {
     message: string,
     readonly status: number,
     readonly fieldErrors: Record<string, string> = {},
+    readonly code?: string,
   ) {
     super(message);
   }
@@ -54,6 +55,7 @@ const FRIENDLY: Record<number, string> = {
 interface CrmError {
   success?: boolean;
   message?: string;
+  code?: string;
   errors?: Record<string, string[]>;
   error?: { message?: string };
 }
@@ -67,7 +69,7 @@ const toApiError = (error: unknown): ApiError => {
     // Límite de peticiones: el CRM responde en inglés («Too Many Attempts.»).
     const crmMessage = status === 429 ? undefined : (body.error?.message ?? body.message);
     const message = crmMessage ?? FRIENDLY[status] ?? (status ? 'Algo ha fallado. Inténtalo de nuevo.' : 'Sin conexión. Revisa tu internet.');
-    return new ApiError(message, status, fieldErrors);
+    return new ApiError(message, status, fieldErrors, body.code);
   }
   return new ApiError(error instanceof Error ? error.message : 'Algo ha fallado. Inténtalo de nuevo.', 0);
 };
@@ -113,8 +115,14 @@ export const sendCode = (phone: string) =>
   call(() => apiClient.post(`/auth/${brand.id}/send-code`, { phone })).then((res) => ({
     simulated: Boolean((res as { simulated?: boolean }).simulated),
   }));
-export const verifyCode = async (phone: string, code: string) => {
-  const res = (await call(() => apiClient.post(`/auth/${brand.id}/verify-code`, { phone, code }))) as unknown as VerifyCodeBody;
+export const verifyCode = async (phone: string, code: string, guestToken?: string) => {
+  const res = (await call(() =>
+    apiClient.post(`/auth/${brand.id}/verify-code`, {
+      phone,
+      code,
+      ...(guestToken ? { guestToken } : {}),
+    }),
+  )) as unknown as VerifyCodeBody;
   const { token, user, hasProfile, hasAvatar } = res.data;
   const profile: V1UserProfile = {
     id: String(user.id),
@@ -127,6 +135,24 @@ export const verifyCode = async (phone: string, code: string) => {
   signIn(token, profile, phone);
   return { user: profile as unknown as UserProfile, hasProfile: Boolean(hasProfile), hasAvatar: Boolean(hasAvatar) };
 };
+
+/** Sedka: entra sin teléfono ni perfil. Atelier y Outlet no tienen esta entrada. */
+export const startGuest = async () => {
+  const res = (await call(() => apiClient.post('/auth/sedka/guest', {}))) as unknown as {
+    data: { token: string; userId?: string; hasAvatar?: boolean };
+  };
+  const profile: V1UserProfile = {
+    id: String(res.data.userId ?? ''),
+    name: null,
+    email: null,
+    phone: '',
+    createdAt: new Date().toISOString(),
+    hasAvatar: Boolean(res.data.hasAvatar),
+  };
+  signIn(res.data.token, profile);
+  return { hasAvatar: Boolean(res.data.hasAvatar) };
+};
+
 export const logout = async () => {
   signOut();
 };
@@ -203,8 +229,8 @@ interface Facet {
 }
 
 /**
- * Filtros del catálogo, los mismos que la V1: marca y corte en novia; estilo y
- * color en novio. En Sedka los trajes no traen estilo ni color: se filtran por marca.
+ * Filtros del catálogo. Novia: marca y corte. Novio en Atelier y Outlet: estilo
+ * y color. Novio en Sedka: marca y color (el color solo cuando el traje lo trae).
  */
 export const FACETS: Record<Category, readonly Facet[]> = {
   bride: [
@@ -213,7 +239,10 @@ export const FACETS: Record<Category, readonly Facet[]> = {
   ],
   groom:
     brand.groomFilters === 'brand'
-      ? [{ key: 'brand', label: 'Marca', path: 'collections/groom-brands' }]
+      ? [
+          { key: 'brand', label: 'Marca', path: 'collections/groom-brands' },
+          { key: 'color', label: 'Color', path: 'collections/groom-colors' },
+        ]
       : [
           { key: 'suitType', label: 'Estilo', path: 'collections/groom-suit-types' },
           { key: 'color', label: 'Color', path: 'collections/groom-colors' },

@@ -35,6 +35,8 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       '127.0.0.1',
+      'sedka.localhost',
+      'outlet.localhost',
       'probador.crmnovias.com',
       '.crmnovias.com', // Allow all subdomains
     ],
