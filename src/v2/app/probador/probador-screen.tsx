@@ -73,25 +73,22 @@ export function ProbadorScreen() {
         <section className="relative min-h-0 flex-1 bg-studio" aria-label="Probador">
           <Backdrop src={stageStill} />
           {showing && stageStill ? (
-            <div className="relative flex h-full justify-center">
+            <div className="relative flex h-full items-center justify-center gap-2 px-2 md:gap-3 md:px-4">
+              {showSwitch ? (
+                <ViewSwitch
+                  options={viewOptions}
+                  value={view}
+                  onChange={(v) => {
+                    setViewChoice({ key: showing.key, view: v });
+                  }}
+                />
+              ) : null}
               <Turntable
-                className="h-full !w-auto"
+                className={`h-full !w-auto ${showSwitch ? 'max-w-[calc(100%-5.25rem)]' : 'max-w-full'}`}
                 stillUrl={stageStill}
                 videoUrl={view === 'turn' && turntable?.status === 'ready' ? turntable.videoUrl : null}
                 pendingLabel={busy || !result || view !== 'turn' ? null : turntableLabel(turntable)}
                 badge={!showSwitch}
-                pendingPosition={showSwitch ? 'bottom-14' : 'top-3'}
-                overlay={
-                  showSwitch ? (
-                    <ViewSwitch
-                      options={viewOptions}
-                      value={view}
-                      onChange={(v) => {
-                        setViewChoice({ key: showing.key, view: v });
-                      }}
-                    />
-                  ) : null
-                }
                 alt={
                   result && selected
                     ? view === 'detail'
