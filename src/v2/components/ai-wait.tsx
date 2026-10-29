@@ -10,9 +10,11 @@ interface AiWaitProps {
   /** Segundos que suele tardar, para colocar los pasos en el tiempo. */
   expectedSeconds: number;
   note?: string;
+  /** Atelier no enseña la cuenta atrás: solo los pasos. */
+  showTime?: boolean;
 }
 
-export function AiWait({ steps, expectedSeconds, note }: AiWaitProps) {
+export function AiWait({ steps, expectedSeconds, note, showTime = true }: AiWaitProps) {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -43,11 +45,13 @@ export function AiWait({ steps, expectedSeconds, note }: AiWaitProps) {
           </li>
         ))}
       </ol>
-      <p className="text-sm text-muted">
-        {remaining > 0
-          ? `Suele tardar unos ${Math.ceil(expectedSeconds / 10) * 10} segundos. Quedan unos ${remaining} s.`
-          : 'Está tardando un poco más de lo normal. Seguimos con ello.'}
-      </p>
+      {showTime ? (
+        <p className="text-sm text-muted">
+          {remaining > 0
+            ? `Suele tardar unos ${Math.ceil(expectedSeconds / 10) * 10} segundos. Quedan unos ${remaining} s.`
+            : 'Está tardando un poco más de lo normal. Seguimos con ello.'}
+        </p>
+      ) : null}
       {note ? <p className="text-sm text-muted">{note}</p> : null}
     </div>
   );

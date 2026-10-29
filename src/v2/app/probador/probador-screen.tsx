@@ -36,7 +36,6 @@ export function ProbadorScreen() {
     error,
     setError,
     notice,
-    elapsed,
     avatar,
     catalog,
     all,
@@ -59,7 +58,6 @@ export function ProbadorScreen() {
     toggle,
     share,
     busy,
-    expected,
     preset,
   } = useProbador();
 
@@ -105,13 +103,10 @@ export function ProbadorScreen() {
           )}
 
           {busy ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-studio/80 backdrop-blur-md" aria-live="polite">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-studio/80 backdrop-blur-md" aria-live="polite">
+              <LoaderCircle className="size-10 animate-spin" strokeWidth={1.5} aria-hidden />
               <p className="label-caps px-6 text-center">
                 {partner ? 'Preparando la foto de los dos' : `Vistiéndote con ${all?.find((g) => g.dressId === working)?.name ?? ''}`}
-              </p>
-              <p className="mt-2 text-[40px] font-light tabular-nums">{elapsed} s</p>
-              <p className="mt-1 text-[13px] text-muted">
-                {elapsed < expected ? `Suele tardar unos ${expected} s` : 'Un poco más de lo normal…'}
               </p>
             </div>
           ) : null}

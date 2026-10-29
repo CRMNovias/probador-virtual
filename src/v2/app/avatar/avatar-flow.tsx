@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowRight, Camera, ImageUp, RefreshCw } from 'lucide-react';
+import { ArrowRight, Camera, ImageUp, LoaderCircle, RefreshCw } from 'lucide-react';
 import { TopBar } from '@v2/components/app-shell';
 import { AiWait } from '@v2/components/ai-wait';
 import { Backdrop } from '@v2/components/backdrop';
@@ -185,9 +185,9 @@ export function AvatarFlow() {
               // eslint-disable-next-line @next/next/no-img-element -- foto local recién elegida
               <img src={preview} alt="" className="absolute inset-0 h-full w-full object-contain opacity-40 blur" />
             ) : null}
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+              {brand.id === 'atelier' ? <LoaderCircle className="size-10 animate-spin" strokeWidth={1.5} aria-hidden /> : <span className="size-1.5 animate-pulse bg-accent" aria-hidden />}
               <p className="label-caps">Creando tu avatar</p>
-              <span className="mt-3 size-1.5 animate-pulse bg-accent" aria-hidden />
             </div>
           </>
         }
@@ -195,6 +195,7 @@ export function AvatarFlow() {
         <AiWait
           steps={['Subiendo tu foto', 'Creando tu avatar de cuerpo entero', 'Ajustando luz y detalles']}
           expectedSeconds={45}
+          showTime={brand.id !== 'atelier'}
           note="Puedes dejar esta pantalla abierta; no hace falta que hagas nada."
         />
       </Layout>
