@@ -100,8 +100,6 @@ export function SedkaProbador() {
     stageStill,
     showSwitch,
     tryOn,
-    needsPhone,
-    askForPhone,
     toggle,
     share,
     busy,
@@ -345,16 +343,6 @@ export function SedkaProbador() {
                 <Notice>{notice}</Notice>
               </div>
             ) : null}
-            {needsPhone ? (
-              <div className="mb-2.5">
-                <Notice>Para seguir probando, introduce tu número de teléfono. Recibirás las pruebas por WhatsApp.</Notice>
-                {ready ? (
-                  <Button block className="mt-2.5" onClick={askForPhone}>
-                    Introducir teléfono
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
             {!selected ? (
               <LinkButton href="/coleccion" block>
                 Ver la colección
@@ -377,7 +365,7 @@ export function SedkaProbador() {
                       {noVideo ? 'Sin 360°' : '360°…'}
                     </button>
                   )}
-                  <button type="button" onClick={() => (needsPhone ? askForPhone() : void tryOn())} className={lineButton}>
+                  <button type="button" onClick={() => void tryOn()} className={lineButton}>
                     <RotateCcw className="size-3.5" strokeWidth={1.5} aria-hidden />
                     Repetir
                   </button>
@@ -387,8 +375,8 @@ export function SedkaProbador() {
                 </LinkButton>
               </>
             ) : (
-              <Button block loading={busy} onClick={() => (needsPhone ? askForPhone() : void tryOn())}>
-                {busy ? 'Generando…' : needsPhone ? 'Introducir teléfono' : 'Generar prueba virtual'}
+              <Button block loading={busy} onClick={() => void tryOn()}>
+                {busy ? 'Generando…' : 'Generar prueba virtual'}
               </Button>
             )}
           </div>
