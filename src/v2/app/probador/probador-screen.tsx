@@ -11,6 +11,7 @@ import { turntableLabel } from '@v2/lib/use-turntable';
 import { BackgroundSheet } from './background-sheet';
 import { FOCUS_TRANSITION, GarmentFocus } from './garment-focus';
 import { PartnerSheet } from './partner-sheet';
+import { ShopSheet } from '@v2/components/shop-sheet';
 import { useProbador } from './use-probador';
 
 const TABS: { id: Category; label: string }[] = [
@@ -55,6 +56,7 @@ export function ProbadorScreen() {
     showSwitch,
     zoom,
     tryOn,
+    shopSheet,
     toggle,
     share,
     busy,
@@ -336,6 +338,7 @@ export function ProbadorScreen() {
         </section>
       </div>
 
+      <ShopSheet {...shopSheet} />
       <BackgroundSheet open={sheet === 'background'} value={background} onChange={setBackground} onClose={() => setSheet(null)} />
       <PartnerSheet
         open={sheet === 'partner'}

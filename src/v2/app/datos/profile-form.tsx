@@ -1,21 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Eyebrow, Field, Notice } from '@v2/components/ui';
 import { ApiError, createProfile, getProfile, listShops } from '@v2/lib/api';
-import { brand, type BrandId } from '@v2/lib/brand';
+import { brand } from '@v2/lib/brand';
 import { CardHead, cardScreens } from '@v2/components/brand-card';
+import { ShopSelect } from '@v2/components/shop-select';
+import { rememberShop } from '@v2/lib/shop-memory';
 import { validateContact, type ContactErrors, type ContactValues } from '@v2/lib/profile';
 import { useLoad } from '@v2/lib/use-load';
 
 type Values = ContactValues;
 type Errors = ContactErrors;
 const validate = validateContact;
-
-/** Cómo se pide la tienda en cada marca (Atelier: «Tu atelier»). */
-const SHOP_LABEL: Partial<Record<BrandId, string>> = {
-  sedka: 'Tienda Sedka más cercana',
-  outlet: 'Tienda Outlet Nupcial más cercana',
-};
 
 export function ProfileForm() {
   const router = useRouter();
@@ -32,16 +28,23 @@ export function ProfileForm() {
   const [busy, setBusy] = useState(false);
   const card = cardScreens;
 
+  // La tienda elegida al entrar (junto al teléfono) ya viene marcada.
+  useEffect(() => {
+    const chosen = profile?.shopId;
+    if (chosen && shops.some((s) => s.id === chosen)) setValues((v) => (v.shopId ? v : { ...v, shopId: String(chosen) }));
+  }, [profile, shops]);
+
   // Los errores del CRM solo cuentan mientras existen: un campo editado vuelve a la validación local.
   const errors: Errors = {
     ...validate(values),
     ...Object.fromEntries(Object.entries(serverErrors).filter(([, message]) => message)),
   };
   const shown = (key: keyof Values) => (touched[key] ? errors[key] : undefined);
-  const set = (key: keyof Values) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setValues((v) => ({ ...v, [key]: e.target.value }));
+  const setValue = (key: keyof Values, value: string) => {
+    setValues((v) => ({ ...v, [key]: value }));
     setServerErrors((s) => ({ ...s, [key]: undefined }));
   };
+  const set = (key: keyof Values) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setValue(key, e.target.value);
   const blur = (key: keyof Values) => () => setTouched((t) => ({ ...t, [key]: true }));
 
   const submit = async (e: React.FormEvent) => {
@@ -59,6 +62,7 @@ export function ProfileForm() {
         shopId: Number(values.shopId),
         sendPhotosWhatsApp: whatsapp,
       });
+      rememberShop(Number(values.shopId));
       router.replace(`/avatar?next=${encodeURIComponent(next)}`);
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length) setServerErrors(err.fieldErrors);
@@ -105,27 +109,7 @@ export function ProfileForm() {
           onBlur={blur('postcode')}
           error={shown('postcode')}
         />
-        <div>
-          <label htmlFor="shopId" className="label-caps mb-1 block text-muted">
-            {SHOP_LABEL[brand.id] ?? `Tu ${brand.shop.one}`}
-          </label>
-          <select
-            id="shopId"
-            value={values.shopId}
-            onChange={set('shopId')}
-            onBlur={blur('shopId')}
-            aria-invalid={Boolean(shown('shopId'))}
-            className={`h-11 w-full border-0 border-b bg-transparent px-0 text-base outline-none focus:border-ink ${shown('shopId') ? 'border-danger' : 'border-neutral-300'}`}
-          >
-            <option value="">{shops.length ? `Elige ${brand.shop.a}` : `Cargando ${brand.shop.many}…`}</option>
-            {shops.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-          {shown('shopId') ? <p className="mt-2 text-[13px] text-danger">{shown('shopId')}</p> : null}
-        </div>
+        <ShopSelect shops={shops} value={values.shopId} onChange={(value) => setValue('shopId', value)} onBlur={blur('shopId')} error={shown('shopId')} />
 
         <label className="flex items-start gap-3 border-t border-line pt-4 text-[13px] leading-snug">
           <input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-accent" />

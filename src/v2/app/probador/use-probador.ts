@@ -3,9 +3,11 @@ import { flushSync } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { ViewOption } from '@v2/components/view-switch';
 import {
+  ApiError,
   generateTryOn,
   getAvatar,
   getGarment,
+  getProfile,
   listFavorites,
   listGarments,
   listTryOns,
@@ -77,7 +79,13 @@ export function useProbador() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Set<string> | null>(null);
+  // Tienda obligatoria: una cuenta sin tienda la elige en el aviso antes de probar.
+  const [shopAsk, setShopAsk] = useState(false);
+  const [shopMissing, setShopMissing] = useState(false);
+  const [shopSaved, setShopSaved] = useState(false);
   const elapsed = useElapsed(working !== null);
+  const { data: profile } = useLoad(() => getProfile().catch(() => null));
+  const needsShop = !shopSaved && (shopMissing || Boolean(profile?.needsShop));
 
   const { data: base } = useLoad(() => Promise.all([getAvatar(), listTryOns(), listFavorites()]));
   const [avatar, groups, favoriteList] = base ?? [null, [], []];
@@ -154,7 +162,7 @@ export function useProbador() {
     if (!focused && selectedId) document.getElementById(`prenda-${selectedId}`)?.scrollIntoView({ block: 'nearest', inline: 'center' });
   }, [focused, selectedId]);
 
-  const tryOn = async () => {
+  const runTryOn = async () => {
     if (!selected) return;
     setWorking(selected.dressId);
     setError(null);
@@ -166,10 +174,37 @@ export function useProbador() {
       });
       setGenerated((g) => ({ ...g, [selected.dressId]: { tryOn, options, couple: Boolean(partner) } }));
     } catch (err) {
+      if (err instanceof ApiError && err.code === 'shop_required') {
+        setShopMissing(true);
+        setShopAsk(true);
+        return;
+      }
       setError(err instanceof Error ? err.message : 'No se pudo hacer la prueba.');
     } finally {
       setWorking(null);
     }
+  };
+
+  /** Sin tienda elegida, antes de la prueba salta el aviso para elegirla. */
+  const tryOn = async () => {
+    if (!selected) return;
+    if (needsShop) {
+      setShopAsk(true);
+      return;
+    }
+    await runTryOn();
+  };
+
+  /** Props de <ShopSheet>: al guardar la tienda, la prueba sigue sola. */
+  const shopSheet = {
+    open: shopAsk,
+    onClose: () => setShopAsk(false),
+    onSaved: () => {
+      setShopSaved(true);
+      setShopMissing(false);
+      setShopAsk(false);
+      void runTryOn();
+    },
   };
 
   const toggle = async () => {
@@ -250,6 +285,7 @@ export function useProbador() {
     showSwitch,
     zoom,
     tryOn,
+    shopSheet,
     toggle,
     share,
     busy,

@@ -3,9 +3,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { Button, Eyebrow, Notice } from '@v2/components/ui';
-import { sendCode, verifyCode } from '@v2/lib/api';
+import { listShops, sendCode, updateProfile, verifyCode } from '@v2/lib/api';
 import { brand } from '@v2/lib/brand';
 import { CardHead, cardScreens } from '@v2/components/brand-card';
+import { ShopSelect, shopError } from '@v2/components/shop-select';
+import { rememberedShop, rememberShop } from '@v2/lib/shop-memory';
+import { useLoad } from '@v2/lib/use-load';
 
 /** Prefijos más habituales entre las clientas; España por defecto. */
 const PREFIXES = [
@@ -32,7 +35,15 @@ const formatSpanish = (digits: string) => digits.replace(/(\d{3})(\d{0,3})(\d{0,
 export function LoginFlow() {
   const router = useRouter();
   const next = useSearchParams().get('next');
-  const [step, setStep] = useState<'phone' | 'code'>('phone');
+  const [step, setStep] = useState<'phone' | 'code' | 'shop'>('phone');
+  // La tienda es obligatoria y va junto al teléfono, así el lead nace en ella y
+  // nunca en la central. Si este dispositivo ya la conoce, no se vuelve a pedir;
+  // si la cuenta no tiene tienda (needsShop), se pide justo después del código.
+  const [askShop] = useState(() => rememberedShop() === null);
+  const { data: shops } = useLoad(() => listShops());
+  const [shopId, setShopId] = useState('');
+  const [shopTouched, setShopTouched] = useState(false);
+  const [afterShop, setAfterShop] = useState<{ hasProfile: boolean; hasAvatar: boolean } | null>(null);
   const [prefix, setPrefix] = useState('+34');
   const [number, setNumber] = useState('');
   const [code, setCode] = useState('');
@@ -54,7 +65,9 @@ export function LoginFlow() {
   const requestCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const invalid = phoneError(prefix, digits);
+    if (askShop && !shopId) setShopTouched(true);
     if (invalid) return setError(invalid);
+    if (askShop && !shopId) return;
     setBusy(true);
     setError(null);
     try {
@@ -75,15 +88,42 @@ export function LoginFlow() {
     setBusy(true);
     setError(null);
     try {
-      const session = await verifyCode(phone, value);
-      const target = next ?? brand.home;
-      if (!session.hasProfile) router.replace(`/datos?next=${encodeURIComponent(target)}`);
-      else if (!session.hasAvatar) router.replace(`/avatar?next=${encodeURIComponent(target)}`);
-      else router.replace(target);
+      const session = await verifyCode(phone, value, askShop && shopId ? Number(shopId) : undefined);
+      rememberShop(session.shopId);
+      if (session.needsShop) {
+        setAfterShop(session);
+        setStep('shop');
+        setBusy(false);
+        return;
+      }
+      go(session);
     } catch (err) {
       setCode('');
       setError(err instanceof Error ? err.message : 'El código no es correcto.');
       codeRef.current?.focus();
+      setBusy(false);
+    }
+  };
+
+  const go = (session: { hasProfile: boolean; hasAvatar: boolean }) => {
+    const target = next ?? brand.home;
+    if (!session.hasProfile) router.replace(`/datos?next=${encodeURIComponent(target)}`);
+    else if (!session.hasAvatar) router.replace(`/avatar?next=${encodeURIComponent(target)}`);
+    else router.replace(target);
+  };
+
+  const saveShop = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setShopTouched(true);
+    if (!shopId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await updateProfile({ shopId: Number(shopId) });
+      rememberShop(Number(shopId));
+      go(afterShop ?? { hasProfile: false, hasAvatar: false });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `No se pudo guardar ${brand.shop.the}.`);
       setBusy(false);
     }
   };
@@ -97,6 +137,31 @@ export function LoginFlow() {
 
   const card = cardScreens;
   const shownPhone = `${prefix} ${prefix === '+34' ? formatSpanish(digits) : digits}`;
+
+  if (step === 'shop') {
+    return (
+      <>
+        {card ? (
+          <CardHead logo eyebrow="Tu tienda" title={`Elige ${brand.shop.a}`} lead={`Para seguir, dinos ${brand.shop.toWhich} irías.`} />
+        ) : (
+          <>
+            <Eyebrow>Un último paso</Eyebrow>
+            <h1 className="mt-2 text-[22px] font-light uppercase tracking-[0.06em]">Elige {brand.shop.a}</h1>
+            <p className="mt-3 text-[13px] leading-relaxed text-muted">
+              Para seguir, dinos {brand.shop.toWhich} irías. Allí te atenderán si pides cita.
+            </p>
+          </>
+        )}
+        <form className={`${card ? '' : 'mt-8'} space-y-5`} onSubmit={saveShop} noValidate>
+          <ShopSelect shops={shops ?? []} value={shopId} onChange={setShopId} onBlur={() => setShopTouched(true)} error={shopTouched && !shopId ? shopError : undefined} />
+          {error ? <Notice tone="danger">{error}</Notice> : null}
+          <Button type="submit" block loading={busy}>
+            Continuar
+          </Button>
+        </form>
+      </>
+    );
+  }
 
   if (step === 'code') {
     return (
@@ -251,6 +316,19 @@ export function LoginFlow() {
             </p>
           ) : null}
         </div>
+        {askShop ? (
+          <ShopSelect
+            shops={shops ?? []}
+            value={shopId}
+            onChange={(value) => {
+              setShopId(value);
+              setShopTouched(true);
+            }}
+            onBlur={() => setShopTouched(true)}
+            error={shopTouched && !shopId ? shopError : undefined}
+            hint="Si ya tienes cuenta, mantenemos la tuya."
+          />
+        ) : null}
         <Button type="submit" block loading={busy}>
           Recibir código por WhatsApp
         </Button>

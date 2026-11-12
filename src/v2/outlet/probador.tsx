@@ -6,6 +6,7 @@ import { Turntable } from '@v2/components/turntable';
 import { Button, LinkButton, Notice } from '@v2/components/ui';
 import { BackgroundSheet } from '@v2/app/probador/background-sheet';
 import { PartnerSheet } from '@v2/app/probador/partner-sheet';
+import { ShopSheet } from '@v2/components/shop-sheet';
 import { useProbador } from '@v2/app/probador/use-probador';
 import { backgroundLabel } from '@v2/lib/backgrounds';
 import { brand } from '@v2/lib/brand';
@@ -126,6 +127,7 @@ export function OutletProbador() {
     stageStill,
     showSwitch,
     tryOn,
+    shopSheet,
     toggle,
     share,
     busy,
@@ -422,6 +424,7 @@ export function OutletProbador() {
         </aside>
       </div>
 
+      <ShopSheet {...shopSheet} />
       <BackgroundSheet open={sheet === 'background'} value={background} onChange={setBackground} onClose={() => setSheet(null)} />
       <PartnerSheet
         open={sheet === 'partner'}
