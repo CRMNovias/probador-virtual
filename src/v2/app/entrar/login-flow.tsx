@@ -6,7 +6,6 @@ import { Button, Eyebrow, Notice } from '@v2/components/ui';
 import { sendCode, verifyCode } from '@v2/lib/api';
 import { brand } from '@v2/lib/brand';
 import { CardHead, cardScreens } from '@v2/components/brand-card';
-import { useAuth } from '@/context/AuthContext';
 
 /** Prefijos más habituales entre las clientas; España por defecto. */
 const PREFIXES = [
@@ -32,10 +31,7 @@ const formatSpanish = (digits: string) => digits.replace(/(\d{3})(\d{0,3})(\d{0,
 
 export function LoginFlow() {
   const router = useRouter();
-  const params = useSearchParams();
-  const next = params.get('next');
-  const claimGuest = brand.id === 'sedka' && params.get('claim') === '1';
-  const { token } = useAuth();
+  const next = useSearchParams().get('next');
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [prefix, setPrefix] = useState('+34');
   const [number, setNumber] = useState('');
@@ -79,12 +75,8 @@ export function LoginFlow() {
     setBusy(true);
     setError(null);
     try {
-      const session = await verifyCode(phone, value, claimGuest ? (token ?? undefined) : undefined);
+      const session = await verifyCode(phone, value);
       const target = next ?? brand.home;
-      if (claimGuest) {
-        router.replace(target);
-        return;
-      }
       if (!session.hasProfile) router.replace(`/datos?next=${encodeURIComponent(target)}`);
       else if (!session.hasAvatar) router.replace(`/avatar?next=${encodeURIComponent(target)}`);
       else router.replace(target);
@@ -198,19 +190,11 @@ export function LoginFlow() {
           eyebrow="Acceso"
           title="Probador Virtual"
           lead={
-            claimGuest ? (
-              <>
-                Para seguir probándote diseños, introduce tu teléfono.
-                <br />
-                Te enviamos un código por WhatsApp.
-              </>
-            ) : (
-              <>
-                Pruébate nuestros diseños desde casa.
-                <br />
-                Te enviamos un código por WhatsApp.
-              </>
-            )
+            <>
+              Pruébate nuestros diseños desde casa.
+              <br />
+              Te enviamos un código por WhatsApp.
+            </>
           }
         />
       ) : (
@@ -221,9 +205,7 @@ export function LoginFlow() {
           <Eyebrow>Paso 1 de 2</Eyebrow>
           <h1 className="mt-2 text-[22px] font-light uppercase tracking-[0.06em]">Tu teléfono</h1>
           <p className="mt-3 text-[13px] leading-relaxed text-muted">
-            {claimGuest
-              ? 'Para seguir probándote diseños, introduce tu teléfono. Te enviamos un código por WhatsApp.'
-              : 'Te enviamos un código por WhatsApp. Sirve tanto para crear tu cuenta como para volver a entrar.'}
+            Te enviamos un código por WhatsApp. Sirve tanto para crear tu cuenta como para volver a entrar.
           </p>
         </>
       )}

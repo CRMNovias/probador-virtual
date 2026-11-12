@@ -14,10 +14,6 @@ export interface UserProfile {
   shopName?: string | null;
   postcode?: string | null;
   sendPhotosWhatsApp?: boolean;
-  /** Solo Sedka: entró sin teléfono. */
-  isGuest?: boolean;
-  /** Solo Sedka: la prueba gratis ya está hecha y la siguiente pide el teléfono. */
-  freeTryOnUsed?: boolean;
   wedding?: { date: string | null; place: string | null; style: WeddingStyle | null; moment: WeddingMoment | null } | null;
 }
 
@@ -70,8 +66,6 @@ export interface TryOn {
   imageUrl: string;
   createdAt: string;
   turntable?: Turntable | null;
-  /** Sedka, sesión sin teléfono: la siguiente prueba pide el número. */
-  phoneRequiredNext?: boolean;
 }
 
 export interface TryOnGroup {
