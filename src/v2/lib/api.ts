@@ -7,6 +7,7 @@ import * as tryOns from '@/services/tryOnService';
 import * as users from '@/services/userService';
 import type { UserProfile as V1UserProfile } from '@/types/index';
 import { brand } from './brand';
+import { campaign } from './meta';
 import { AVATAR_PROMPT, tryOnPrompt, type PoseId } from './prompts';
 import { signIn, signOut } from './session';
 import type {
@@ -111,6 +112,8 @@ interface VerifyCodeBody {
     /** Tienda elegida en esta marca; sin ella (`needsShop`) se pide antes de seguir. */
     shopId?: number | null;
     needsShop?: boolean;
+    /** Teléfono y tienda completos por primera vez: CompleteRegistration para Meta. */
+    registered?: boolean;
   };
 }
 
@@ -122,9 +125,9 @@ export const sendCode = (phone: string) =>
 /** `shopId`: la tienda elegida junto al teléfono (si la clienta ya tiene una, el CRM deja la suya). */
 export const verifyCode = async (phone: string, code: string, shopId?: number) => {
   const res = (await call(() =>
-    apiClient.post(`/auth/${brand.id}/verify-code`, { phone, code, ...(shopId ? { shopId } : {}) }),
+    apiClient.post(`/auth/${brand.id}/verify-code`, { phone, code, ...(shopId ? { shopId } : {}), ...campaign() }),
   )) as unknown as VerifyCodeBody;
-  const { token, user, hasProfile, hasAvatar, shopId: chosenShopId, needsShop } = res.data;
+  const { token, user, hasProfile, hasAvatar, shopId: chosenShopId, needsShop, registered } = res.data;
   const profile: V1UserProfile = {
     id: String(user.id),
     name: user.name ?? null,
@@ -140,6 +143,7 @@ export const verifyCode = async (phone: string, code: string, shopId?: number) =
     hasAvatar: Boolean(hasAvatar),
     shopId: chosenShopId ?? null,
     needsShop: Boolean(needsShop),
+    registered: Boolean(registered),
   };
 };
 export const logout = async () => {
@@ -159,7 +163,7 @@ export interface ProfileInput {
   sendPhotosWhatsApp: boolean;
 }
 export const createProfile = (input: ProfileInput) =>
-  call(() => users.createProfile(input)).then((res) => unwrap<{ user: UserProfile }>(res));
+  call(() => users.createProfile({ ...input, ...campaign() } as ProfileInput)).then((res) => unwrap<{ user: UserProfile }>(res));
 
 export interface ProfileUpdate {
   name?: string;
@@ -173,7 +177,9 @@ export interface ProfileUpdate {
   weddingMoment?: WeddingMoment | null;
 }
 /** Cambia los datos de contacto y de la boda (`null` borra un dato de la boda). */
-export const updateProfile = (input: ProfileUpdate) => call(() => users.updateProfile(input)) as Promise<UserProfile>;
+export const updateProfile = (input: ProfileUpdate) =>
+  // Con la tienda va la campaña: si entró sin tienda, el CRM la guarda ahora con ella.
+  call(() => users.updateProfile({ ...input, ...(input.shopId ? campaign() : {}) } as ProfileUpdate)) as Promise<UserProfile>;
 
 // Avatar
 export const uploadPhoto = (file: File) => call(() => users.uploadPhoto(file));
@@ -356,7 +362,8 @@ export const listHours = async (input: Omit<BookingInput, 'hour'>): Promise<stri
   return res.closed ? [] : res.slots.map((s) => s.hour);
 };
 
-export const bookAppointment = (input: BookingInput) => call(() => appointments.bookAppointment(input, BOOKING));
+export const bookAppointment = (input: BookingInput) =>
+  call(() => appointments.bookAppointment({ ...input, ...campaign() } as BookingInput, BOOKING));
 export const updateAppointment = (input: BookingInput & { appointmentId: number }) =>
   call(() => appointments.updateAppointmentBooking(input, BOOKING));
 export const cancelAppointment = (appointmentId: number) => call(() => appointments.cancelAppointmentBooking(appointmentId, BOOKING));

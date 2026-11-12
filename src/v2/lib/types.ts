@@ -12,6 +12,8 @@ export interface UserProfile {
   shopId?: number | null;
   /** Sin tienda elegida en esta marca: se pide antes de hacer una prueba. */
   needsShop?: boolean;
+  /** Respuesta de /user/update-profile: teléfono y tienda completos por primera vez. */
+  registered?: boolean;
   /** Los campos siguientes solo llegan en `/user/profile`. */
   shopName?: string | null;
   postcode?: string | null;

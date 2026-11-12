@@ -8,6 +8,7 @@ import { brand } from '@v2/lib/brand';
 import { CardHead, cardScreens } from '@v2/components/brand-card';
 import { ShopSelect, shopError } from '@v2/components/shop-select';
 import { rememberedShop, rememberShop } from '@v2/lib/shop-memory';
+import { trackMeta } from '@v2/lib/meta';
 import { useLoad } from '@v2/lib/use-load';
 
 /** Prefijos más habituales entre las clientas; España por defecto. */
@@ -90,6 +91,8 @@ export function LoginFlow() {
     try {
       const session = await verifyCode(phone, value, askShop && shopId ? Number(shopId) : undefined);
       rememberShop(session.shopId);
+      // Teléfono y tienda por primera vez: CompleteRegistration para Meta.
+      if (session.registered) trackMeta('CompleteRegistration');
       if (session.needsShop) {
         setAfterShop(session);
         setStep('shop');
@@ -119,8 +122,9 @@ export function LoginFlow() {
     setBusy(true);
     setError(null);
     try {
-      await updateProfile({ shopId: Number(shopId) });
+      const saved = await updateProfile({ shopId: Number(shopId) });
       rememberShop(Number(shopId));
+      if (saved.registered) trackMeta('CompleteRegistration');
       go(afterShop ?? { hasProfile: false, hasAvatar: false });
     } catch (err) {
       setError(err instanceof Error ? err.message : `No se pudo guardar ${brand.shop.the}.`);

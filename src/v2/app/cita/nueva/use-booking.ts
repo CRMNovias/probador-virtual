@@ -14,6 +14,7 @@ import {
 import { addDays, fromDateKey, startOfToday, toDateKey } from '@v2/lib/dates';
 import type { BookingService, BookingShop } from '@v2/lib/types';
 import { useLoad } from '@v2/lib/use-load';
+import { trackMeta } from '@v2/lib/meta';
 
 /** Servicio que encaja con lo que se estaba probando (vestido o traje). */
 const matchesCategory = (s: BookingService, category: string | null) => {
@@ -116,7 +117,10 @@ export function useBooking() {
     try {
       const input = { shopId: shop.id, serviceId: service.id, date, hour };
       if (editing) await updateAppointment({ ...input, appointmentId: editing.id });
-      else await bookAppointment(input);
+      else {
+        await bookAppointment(input);
+        trackMeta('Schedule', { content_name: shop.name });
+      }
       setBooked({ shop, service, date, hour });
       window.scrollTo({ top: 0 });
     } catch (err) {
