@@ -39,6 +39,8 @@ export class ApiError extends Error {
     message: string,
     readonly status: number,
     readonly fieldErrors: Record<string, string> = {},
+    /** Código del CRM, p. ej. `shop_required` (falta elegir tienda). */
+    readonly code?: string,
   ) {
     super(message);
   }
@@ -54,6 +56,7 @@ const FRIENDLY: Record<number, string> = {
 interface CrmError {
   success?: boolean;
   message?: string;
+  code?: string;
   errors?: Record<string, string[]>;
   error?: { message?: string };
 }
@@ -67,7 +70,7 @@ const toApiError = (error: unknown): ApiError => {
     // Límite de peticiones: el CRM responde en inglés («Too Many Attempts.»).
     const crmMessage = status === 429 ? undefined : (body.error?.message ?? body.message);
     const message = crmMessage ?? FRIENDLY[status] ?? (status ? 'Algo ha fallado. Inténtalo de nuevo.' : 'Sin conexión. Revisa tu internet.');
-    return new ApiError(message, status, fieldErrors);
+    return new ApiError(message, status, fieldErrors, body.code);
   }
   return new ApiError(error instanceof Error ? error.message : 'Algo ha fallado. Inténtalo de nuevo.', 0);
 };
@@ -105,6 +108,9 @@ interface VerifyCodeBody {
     user: { id: string | number; name?: string | null; email?: string | null; phone?: string; createdAt: string };
     hasProfile?: boolean;
     hasAvatar?: boolean;
+    /** Tienda elegida en esta marca; sin ella (`needsShop`) se pide antes de seguir. */
+    shopId?: number | null;
+    needsShop?: boolean;
   };
 }
 
@@ -113,9 +119,12 @@ export const sendCode = (phone: string) =>
   call(() => apiClient.post(`/auth/${brand.id}/send-code`, { phone })).then((res) => ({
     simulated: Boolean((res as { simulated?: boolean }).simulated),
   }));
-export const verifyCode = async (phone: string, code: string) => {
-  const res = (await call(() => apiClient.post(`/auth/${brand.id}/verify-code`, { phone, code }))) as unknown as VerifyCodeBody;
-  const { token, user, hasProfile, hasAvatar } = res.data;
+/** `shopId`: la tienda elegida junto al teléfono (si la clienta ya tiene una, el CRM deja la suya). */
+export const verifyCode = async (phone: string, code: string, shopId?: number) => {
+  const res = (await call(() =>
+    apiClient.post(`/auth/${brand.id}/verify-code`, { phone, code, ...(shopId ? { shopId } : {}) }),
+  )) as unknown as VerifyCodeBody;
+  const { token, user, hasProfile, hasAvatar, shopId: chosenShopId, needsShop } = res.data;
   const profile: V1UserProfile = {
     id: String(user.id),
     name: user.name ?? null,
@@ -125,7 +134,13 @@ export const verifyCode = async (phone: string, code: string) => {
     hasAvatar: Boolean(hasAvatar),
   };
   signIn(token, profile, phone);
-  return { user: profile as unknown as UserProfile, hasProfile: Boolean(hasProfile), hasAvatar: Boolean(hasAvatar) };
+  return {
+    user: profile as unknown as UserProfile,
+    hasProfile: Boolean(hasProfile),
+    hasAvatar: Boolean(hasAvatar),
+    shopId: chosenShopId ?? null,
+    needsShop: Boolean(needsShop),
+  };
 };
 export const logout = async () => {
   signOut();

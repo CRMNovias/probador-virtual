@@ -10,6 +10,8 @@ export interface UserProfile {
   email: string | null;
   hasAvatar: boolean;
   shopId?: number | null;
+  /** Sin tienda elegida en esta marca: se pide antes de hacer una prueba. */
+  needsShop?: boolean;
   /** Los campos siguientes solo llegan en `/user/profile`. */
   shopName?: string | null;
   postcode?: string | null;
