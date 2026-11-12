@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { startMeta, trackOpen } from '@v2/lib/meta';
 import { probadorFor } from '@/components/routing/LegacyRedirect';
 import AvatarPage from '@v2/app/avatar/page';
 import SharePage from '@v2/app/c/page';
@@ -74,6 +75,11 @@ const PRIVATE: { path: string; title: string; page: () => ReactNode }[] = [
 export default function V2App() {
   const { login, logout } = useAuth();
   useEffect(() => connectSession({ login, logout }), [login, logout]);
+  // Abre el probador: ViewContent para Meta (una vez por página).
+  useEffect(() => {
+    startMeta();
+    trackOpen();
+  }, []);
 
   return (
     // data-brand: los colores y la letra de la marca (src/v2/v2.css).

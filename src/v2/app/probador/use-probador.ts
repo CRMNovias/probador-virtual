@@ -19,6 +19,7 @@ import { withBase } from '@v2/lib/base-path';
 import { brand } from '@v2/lib/brand';
 import type { Category, CollectionItem, TryOn } from '@v2/lib/types';
 import { useLoad } from '@v2/lib/use-load';
+import { trackTryOnShown } from '@v2/lib/meta';
 import { useTurntable } from '@v2/lib/use-turntable';
 import type { Partner } from './partner-sheet';
 
@@ -173,6 +174,7 @@ export function useProbador() {
         partner: partner ? { dressId: partner.dressId, image: partner.image } : null,
       });
       setGenerated((g) => ({ ...g, [selected.dressId]: { tryOn, options, couple: Boolean(partner) } }));
+      trackTryOnShown(selected.dressId, selected.name);
     } catch (err) {
       if (err instanceof ApiError && err.code === 'shop_required') {
         setShopMissing(true);

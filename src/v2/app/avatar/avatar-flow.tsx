@@ -8,6 +8,7 @@ import { Backdrop } from '@v2/components/backdrop';
 import { Turntable } from '@v2/components/turntable';
 import { Button, Eyebrow, Notice } from '@v2/components/ui';
 import { generateAvatar, getAvatar, uploadPhoto } from '@v2/lib/api';
+import { trackMeta } from '@v2/lib/meta';
 import { brand } from '@v2/lib/brand';
 import { reviewPhoto, type PhotoReview } from '@v2/lib/photo-quality';
 import { useLoad } from '@v2/lib/use-load';
@@ -118,6 +119,7 @@ export function AvatarFlow() {
     setError(null);
     try {
       await uploadPhoto(file);
+      trackMeta('SubeFoto');
       const avatar = await generateAvatar();
       setAvatarUrl(avatar.avatarUrl);
       setStep('done');
