@@ -1,7 +1,8 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { startMeta, trackOpen } from '@v2/lib/meta';
+import { getGarmentByWp } from '@v2/lib/api';
 import { probadorFor } from '@/components/routing/LegacyRedirect';
 import AvatarPage from '@v2/app/avatar/page';
 import SharePage from '@v2/app/c/page';
@@ -48,8 +49,9 @@ function Private({ children }: { children: ReactNode }) {
 }
 
 /**
- * Portada: con sesión, directo al probador (Sedka: a la colección). Con una prenda en la dirección (los
- * enlaces de la V1, `?dressId=&category=`), a esa prenda: sin sesión, después de entrar.
+ * Portada: con sesión, directo al probador (Sedka: a la colección). Con una prenda en la dirección, a
+ * esa prenda (sin sesión, después de entrar): `?dressId=&category=` (los enlaces de la V1 y el botón de
+ * la ficha de Atelier) o `?wpId=` (id de WooCommerce: el botón de la ficha de Sedka).
  */
 function Home() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -57,7 +59,29 @@ function Home() {
   if (isLoading) return null;
   const query = new URLSearchParams(search);
   if (query.get('dressId')) return <Navigate to={withBase(probadorFor(query))} replace />;
+  const wpId = query.get('wpId');
+  if (wpId && /^\d+$/.test(wpId)) return <GarmentByWp wpId={wpId} />;
   return isAuthenticated ? <Navigate to={withBase(brand.home)} replace /> : <WelcomePage />;
+}
+
+/** `?wpId=` → el probador con ese modelo. Si el probador no lo tiene, a la colección. */
+function GarmentByWp({ wpId }: { wpId: string }) {
+  const [to, setTo] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getGarmentByWp(wpId).then(
+      (item) => {
+        if (!cancelled) setTo(`/probador?d=${encodeURIComponent(item.dressId)}${item.category ? `&c=${item.category}` : ''}`);
+      },
+      () => {
+        if (!cancelled) setTo('/coleccion');
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [wpId]);
+  return to ? <Navigate to={withBase(to)} replace /> : null;
 }
 
 const PRIVATE: { path: string; title: string; page: () => ReactNode }[] = [
