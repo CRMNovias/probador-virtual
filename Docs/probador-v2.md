@@ -128,3 +128,18 @@ El vídeo 360 y las fotos de detalle los hace el CRM (`ARS-BRIDAL/crmnovias-com`
 Lo mismo que la V1 (`.github/workflows/main.yml`). No hace falta tocar nginx: sirve
 `index.html` para cualquier ruta, también `/v1`. Si en algún momento se añadió un
 `location /v2` hacia otro puerto, hay que quitarlo: esta misma app redirige `/v2`.
+
+## Botón «Probador virtual» de la ficha de producto
+
+La portada (`src/v2/routes.tsx`, `Home`) abre el modelo que llega en la dirección:
+
+- `?dressId=<id del producto en el CRM>` (Atelier: ventana de su ficha, shortcode `[probador_sku]`;
+  también los enlaces de la V1) → `/probador?d=<id>&c=<categoría>`.
+- `?wpId=<id de WooCommerce>` (Sedka: botón de su ficha) → se resuelve con
+  `GET /probador/{marca}/collections/item?wpId=` (público) y va a `/probador?d=…`. Si el probador
+  no tiene ese modelo, a `/coleccion`.
+
+Sin sesión, `/probador` manda a `/entrar?next=…` y cada paso (entrada, `/datos`, `/avatar`) conserva
+`next`, así que al terminar se llega al modelo. Si el modelo no está en el catálogo del probador, se
+abre sin él: el catálogo de Atelier se completa cada día desde su web (CRM,
+`probador-ficha-producto.md`).

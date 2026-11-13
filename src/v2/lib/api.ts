@@ -285,6 +285,11 @@ export const getGarment = (dressId: string) =>
   call(() => apiClient.get(probador(`collections/item?dressId=${encodeURIComponent(dressId)}`))).then((res) =>
     withShortName(unwrap<CollectionItem>(res)),
   );
+/** El modelo por su id de WooCommerce (botón «Probador virtual» de la ficha de producto de la web). */
+export const getGarmentByWp = (wpId: string) =>
+  call(() => apiClient.get(probador(`collections/item?wpId=${encodeURIComponent(wpId)}`))).then((res) =>
+    withShortName(unwrap<CollectionItem>(res)),
+  );
 export const listFacet = (path: string) =>
   call(() => apiClient.get(probador(path))).then((res) => unwrap<CollectionFacet[] | undefined>(res) ?? []);
 
