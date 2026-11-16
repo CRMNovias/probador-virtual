@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/apiClient';
 import { brand, type BrandId } from './brand';
+import { campaign, campaignFbc, capture, readStorage, testEventCode, writeStorage } from './campaign';
 
 /**
  * Eventos del probador para Meta, con el píxel de la web de cada marca y por la
@@ -7,7 +8,9 @@ import { brand, type BrandId } from './brand';
  *
  * - El probador va dentro de la web (iframe). Le manda cada evento a la página y
  *   el script `probador-bridge.js` lo dispara con el píxel de la web. La página le
- *   pasa su URL (UTM, fbclid), las cookies `_fbp` y `_fbc` y el consentimiento.
+ *   pasa su URL (UTM, fbclid), la de la página por la que la clienta llegó a la web
+ *   (si vino del anuncio a otra página), las cookies `_fbp` y `_fbc` (también
+ *   cuando el píxel las crea después) y el consentimiento.
  * - Solo se avisa a Meta si la clienta ha aceptado las cookies de publicidad en
  *   la web (CookieYes). Mientras no responde al banner, los eventos esperan; si
  *   las rechaza, no se mandan. Sin el script en la página (o con el probador
@@ -34,10 +37,6 @@ const WEB_ORIGINS: Record<BrandId, string[]> = {
 const DEV_WEB_ORIGIN = 'http://localhost:5190';
 const isWebOrigin = (origin: string) => WEB_ORIGINS[brand.id].includes(origin) || (import.meta.env.DEV && origin === DEV_WEB_ORIGIN);
 
-const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid'] as const;
-const UTM_STORE = `probador-v2:utm:${brand.id}`;
-const UTM_DAYS = 30;
-const TEST_STORE = 'probador-v2:meta-test';
 /** Tiempo que se espera al script de la web antes de dar por hecho que no está. */
 const BRIDGE_WAIT_MS = 3000;
 
@@ -71,57 +70,8 @@ const flush = () => {
   }
 };
 
-const read = (storage: Storage, key: string): string | null => {
-  try {
-    return storage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-const write = (storage: Storage, key: string, value: string) => {
-  try {
-    storage.setItem(key, value);
-  } catch {
-    // Sin almacenamiento: la campaña solo vale para esta página.
-  }
-};
-
-/** Guarda las UTM, fbclid y el código de prueba de Meta que traiga una URL. */
-const capture = (search: string) => {
-  const params = new URLSearchParams(search);
-  const found: Record<string, string> = {};
-  UTM_KEYS.forEach((key) => {
-    const value = (params.get(key) ?? '').trim();
-    if (value && value.length <= 255) found[key] = value;
-  });
-  if (Object.keys(found).length) write(window.localStorage, UTM_STORE, JSON.stringify({ at: Date.now(), utms: found }));
-  const test = params.get('test_event_code');
-  if (test && /^[A-Za-z0-9]{4,32}$/.test(test)) write(window.sessionStorage, TEST_STORE, test);
-};
-
-const stored = (): { at: number; utms: Record<string, string> } | null => {
-  try {
-    const raw = JSON.parse(read(window.localStorage, UTM_STORE) ?? 'null') as { at?: number; utms?: Record<string, string> } | null;
-    if (!raw?.at || !raw.utms || Date.now() - raw.at > UTM_DAYS * 86_400_000) return null;
-    return { at: raw.at, utms: raw.utms };
-  } catch {
-    return null;
-  }
-};
-
-/** UTM y fbclid de la campaña con la que llegó (30 días), para el CRM. */
-export const campaign = (): Record<string, string> => {
-  const utms = stored()?.utms ?? {};
-  return Object.fromEntries(UTM_KEYS.filter((k) => typeof utms[k] === 'string' && utms[k]).map((k) => [k, utms[k] as string]));
-};
-
 /** `_fbc` de la web o, si no lo hay, el que Meta construye con el fbclid. */
-const fbc = (): string | null => {
-  if (context.fbc) return context.fbc;
-  const saved = stored();
-  const fbclid = saved?.utms['fbclid'];
-  return saved && fbclid ? `fb.1.${String(saved.at)}.${fbclid}` : null;
-};
+const fbc = (): string | null => context.fbc ?? campaignFbc();
 
 /** Arranca el puente con la web (una vez por página). */
 export const startMeta = () => {
@@ -141,6 +91,7 @@ export const startMeta = () => {
       type?: string;
       url?: string;
       search?: string;
+      landing?: string;
       fbp?: string | null;
       fbc?: string | null;
       consent?: Consent;
@@ -148,6 +99,8 @@ export const startMeta = () => {
     if (!isWebOrigin(event.origin) || data?.source !== 'probador-web' || data.type !== 'context') return;
     context = { url: data.url ?? context.url, origin: event.origin, fbp: data.fbp ?? null, fbc: data.fbc ?? null };
     consent = data.consent ?? 'unknown';
+    // Primero la página por la que llegó a la web; la URL actual, si trae campaña, manda.
+    capture(data.landing ?? '');
     capture(data.search ?? '');
     // La web vuelve a mandar el contexto cuando la clienta responde al banner de cookies.
     mode = 'bridge';
@@ -194,7 +147,7 @@ export const trackMeta = (name: MetaEvent, params: MetaParams = {}) => {
         fbc: fbc(),
         content_name: params.content_name,
         content_ids: params.content_ids,
-        test_event_code: read(window.sessionStorage, TEST_STORE) ?? undefined,
+        test_event_code: testEventCode(),
       };
       // Solo en desarrollo: lo que se manda al CRM, para comprobarlo en la consola.
       if (import.meta.env.DEV) {
@@ -238,13 +191,13 @@ export const trackTryOnShown = (dressId: string, name: string) => {
   const key = `probador-v2:customized:${brand.id}`;
   const done = new Set<string>(((): string[] => {
     try {
-      return JSON.parse(read(window.localStorage, key) ?? '[]') as string[];
+      return JSON.parse(readStorage(window.localStorage, key) ?? '[]') as string[];
     } catch {
       return [];
     }
   })());
   if (done.has(dressId)) return;
   done.add(dressId);
-  write(window.localStorage, key, JSON.stringify([...done].slice(-200)));
+  writeStorage(window.localStorage, key, JSON.stringify([...done].slice(-200)));
   trackMeta('CustomizeProduct', { content_ids: [dressId], content_name: name });
 };

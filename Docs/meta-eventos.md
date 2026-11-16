@@ -23,10 +23,21 @@ No se usa `Lead`: lo usan los formularios de las webs.
    página con `postMessage` y `public/probador-bridge.js` (en la página) lo dispara
    con el píxel de la web, `fbq(..., { eventID })`.
 3. Al arrancar, el probador saluda a la página y ella le pasa su URL (UTM, `fbclid`,
-   `test_event_code`), las cookies `_fbp` y `_fbc` y el **consentimiento**. Solo se
-   aceptan los orígenes de las webs de la marca.
-4. `campaign()` guarda 30 días las UTM y el `fbclid` (`localStorage`), y van en
+   `test_event_code`), la consulta de la página por la que la clienta llegó a la web
+   (`landing`: la guarda el plugin de formularios de la web en
+   `sessionStorage.atcrm_utms`), las cookies `_fbp` y `_fbc` y el **consentimiento**.
+   Solo se aceptan los orígenes de las webs de la marca. El puente vuelve a pasarlo
+   cuando la clienta responde al banner y cuando el píxel crea `_fbp`/`_fbc` después
+   (vigila 10 s).
+4. `src/v2/lib/campaign.ts` guarda 30 días las UTM y el `fbclid` (`localStorage`, y
+   una copia en memoria por si el navegador no deja guardar en el iframe): primero
+   las de la página de llegada y, si la URL actual trae campaña, esas. Van en
    `verify-code`, `/user/create`, `/user/update-profile` con tienda y la reserva.
+5. **fbc**: la cookie `_fbc` de la web o, si no la hay, `fb.1.<hora del clic>.<fbclid>`
+   con el `fbclid` guardado (hasta 500 caracteres; el mismo clic conserva su hora).
+   Solo existe si la clienta llegó por un clic de Meta: el código es el mismo en las
+   tres webs, así que un 0 % en una es cosa del tráfico. Ver la sección «fbc» de la
+   regla del CRM.
 
 ## Consentimiento (RGPD)
 
@@ -44,7 +55,8 @@ Atelier y Outlet usan CookieYes. El puente lee `getCkyConsent()`, y con el event
 Las UTM se guardan siempre: solo van al CRM, junto al lead.
 
 Píxeles: Atelier `561181242431431`, Outlet `906738730565930`, Sedka
-`1494187322736138`. El CRM los tiene en `config/custom.php` (`meta_pixel_id`).
+`1494187322736138`. El CRM los tiene en `config/custom.php` (`meta_pixel_id`). El
+frontal no los usa: el evento del navegador lo dispara el píxel de la web.
 
 ## En las webs
 
