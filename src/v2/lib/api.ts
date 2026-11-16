@@ -7,7 +7,7 @@ import * as tryOns from '@/services/tryOnService';
 import * as users from '@/services/userService';
 import type { UserProfile as V1UserProfile } from '@/types/index';
 import { brand } from './brand';
-import { campaign } from './meta';
+import { campaign } from './campaign';
 import { AVATAR_PROMPT, tryOnPrompt, type PoseId } from './prompts';
 import { signIn, signOut } from './session';
 import type {
