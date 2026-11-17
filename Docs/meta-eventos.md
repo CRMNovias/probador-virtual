@@ -41,15 +41,17 @@ No se usa `Lead`: lo usan los formularios de las webs.
 
 ## Consentimiento (RGPD)
 
-Atelier y Outlet usan CookieYes. El puente lee `getCkyConsent()`, y con el evento
-`cookieyes_consent_update` vuelve a mandar el contexto cuando la clienta responde.
+Las tres webs (Atelier, Outlet y Sedka) usan CookieYes; Sedka no tenía banner el
+12/11/2026 y sí el 17/11/2026 (comprobado en el navegador). El puente lee
+`getCkyConsent()`, y con el evento `cookieyes_consent_update` vuelve a mandar el
+contexto cuando la clienta responde.
 
 | Publicidad en la web | Qué hace el probador |
 |---|---|
 | Aceptada (`granted`) | Manda los eventos (CRM + píxel) |
 | Sin responder (`pending`) | Los guarda y los manda si la acepta |
 | Rechazada (`denied`) | No manda nada |
-| Web sin CookieYes (`unknown`) | Los manda; esa web decide con su propio píxel |
+| Web sin CookieYes (`unknown`; hoy ninguna) | Los manda; esa web decide con su propio píxel |
 | Sin el script de la web, o probador abierto directamente | No manda nada a Meta (no se sabe si hay consentimiento) |
 
 Las UTM se guardan siempre: solo van al CRM, junto al lead.
