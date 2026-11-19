@@ -21,12 +21,15 @@ export default function WelcomePage() {
   if (brand.id === 'sedka') return <SedkaWelcome />;
   if (brand.id === 'outlet') return <OutletWelcome />;
   return (
-    // Móvil, tablet y pantallas verticales: el vídeo arriba, a media pantalla, y el texto debajo
-    // (se baja si no cabe). Pantalla apaisada (wide): el vídeo, vertical, pegado a la izquierda y
-    // a su ancho (como mucho, media pantalla); el texto, centrado en el resto.
+    // Móvil: el vídeo arriba, pequeño, y debajo el título con «Empezar» a la vista. En la web de
+    // Atelier el probador va en un marco de 1000 px que empieza bajo la cabecera: con el vídeo a
+    // media pantalla el botón quedaba fuera de la primera pantalla (19/11/2026).
+    // Tablet: el vídeo a media pantalla y el texto debajo. Pantalla apaisada (wide): el vídeo,
+    // vertical, pegado a la izquierda y a su ancho (como mucho, media pantalla); el texto,
+    // centrado en el resto.
     <main className="flex min-h-dvh flex-col bg-white wide:h-dvh wide:flex-row">
       {/* Escenario: la prueba girando, como en el probador */}
-      <div className="relative h-[52dvh] shrink-0 bg-studio md:h-[56dvh] wide:h-full wide:w-[min(56.25dvh,50vw)]">
+      <div className="relative h-[min(34dvh,280px)] shrink-0 bg-studio md:h-[56dvh] wide:h-full wide:w-[min(56.25dvh,50vw)]">
         <Backdrop src={DEMO_STILL} />
         <Image src={DEMO_STILL} alt="" fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-contain" />
         <video
@@ -45,8 +48,10 @@ export default function WelcomePage() {
         <p className="label-caps absolute bottom-4 left-4 text-ink/70">360°</p>
       </div>
 
-      <div className="px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-6 md:mx-auto md:w-full md:max-w-xl md:px-8 md:pb-12 md:pt-10 wide:mx-0 wide:flex wide:max-w-none wide:flex-1 wide:items-center wide:justify-center wide:px-[clamp(2.5rem,6vw,7rem)] wide:py-10">
-        <div className="wide:w-full wide:max-w-[clamp(32rem,30vw,38rem)]">
+      <div className="px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-5 md:mx-auto md:w-full md:max-w-xl md:px-8 md:pb-12 md:pt-10 wide:mx-0 wide:flex wide:max-w-none wide:flex-1 wide:items-center wide:justify-center wide:px-[clamp(2.5rem,6vw,7rem)] wide:py-10">
+        {/* Móvil: los botones van justo después del texto y los pasos, debajo (order). Tablet y
+            ordenador: el orden del código, con los pasos antes de los botones. */}
+        <div className="flex flex-col wide:w-full wide:max-w-[clamp(32rem,30vw,38rem)]">
           <p className="label-caps text-muted">Probador virtual</p>
           <h1 className="mt-2 text-[22px] font-light uppercase leading-[1.18] tracking-[0.06em] md:mt-3 md:text-[28px] wide:text-[clamp(1.875rem,1.7vw,2.25rem)]">
             ¡El primer paso hasta tu vestido o traje!
@@ -56,7 +61,7 @@ export default function WelcomePage() {
           </p>
 
           {/* Móvil: el título delante. Tablet y ordenador: el título encima. */}
-          <ul className="mt-4 space-y-2 text-[13px] leading-snug md:mt-7 md:space-y-4 md:text-[15px] wide:mt-6 wide:text-[clamp(0.875rem,0.8vw,1rem)]">
+          <ul className="order-1 mt-6 space-y-2 text-[13px] leading-snug md:order-none md:mt-7 md:space-y-4 md:text-[15px] wide:mt-6 wide:text-[clamp(0.875rem,0.8vw,1rem)]">
             {FEATURES.map((f) => (
               <li key={f.title}>
                 <span className="label-caps text-ink md:block">{f.title}</span> <span className="text-muted md:mt-1 md:block">{f.description}</span>
@@ -64,10 +69,16 @@ export default function WelcomePage() {
             ))}
           </ul>
 
-          <LinkButton href="/entrar" block className="mt-6 md:mt-8">
-            Empezar
-          </LinkButton>
-          <p className="mt-3 text-center text-[11px] leading-relaxed text-muted md:text-[12px]">
+          {/* Como en Outlet y Sedka: quien ya tiene cuenta entra por el mismo sitio. */}
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row md:mt-8">
+            <LinkButton href="/entrar" block className="sm:flex-1">
+              Empezar
+            </LinkButton>
+            <LinkButton href="/entrar" block variant="secondary" className="sm:flex-1">
+              Ya tengo cuenta
+            </LinkButton>
+          </div>
+          <p className="order-2 mt-5 text-center text-[11px] leading-relaxed text-muted md:order-none md:mt-3 md:text-[12px]">
             Recreación con IA; puede diferir del resultado real.{' '}
             <a href={brand.privacyUrl} className="underline underline-offset-2" target="_blank" rel="noopener">
               Privacidad
